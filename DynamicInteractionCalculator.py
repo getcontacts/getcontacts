@@ -10,13 +10,11 @@ import sys
 import time
 import itertools
 import mdtraj as md
-from saltbridge import *
-from vanderwaal import *
-from hydrogenbond import *
-from hydrophobe import *
-from pication import *
-from aromatic import *
-from vmdMeasureHBonds import * 
+from contact_calc.saltbridge import *
+from contact_calc.pication import *
+from contact_calc.aromatic import *
+from contact_calc.vanderwaal import *
+from contact_calc.vmdMeasureHBonds import * 
 
 USAGE_STR= """
 # Usage:
@@ -34,26 +32,13 @@ USAGE_STR= """
 # <optional -chain flag> To denote the specific chain ID to query when using VMD's hydrogen bond calculator 
 # <optional -ligand flag> To denote the resname of ligand in the simulation.
 
-# Example 1:
-TRAJ_PATH="/scratch/PI/rondror/akma327/noncovalent_Interaction_Scripts/mOR-InteractionOutput/MOR_active_waters/mor_active_refine150_agonist_noNanobody/rep_1/Prod_1/Prod_1_reimaged.nc"
-TOP_PATH="/scratch/PI/rondror/akma327/noncovalent_Interaction_Scripts/mOR-InteractionOutput/MOR_active_waters/mor_active_refine150_agonist_noNanobody/step5_assembly.pdb"
-OUTPUT_DIRECTORY_PATH="/scratch/PI/rondror/akma327/noncovalent_Interaction_Scripts/DynamicInteractions/data/testing"
-OUTPUT_FILE_IDENTIFIER="salt_bridge_result.txt"
-python DynamicInteractionCalculator.py $TRAJ_PATH $TOP_PATH $OUTPUT_DIRECTORY_PATH $OUTPUT_FILE_IDENTIFIER -sb -stride 1
+# Example 
+TRAJ_PATH="Prod_0_reimaged.nc"
+TOP_PATH="step5_assembly.pdb"
+OUTPUT_DIRECTORY_PATH="output_contacts"
+OUTPUT_FILE_IDENTIFIER="hbsb.txt"
+python DynamicInteractionCalculator.py $TRAJ_PATH $TOP_PATH $OUTPUT_DIRECTORY_PATH $OUTPUT_FILE_IDENTIFIER -hbsb
 
-# Example 2:
-TRAJ_PATH="/scratch/PI/rondror/akma327/noncovalent_Interaction_Scripts/mOR-InteractionOutput/MOR_active_waters/mor_active_refine150_agonist_noNanobody/rep_1/Prod_1/Prod_1_reimaged.nc"
-TOP_PATH="/scratch/PI/rondror/akma327/noncovalent_Interaction_Scripts/mOR-InteractionOutput/MOR_active_waters/mor_active_refine150_agonist_noNanobody/step5_assembly.pdb"
-OUTPUT_DIRECTORY_PATH="/scratch/PI/rondror/akma327/noncovalent_Interaction_Scripts/DynamicInteractions/data/testing"
-OUTPUT_FILE_IDENTIFIER="bb_hydrogen_bond_result.txt"
-WATER_HBOND_FILE_PATH="/scratch/PI/rondror/akma327/noncovalent_Interaction_Scripts/mOR-InteractionOutput/MOR_active_waters/mor_active_refine150_agonist_noNanobody/rep_1/Prod_1/hydrogen_bond_water_result.txt"
-python DynamicInteractionCalculator.py $TRAJ_PATH $TOP_PATH $OUTPUT_DIRECTORY_PATH $OUTPUT_FILE_IDENTIFIER -hbbb -process $WATER_HBOND_FILE_PATH -stride 1
-
-# Take Note:
-# The choice of OUTPUT_FILE_IDENTIFIER must stay consistent when providing input file name for stitching across fragments
-# In the second example where user wants to compute water bond, the argument for post processing file must be specified.
-# This applies for the case of trying to compute normal hydrogen bond, residue water bonds, and water bridges from the raw
-# water mediated hydrogen bond file. This is a way to have everything incorporated into the pipeline. 
 """
 
 K_MIN_ARG = 6
@@ -674,6 +659,8 @@ def calcLigandWaterBond2Results(f, post_process_file, ligand, solventId="HOH"):
 
 
 def calcDynamicInteractions(file_writer, interaction_selection, stride, TOP_PATH, TRAJ_PATH, solvent, solventId, chainId, ligand, post_process_file):
+	
+	### MD Traj Interactions
 	if(interaction_selection in ['-sb', '-pc', '-ps', '-ts', '-vdw']):
 		traj = md.load(TRAJ_PATH, top = TOP_PATH)
 		traj = traj[::stride] #take stride value into account 
@@ -687,6 +674,9 @@ def calcDynamicInteractions(file_writer, interaction_selection, stride, TOP_PATH
 		calcEdgeToFaceResults(traj, file_writer, TOP_PATH)
 	if(interaction_selection == '-vdw'):
 		calcVanderwaalsResults(traj, file_writer, TOP_PATH)
+
+
+	### VMD HBond Interactions
 	if(interaction_selection == '-hbw'):
 		calcHydrogenBondWaterResults(file_writer, stride, TOP_PATH, TRAJ_PATH, solventId, chainId)
 	if(interaction_selection == '-hbbb'):
@@ -702,7 +692,7 @@ def calcDynamicInteractions(file_writer, interaction_selection, stride, TOP_PATH
 	if(interaction_selection == '-wb2'):
 		calcWaterBond2Results(file_writer, post_process_file)
 
-	### Ligand Based Interactions
+	### MVD Ligand HBond Interactions
 	if(interaction_selection == "-lhbw"):
 		calcLigandHydrogenBondWaterResults(file_writer, stride, TOP_PATH, TRAJ_PATH, solventId, chainId, ligand)
 	if(interaction_selection == "-hlb"):
