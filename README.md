@@ -11,7 +11,7 @@ MDContactNetworks is compatible with .nc and .dcd file formats for MD trajectori
 
 The code is organized into two steps:
 
-### 1. Computing non-covalent contacts in a protein throughout every frame of a MD Simulation fragment
+1. Computing non-covalent contacts in a protein throughout every frame of a MD Simulation fragment
    
    __Input:__ 
 
@@ -62,12 +62,12 @@ The code is organized into two steps:
 
    __Examples__
 
-	   1) python DynamicInteractionCalculator.py TOP.pdb TRAJ.nc hbw.txt -hbw -stride 5 -solv IP3 -chain A -ligand EJ4
+		python DynamicInteractionCalculator.py TOP.pdb TRAJ.nc hbw.txt -hbw -stride 5 -solv IP3 -chain A -ligand EJ4
 
-	   2) python DynamicInteractionCalculator.py TOP.pdb TRAJ.nc hbsb.txt -hbsb -process hbw.txt 
+		python DynamicInteractionCalculator.py TOP.pdb TRAJ.nc hbsb.txt -hbsb -process hbw.txt 
 
 
-### 2. Visualizing dynamic contact networks
+2. Visualizing dynamic contact networks
 
    __Input:__ Directory containing non-covalent contacts computed for each fragment of simulation
 
