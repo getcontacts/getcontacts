@@ -658,105 +658,103 @@ def calcLigandWaterBond2Results(f, post_process_file, ligand, solventId="HOH"):
 
 
 
-def calcDynamicInteractions(file_writer, interaction_selection, stride, TOP_PATH, TRAJ_PATH, solvent, solventId, chainId, ligand, post_process_file):
-	
+def createFileWriter(OUTPUT):
+	if not os.path.exists(os.path.dirname(OUTPUT)):
+		os.makedirs(os.path.dirname(OUTPUT))
+	f = open(OUTPUT, 'w')
+	return f
+
+# def calcDynamicInteractions(file_writer, INTERACTION_TYPE, stride, TOP_PATH, TRAJ_PATH, solvent, solventId, chainId, ligand, post_process_file):
+def calcDynamicInteractions(TOP, TRAJ, OUTPUT, INTERACTION_TYPE, post_process_file=None, stride=1, solventId=None, solvent=None, chainId=None, ligand=None):
+	print("Begin calculating non-covalent interaction ...")
+	f = createFileWriter(OUTPUT)
+	f.write("Stride:" + str(stride) + "\n")
+	f.write("TrajectoryPath:" + TRAJ + "\n")
+	f.write("TopologyPath:" + TOP + "\n")
+
+
 	### MD Traj Interactions
-	if(interaction_selection in ['-sb', '-pc', '-ps', '-ts', '-vdw']):
+	if(INTERACTION_TYPE in ['-sb', '-pc', '-ps', '-ts', '-vdw']):
 		traj = md.load(TRAJ_PATH, top = TOP_PATH)
 		traj = traj[::stride] #take stride value into account 
-	if(interaction_selection == '-sb'):
+	if(INTERACTION_TYPE == '-sb'):
 		calcSaltBridgeResults(traj, file_writer, TOP_PATH)
-	if(interaction_selection == '-pc'):
+	if(INTERACTION_TYPE == '-pc'):
 		calcPiCationResults(traj, file_writer, TOP_PATH)
-	if(interaction_selection == '-ps'):
+	if(INTERACTION_TYPE == '-ps'):
 		calcFaceToFaceResults(traj, file_writer, TOP_PATH)
-	if(interaction_selection == '-ts'):
+	if(INTERACTION_TYPE == '-ts'):
 		calcEdgeToFaceResults(traj, file_writer, TOP_PATH)
-	if(interaction_selection == '-vdw'):
+	if(INTERACTION_TYPE == '-vdw'):
 		calcVanderwaalsResults(traj, file_writer, TOP_PATH)
 
 
 	### VMD HBond Interactions
-	if(interaction_selection == '-hbw'):
+	if(INTERACTION_TYPE == '-hbw'):
 		calcHydrogenBondWaterResults(file_writer, stride, TOP_PATH, TRAJ_PATH, solventId, chainId)
-	if(interaction_selection == '-hbbb'):
+	if(INTERACTION_TYPE == '-hbbb'):
 		calcBackBoneHBondResults(file_writer, post_process_file)
-	if(interaction_selection == '-hbsb'):
+	if(INTERACTION_TYPE == '-hbsb'):
 		calcSideChainBackBoneHBondResults(file_writer, post_process_file)
-	if(interaction_selection == '-hbss'):
+	if(INTERACTION_TYPE == '-hbss'):
 		calcSideChainHBondResults(file_writer, post_process_file)
-	if(interaction_selection == '-rw'):
+	if(INTERACTION_TYPE == '-rw'):
 		calcResidueWaterBondResults(file_writer, post_process_file)
-	if(interaction_selection == '-wb'):
+	if(INTERACTION_TYPE == '-wb'):
 		calcWaterBondResults(file_writer, post_process_file)
-	if(interaction_selection == '-wb2'):
+	if(INTERACTION_TYPE == '-wb2'):
 		calcWaterBond2Results(file_writer, post_process_file)
 
 	### MVD Ligand HBond Interactions
-	if(interaction_selection == "-lhbw"):
+	if(INTERACTION_TYPE == "-lhbw"):
 		calcLigandHydrogenBondWaterResults(file_writer, stride, TOP_PATH, TRAJ_PATH, solventId, chainId, ligand)
-	if(interaction_selection == "-hlb"):
+	if(INTERACTION_TYPE == "-hlb"):
 		calcLigandBackBoneHBondResults(file_writer, post_process_file, ligand)
-	if(interaction_selection == "-hls"):
+	if(INTERACTION_TYPE == "-hls"):
 		calcLigandSideChainHBondResults(file_writer, post_process_file, ligand)
-	if(interaction_selection == '-lw'):
+	if(INTERACTION_TYPE == '-lw'):
 		calcLigandToWaterBondResults(file_writer, post_process_file, ligand)
-	if(interaction_selection == "-lwb"):
+	if(INTERACTION_TYPE == "-lwb"):
 		calcLigandWaterBondResults(file_writer, post_process_file, ligand)
-	if(interaction_selection == "-lwb2"):
+	if(INTERACTION_TYPE == "-lwb2"):
 		calcLigandWaterBond2Results(file_writer, post_process_file, ligand)
 
-def getPDBCodes(str_list):
-	pdb_codes = []
-	pdb_list = str_list.split()
-	for pdb_elem in pdb_list:
-		pdb_codes.append(pdb_elem.split('_')[0])
-	return pdb_codes
 
-def createFileWriter(OutputPath, OutputFileIdentifier):
-	filename = OutputPath + "/" + OutputFileIdentifier
-	print("Output File Path: " + filename)
-	if not os.path.exists(os.path.dirname(filename)):
-		os.makedirs(os.path.dirname(filename))
-	f = open(filename, 'w')
-	return f
-
-
-def displayResults():
+if __name__ == "__main__":
 	if(len(sys.argv) < K_MIN_ARG):
 		print(USAGE_STR)
 		exit(1)
-	TRAJ_PATH = sys.argv[1]
-	TOP_PATH= sys.argv[2]
-	OutputPath = sys.argv[3]
-	OutputFileIdentifier = sys.argv[4]
-	interaction_selection = sys.argv[5]
-	post_process_file = None
-	if("-process" in sys.argv):
-		processIndex = sys.argv.index("-process")
-		post_process_file = sys.argv[processIndex + 1]
-	stride = 1
-	solvent = None 
-	solventId = None 
-	if("-stride" in sys.argv):
-		strideIndex = sys.argv.index("-stride")
-		stride = int(sys.argv[strideIndex+1])
-	if("-solv" in sys.argv):
-		solvIndex = sys.argv.index("-solv")
-		solventId = sys.argv[solvIndex +1]
-		solvent = "resname " + solventId
-	chainId = None 
-	if("-chain" in sys.argv):
-		chainId = str(sys.argv[sys.argv.index("-chain") + 1])
-	ligand = None
-	if("-ligand" in sys.argv):
-		ligand = str(sys.argv[sys.argv.index("-ligand") + 1])
-	f = createFileWriter(OutputPath, OutputFileIdentifier)
-	f.write("Stride:" + str(stride) + "\n")
-	f.write("TrajectoryPath:" + TRAJ_PATH + "\n")
-	print("Begin Noncovalent Interaction Calculator for: " + TRAJ_PATH)
-	f.write("TopologyPath:" + TOP_PATH + "\n")
-	calcDynamicInteractions(f, interaction_selection, stride, TOP_PATH, TRAJ_PATH, solvent, solventId, chainId, ligand, post_process_file)
 
-if __name__ == "__main__":
-	displayResults()
+	### Required arguments
+	(TOP, TRAJ, OUTPUT, INTERACTION_TYPE) = (sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+
+	### Optional arguments
+	post_process_file = None
+	stride = 1
+	solvent = None
+	solventId = None 
+	chainId = None
+	ligand = None
+
+	if("-process" in sys.argv):
+		process_index = sys.argv.index("-process")
+		post_process_file = sys.argv[process_index + 1]
+
+	if("-stride" in sys.argv):
+		stride_index = sys.argv.index("-stride")
+		stride = int(sys.argv[stride_index + 1])
+
+	if("-solv" in sys.argv):
+		solv_index = sys.argv.index("-solv")
+		solventId = sys.argv[solvIndex + 1]
+		solvent = "resname" + solventId
+
+	if("-chain" in sys.argv):
+		chain_index = sys.argv.index("-chain")
+		chainId = str(sys.argv[chain_index + 1])
+
+	if("-ligand" in sys.argv):
+		ligand_index = sys.argv.index("-ligand")
+		ligand = str(sys.argv[ligand_index + 1])
+
+	calcDynamicInteractions(TOP, TRAJ, OUTPUT, INTERACTION_TYPE, post_process_file, stride, solventId, solvent, chainId, ligand)
