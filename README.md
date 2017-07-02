@@ -11,7 +11,7 @@ MDContactNetworks is compatible with .nc and .dcd file formats for MD trajectori
 
 The code is organized into two steps:
 
-1. Computing non-covalent contacts throughout a single fragment of an MD Simulation
+1. Computing non-covalent contacts in a protein throughout every frame of a MD Simulation fragment
    
    __Input:__ 
 
@@ -30,7 +30,7 @@ The code is organized into two steps:
 		   -hbw, Hydrogen Bonds
 		   -lhbw, Ligand Hydrogen Bonds
 
-		   The following requires -process flag 
+		   The following options require an additional -process flag
 
 		   -hbbb, Backbone-backbone hydrogen bonds
 		   -hbsb, Backbone-sidechain hydrogen bonds
@@ -47,7 +47,7 @@ The code is organized into two steps:
 
 	Optional Arguments:
 
-		-process <POST_PROCESS_FILE> To compute interaction types (hbbb, hbsb, etc) user must provide path to the full hydrogen bonds interaction output.
+		-process <POST_PROCESS_FILE> To compute interaction types (hbbb, hbsb, etc) user must provide path to the already computed full hydrogen bonds interaction output hbw.txt
 
 		-stride <STRIDE_VALUE> User can provide a stride value to subsample the trajectory
 
