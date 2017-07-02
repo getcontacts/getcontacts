@@ -62,10 +62,9 @@ The code is organized into two steps:
 
    __Examples__
 
+	   1) python DynamicInteractionCalculator.py TOP.pdb TRAJ.nc hbw.txt -hbw -stride 5 -solv IP3 -chain A -ligand EJ4
 
-   1) python DynamicInteractionCalculator.py TOP.pdb TRAJ.nc hbw.txt -hbw -stride 5 -solv IP3 -chain A -ligand EJ4
-
-   2) python DynamicInteractionCalculator.py TOP.pdb TRAJ.nc hbsb.txt -hbsb -process hbw.txt 
+	   2) python DynamicInteractionCalculator.py TOP.pdb TRAJ.nc hbsb.txt -hbsb -process hbw.txt 
 
 
 ### 2. Visualizing dynamic contact networks
