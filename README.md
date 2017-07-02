@@ -17,27 +17,27 @@ The code is organized into two steps:
 	   OUTPUT - Path of output file 
 	   INTERACTION_TYPE - User specifies what type of non-covalent interaction to compute using the following flags. 
 
-	   -sb, Salt bridges
-	   -pc, Pi-cation 
-	   -ps, Pi-stacking
-	   -ts, T-stacking
-	   -vdw, Van Der Waals
-	   -hbw, Hydrogen Bonds
-	   -lhbw, Ligand Hydrogen Bonds
+		   -sb, Salt bridges
+		   -pc, Pi-cation 
+		   -ps, Pi-stacking
+		   -ts, T-stacking
+		   -vdw, Van Der Waals
+		   -hbw, Hydrogen Bonds
+		   -lhbw, Ligand Hydrogen Bonds
 
-	   The following requires -process flag 
+		   The following requires -process flag 
 
-	   -hbbb, Backbone-backbone hydrogen bonds
-	   -hbsb, Backbone-sidechain hydrogen bonds
-	   -hbss, Sidechain-sidechain hydrogen bonds
-	   -rw, Residue-water hydrogen bond
-	   -wb, Water-mediated hydrogen bond
-	   -wb2, Extended water-mediated hydrogen bond
-	   -hlb, Ligand-backbone hydrogen bonds
-	   -hls, Ligand-sidechain hydrogen bonds
-	   -lw, Ligand-water hydrogen bond
-	   -lwb, Ligand water-mediated hydrogen bond
-	   -lwb2, Ligand extended water-mediated hydrogen bond
+		   -hbbb, Backbone-backbone hydrogen bonds
+		   -hbsb, Backbone-sidechain hydrogen bonds
+		   -hbss, Sidechain-sidechain hydrogen bonds
+		   -rw, Residue-water hydrogen bond
+		   -wb, Water-mediated hydrogen bond
+		   -wb2, Extended water-mediated hydrogen bond
+		   -hlb, Ligand-backbone hydrogen bonds
+		   -hls, Ligand-sidechain hydrogen bonds
+		   -lw, Ligand-water hydrogen bond
+		   -lwb, Ligand water-mediated hydrogen bond
+		   -lwb2, Ligand extended water-mediated hydrogen bond
 
 
 	Optional Arguments:
