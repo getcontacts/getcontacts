@@ -10,11 +10,11 @@ The code is organized into two steps:
    
    __Input:__ 
 
-   Required Arguments:
-   TOP - Path to toplogy
-   TRAJ - Path to simulation trajectory fragment
-   OUTPUT - Path of output file 
-   INTERACTION_TYPE - User specifies what type of non-covalent interaction to compute using the following flags. 
+	Required Arguments:
+	   TOP - Path to topology
+	   TRAJ - Path to simulation trajectory fragment
+	   OUTPUT - Path of output file 
+	   INTERACTION_TYPE - User specifies what type of non-covalent interaction to compute using the following flags. 
 
 	   -sb, Salt bridges
 	   -pc, Pi-cation 
@@ -39,16 +39,16 @@ The code is organized into two steps:
 	   -lwb2, Ligand extended water-mediated hydrogen bond
 
 
-	 Optional Arguments:
-	 -process <POST_PROCESS_FILE> To compute interaction types (hbbb, hbsb, etc) user must provide path to the full hydrogen bonds interaction output.
+	Optional Arguments:
+		-process <POST_PROCESS_FILE> To compute interaction types (hbbb, hbsb, etc) user must provide path to the full hydrogen bonds interaction output.
 
-	 -stride <STRIDE_VALUE> User can provide a stride value to subsample the trajectory
+		-stride <STRIDE_VALUE> User can provide a stride value to subsample the trajectory
 
-	 -solv <SOLVENT_ID> Specify solvent identifier in simulation other than the default of TIP3
+		-solv <SOLVENT_ID> Specify solvent identifier in simulation other than the default of TIP3
 
-	 -chain <CHAIN_ID> Specify specific chain of protein to compute non-covalent contacts
+		-chain <CHAIN_ID> Specify specific chain of protein to compute non-covalent contacts
 
-	 -ligand <LIGAND_NAME> Specify name of ligand if computing hydrogen bonds involving ligand
+		-ligand <LIGAND_NAME> Specify name of ligand if computing hydrogen bonds involving ligand
 
    
    __Output:__ List of non-covalent contacts of specified type for each frame of simulation fragment 
