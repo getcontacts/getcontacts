@@ -5,6 +5,10 @@
 
 from output_utils import *
 
+### After computing hydrogen bonds for a fragment of simulation, these functions allow user to 
+### Stratify output into hbond subtypes (backbone-backbone, backbone-sidechain, sidechain-sidechain
+### residue-water, water-mediated, extended-water mediated)
+
 
 def calcBackBoneHBondResults(f, post_process_file, solventId = 'HOH'):
 	"""

@@ -3,7 +3,7 @@
 # Date: 07/02/17
 # aromatic.py
 
-### Molecular Dynamics Trajectory Simulation - pi-Cationic Interaction Detection ###
+### Molecular Dynamics Trajectory Simulation - Pi-stacking and T-stacking Interaction Detection ###
 
 from __future__ import print_function, division
 import math

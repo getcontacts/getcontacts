@@ -3,6 +3,11 @@
 # Date: 07/02/17
 # stratifyLigandHBonds.py
 
+### After computing hydrogen bonds between ligand and binding pocket residues for a fragment of 
+### simulation, these functions allow user to stratify output into hbond subtypes 
+### (ligand-backbone, ligand-sidechain, ligand-water, ligand water-mediated, ligand extended-water mediated)
+
+
 from output_utils import *
 
 def calcLigandBackBoneHBondResults(f, post_process_file, ligand, solventId = "HOH"):
