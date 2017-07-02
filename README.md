@@ -60,11 +60,11 @@ The code is organized into two steps:
    
    __Output:__ List of non-covalent contacts of specified type for each frame of simulation fragment 
 
-   __Examples__
+   __Examples:__
 
-		python DynamicInteractionCalculator.py TOP.pdb TRAJ.nc hbw.txt -hbw -stride 5 -solv IP3 -chain A -ligand EJ4
+	python DynamicInteractionCalculator.py TOP.pdb TRAJ.nc hbw.txt -hbw -stride 5 -solv IP3 -chain A -ligand EJ4
 
-		python DynamicInteractionCalculator.py TOP.pdb TRAJ.nc hbsb.txt -hbsb -process hbw.txt 
+	python DynamicInteractionCalculator.py TOP.pdb TRAJ.nc hbsb.txt -hbsb -process hbw.txt 
 
 
 ### 2. Visualizing dynamic contact networks
