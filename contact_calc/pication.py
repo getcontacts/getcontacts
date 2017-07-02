@@ -1,8 +1,9 @@
 # Author: Anthony Kai Kwang Ma
-# Email: akma327@stanford.edu
-# Date: October 6, 2015
+# Email: anthonyma27@gmail.com, akma327@stanford.edu
+# Date: 07/02/17
+# pication.py
 
-# Molecular Dynamics Trajectory Simulation - pi-Cationic Interaction Detection
+### Molecular Dynamics Trajectory Simulation - pi-Cationic Interaction Detection ###
 
 from __future__ import print_function, division
 import math
@@ -13,7 +14,7 @@ import mdtraj as md
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import compute_distances, compute_angles
 from mdtraj.geometry import _geometry
-from noncovalentInteractionUtils import *
+from contact_utils import *
 import math
 
 __all__ = ['pication_detect', 'initPiCationChainDict', 'calcPiCationFramePairs']
@@ -32,16 +33,46 @@ PHE_FILTER = ['CG', 'CE1', 'CE2']
 TRP_FILTER = ['CD2', 'CZ2', 'CZ3']
 TYR_FILTER = ['CG', 'CE1', 'CE2']
 
-
-#12/06/15 Version 2.0
-
 def fillTimeGaps(timePoints, filtered_candidate_pairs):
+	"""
+		Fill in data for missing time points 
+	"""
 	missingTimes = set(timePoints) - set(filtered_candidate_pairs.keys())
 	for time in missingTimes:
 		filtered_candidate_pairs[time] = {}
 	return filtered_candidate_pairs
 
+def cationFilter(atom, chain_index, cation_list):
+	"""
+		Identify residue indices that are LYS or ARG cations
+	"""
+	indicator, residueID = atomInfo(atom)
+	if(residueID in CATION_DONOR):
+		if(residueID == 'LYS'):
+			appendAminoAcidToList(cation_list, (atom, chain_index), LYS_FILTER)
+		if(residueID == 'ARG'):
+			appendAminoAcidToList(cation_list, (atom, chain_index), ARG_FILTER)
+
+
+def aromaticFilter(atom, chain_index, cand_aromatic_dict):
+	"""
+		Identify residue indices that are aromatics PHE, TRP, TYR
+	"""
+	indicator, residueID = atomInfo(atom)
+	if(residueID in AROMATIC_DONOR):
+		if(residueID == 'PHE'):
+			appendAminoAcidToDict(cand_aromatic_dict, (atom, chain_index), PHE_FILTER)
+		if(residueID == 'TRP'):
+			appendAminoAcidToDict(cand_aromatic_dict, (atom, chain_index), TRP_FILTER)
+		if(residueID == 'TYR'):
+			appendAminoAcidToDict(cand_aromatic_dict, (atom, chain_index), TYR_FILTER)
+
+
 def filter_candidate_pairs_by_chain(traj, cation_list, cand_aromatic_dict):
+	"""
+		Apply distance and angle geometric criterion to filter out cation-aromatic residues
+		that can form pi-cation interactions. 
+	"""
 	filtered_candidate_pairs = {} # outer dictionary key = time, value = inner dictionary with key = aromatic key, value = list of cations
 	pairKeys = []
 	atomPairs = []
@@ -59,7 +90,7 @@ def filter_candidate_pairs_by_chain(traj, cation_list, cand_aromatic_dict):
 	# calculate atom pair distances
 	atomPairs = np.array(atomPairs)
 	pairDistances = md.compute_distances(traj, atomPairs)
-	# filtered_candidate_pairs = dict.fromkeys(range(len(pairDistances)), {})
+
 	# Filter to get smaller candidate set 
 	for time in range(len(pairDistances)):
 		t_distances = pairDistances[time]
@@ -78,7 +109,31 @@ def filter_candidate_pairs_by_chain(traj, cation_list, cand_aromatic_dict):
 	filtered_candidate_pairs = fillTimeGaps(range(len(pairDistances)), filtered_candidate_pairs)
 	return filtered_candidate_pairs
 
+
+def initPiCationChainDict(initFrame):
+	"""
+		Compute cation list and candidate aromatic residue list for all chains in protein. 
+		This provides a starting point to identifying pairs of cationic-aromatic residues 
+		that can form pi-cation interactions.
+	"""
+	topology = initFrame.topology
+	chainDict = {}
+	for chain_index in range(topology.n_chains):
+		cation_list = []
+		cand_aromatic_dict = {}
+		for index, atom in enumerate(topology.chain(chain_index).atoms):
+			cationFilter(atom, chain_index, cation_list)
+			aromaticFilter(atom, chain_index, cand_aromatic_dict)
+		for key in cand_aromatic_dict.keys():
+			cand_aromatic_dict[key] = list(cand_aromatic_dict[key])
+		chainDict[chain_index] = (cation_list, cand_aromatic_dict)
+	return chainDict
+
+
 def calcPiCationFramePairs(traj, chainDict):
+	"""
+		Compute all pi-cation interactions in protein throughout MD simulation 
+	"""
 	pcFramePairs = {}
 	for chain_index in chainDict.keys():
 		cation_list, cand_aromatic_dict = chainDict[chain_index]
@@ -111,68 +166,27 @@ def calcPiCationFramePairs(traj, chainDict):
 	return pcFramePairs
 
 
-def cationFilter(atom, chain_index, cation_list):
-	indicator, residueID = atomInfo(atom)
-	if(residueID in CATION_DONOR):
-		if(residueID == 'LYS'):
-			appendAminoAcidToList(cation_list, (atom, chain_index), LYS_FILTER)
-		if(residueID == 'ARG'):
-			appendAminoAcidToList(cation_list, (atom, chain_index), ARG_FILTER)
 
-
-def aromaticFilter(atom, chain_index, cand_aromatic_dict):
-	indicator, residueID = atomInfo(atom)
-	if(residueID in AROMATIC_DONOR):
-		if(residueID == 'PHE'):
-			appendAminoAcidToDict(cand_aromatic_dict, (atom, chain_index), PHE_FILTER)
-		if(residueID == 'TRP'):
-			appendAminoAcidToDict(cand_aromatic_dict, (atom, chain_index), TRP_FILTER)
-		if(residueID == 'TYR'):
-			appendAminoAcidToDict(cand_aromatic_dict, (atom, chain_index), TYR_FILTER)
-
-
-def initPiCationChainDict(initFrame):
-	topology = initFrame.topology
-	chainDict = {}
-	for chain_index in range(topology.n_chains):
-		cation_list = []
-		cand_aromatic_dict = {}
-		for index, atom in enumerate(topology.chain(chain_index).atoms):
-			cationFilter(atom, chain_index, cation_list)
-			aromaticFilter(atom, chain_index, cand_aromatic_dict)
-		for key in cand_aromatic_dict.keys():
-			cand_aromatic_dict[key] = list(cand_aromatic_dict[key])
-		chainDict[chain_index] = (cation_list, cand_aromatic_dict)
-	return chainDict
-
-
-############################### Version 1.0 ############################### 
-
-def candidatesToPair(time, traj, chainDict, picationPairs):
-	for chain_index in chainDict.keys():
-		cation_list, cand_aromatic_dict = chainDict[chain_index]
-		for k1 in cand_aromatic_dict.keys():
-			atoms_in_aromatic_resid = cand_aromatic_dict[k1]
-			if(len(atoms_in_aromatic_resid) == 3):
-				aromatic_center = calcCentroid(atoms_in_aromatic_resid, traj, time)
-				aromatic_norm_vec, planeCoord = calcNormVec(atoms_in_aromatic_resid, traj, time)
-				for cation in cation_list:
-					cation_loc = tuple(traj.xyz[time, cation[0].index, :])
-					cation_aromatic_distance = distBetweenTwoPoints(cation_loc, aromatic_center)
-					if(cation_aromatic_distance < CUTOFF_DISTANCE):
-						centerToCationVec = pointsToVec(aromatic_center, cation_loc)
-						deviationAngle = angleBtwnVec(aromatic_norm_vec, centerToCationVec)
-						deviationAngle = min(math.fabs(deviationAngle - 0), math.fabs(deviationAngle - 180))
-						if(deviationAngle < CUTOFF_ANGLE):
-							pairInfo = [cation, [atoms_in_aromatic_resid[0], atoms_in_aromatic_resid[1], atoms_in_aromatic_resid[2]], aromatic_center, cation_aromatic_distance, deviationAngle]
-							picationPairs.append(pairInfo)
-
-#Input Values: A single frame within a trajectory .nc file
-#Output Value: A list containing lists with the following information
-#[Cationic Nitrogen Atom, aromatic carbon 1, aromatic carbon 2, aromatic carbon 3, aromatic center, cation_aromatic_center_dist, cation_aromatic_center_angle]
-def pication_detect(time, traj, initChainDict):
-	picationPairs = []
-	candidatesToPair(time, traj, initChainDict, picationPairs)
-	return picationPairs
-
+def calcPiCationResults(traj, f, PROTEIN_CODE):
+	"""
+		Driver for computing pi-cation interactions
+	"""
+	print("\n\nPi-Cation:" + PROTEIN_CODE + "\n")
+	tic = time.clock()
+	chainDict = initPiCationChainDict(traj)
+	pcFramePairs = calcPiCationFramePairs(traj, chainDict)
+	toc = time.clock()
+	computingTime = toc - tic 
+	f.write("nFrames:" + str(len(pcFramePairs)) + "\n")
+	f.write("\n\nPi-Cation:" + PROTEIN_CODE + "\n")
+	for index, picationPairs in enumerate(pcFramePairs):
+		f.write("Pi_Cation Frame: " + str(index) + "\n")
+		for pair in picationPairs:
+			cation, aromatic = pair[0], pair[1]
+			cation_str = str(cation[0]) + "_" + str(cation[1])
+			aromatic_str = str(aromatic[0][0]).split("-")[0] + "_" + str(aromatic[0][1])
+			f.write(cation_str + " -- " + aromatic_str + "\n")
+	f.write("\nComputing Time:" + str(computingTime) + "\n")
+	print("\nComputing Time:" + str(computingTime) + "\n")
+	return computingTime
 

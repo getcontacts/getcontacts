@@ -15,6 +15,7 @@ from contact_calc.pication import *
 from contact_calc.aromatic import *
 from contact_calc.vanderwaal import *
 from contact_calc.vmdMeasureHBonds import * 
+from contact_calc.output_utils import *
 
 USAGE_STR= """
 # Usage:
@@ -250,110 +251,6 @@ def writeToHeader(f, line, nFrames, currFrame, computingTime, frameHBondDataStru
 
 	elif(line !="\n"): isHeader = False
 	return isHeader, nFrames, currFrame, computingTime, frameHBondDataStruct
-
-# Computation for Salt Bridges
-def calcSaltBridgeResults(traj, f, PROTEIN_CODE):
-	print("\n\nSalt Bridges:" + PROTEIN_CODE + "\n")
-	tic = time.clock()
-	chainDict = initSaltBridgeChainDict(traj)
-	sbFramePairs = calcSaltBridgeFramePairs(traj, chainDict)
-	toc = time.clock()
-	computingTime = toc - tic
-	f.write("nFrames:" + str(len(sbFramePairs)) + "\n")
-	f.write("\n\nSalt Bridges:" + PROTEIN_CODE + "\n")
-	for index, sbPairs in enumerate(sbFramePairs):
-		f.write("Salt Bridge Frame: " + str(index) + "\n")
-		for pairs in sbPairs:
-			atom1, atom2 = pairs[0], pairs[1]
-			f.write(str(atom1[0]) + "_" + str(atom1[1]) +  " -- " + str(atom2[0]) + "_" + str(atom2[1]) + "\n")
-	f.write("\nComputing Time:" + str(computingTime) + "\n")
-	print("\nComputing Time:" + str(computingTime) + "\n")
-	return computingTime
-
-
-#Computation for pi-cation interaction
-def calcPiCationResults(traj, f, PROTEIN_CODE):
-	print("\n\nPi-Cation:" + PROTEIN_CODE + "\n")
-	tic = time.clock()
-	chainDict = initPiCationChainDict(traj)
-	pcFramePairs = calcPiCationFramePairs(traj, chainDict)
-	toc = time.clock()
-	computingTime = toc - tic 
-	f.write("nFrames:" + str(len(pcFramePairs)) + "\n")
-	f.write("\n\nPi-Cation:" + PROTEIN_CODE + "\n")
-	for index, picationPairs in enumerate(pcFramePairs):
-		f.write("Pi_Cation Frame: " + str(index) + "\n")
-		for pair in picationPairs:
-			cation, aromatic = pair[0], pair[1]
-			cation_str = str(cation[0]) + "_" + str(cation[1])
-			aromatic_str = str(aromatic[0][0]).split("-")[0] + "_" + str(aromatic[0][1])
-			f.write(cation_str + " -- " + aromatic_str + "\n")
-	f.write("\nComputing Time:" + str(computingTime) + "\n")
-	print("\nComputing Time:" + str(computingTime) + "\n")
-	return computingTime
-
-def calcFaceToFaceResults(traj, f, PROTEIN_CODE):
-	print("\n\nPi-Stacking:" + PROTEIN_CODE + "\n")
-	nFrames = len(traj)
-	tic = time.clock()
-	chainDict = initFaceFaceAromaticChainDict(traj)
-	psFramePairs = calcPiStackingFramePairs(traj, chainDict)
-	toc = time.clock()
-	computingTime = toc - tic 
-	f.write("nFrames:" + str(len(psFramePairs)) + "\n")
-	f.write("\n\nPi-Stacking:" + PROTEIN_CODE + "\n")
-	for index, pi_stackPairs in enumerate(psFramePairs):
-		f.write("Pi_Stacking Frame: " + str(index) + "\n")
-		for pair in pi_stackPairs:
-			aromatic1, aromatic2 = pair[0], pair[1]
-			aromatic_str1 = str(aromatic1[0][0]).split("-")[0] + "_" + str(aromatic1[0][1])
-			aromatic_str2 = str(aromatic2[0][0]).split("-")[0] + "_" + str(aromatic2[0][1])
-			f.write(aromatic_str1 + " -- " + aromatic_str2 + "\n")
-	f.write("\nComputing Time:" + str(computingTime) + "\n")
-	print("\nComputing Time:" + str(computingTime) + "\n")
-	return computingTime
-
-
-#Computation for edge to face aromatic detection
-def calcEdgeToFaceResults(traj, f, PROTEIN_CODE):
-	print("\n\nT-Stacking:" + PROTEIN_CODE + "\n")
-	nFrames = len(traj)
-	tic = time.clock()
-	tsFramePairs = []
-	chainDict = initFaceEdgeAromaticChainDict(traj)
-	tsFramePairs = calcTStackingFramePairs(traj, chainDict)
-	toc = time.clock()
-	computingTime = toc - tic
-	f.write("nFrames:" + str(len(tsFramePairs)) + "\n")
-	f.write("\n\nT-Stacking:" + PROTEIN_CODE + "\n")
-	for index, t_stackPairs in enumerate(tsFramePairs):
-		f.write("T_Stacking Frame: " + str(index) + "\n")
-		for pair in t_stackPairs:
-			aromatic1, aromatic2 = pair[0], pair[1]
-			aromatic_str1 = str(aromatic1[0][0]).split("-")[0] + "_" + str(aromatic1[0][1])
-			aromatic_str2 = str(aromatic2[0][0]).split("-")[0] + "_" + str(aromatic2[0][1])
-			f.write(aromatic_str1 + " -- " + aromatic_str2 + "\n")
-	f.write("\nComputing Time:" + str(computingTime) + "\n")
-	print("\nComputing Time:" + str(computingTime) + "\n")
-	return computingTime
-
-
-def calcVanderwaalsResults(traj, f, PROTEIN_CODE):
-	print("\n\nVan Der Waals:" + PROTEIN_CODE + "\n")
-	tic = time.clock()
-	vdwFramePairs = calcVDWFramePairs(traj)
-	toc = time.clock()
-	computingTime = toc - tic
-	f.write("nFrames:" + str(len(vdwFramePairs)) + "\n")
-	f.write("\n\nVan Der Waals:" + PROTEIN_CODE + "\n")
-	for index, vanderwaalPairs in enumerate(vdwFramePairs):
-		f.write("Vanderwaal Frame: " + str(index) + "\n")
-		for pair in vanderwaalPairs:
-			atom1, atom2 = pair[0], pair[1]
-			f.write(str(atom1[0]) + "_" + str(atom1[1]) +  " -- " + str(atom2[0]) + "_" + str(atom2[1]) + "\n")
-	f.write("\nComputing Time:" + str(computingTime) + "\n")
-	print("\nComputing Time:" + str(computingTime) + "\n")
-	return computingTime
 
 
 ### Calculate all water mediated hydrogen bonds between protein and water
@@ -659,13 +556,19 @@ def calcLigandWaterBond2Results(f, post_process_file, ligand, solventId="HOH"):
 
 
 def createFileWriter(OUTPUT):
+	"""
+		Create file descripter to write out non-covalent interactions for a simulation fragment
+	"""
 	if not os.path.exists(os.path.dirname(OUTPUT)):
 		os.makedirs(os.path.dirname(OUTPUT))
 	f = open(OUTPUT, 'w')
 	return f
 
-# def calcDynamicInteractions(file_writer, INTERACTION_TYPE, stride, TOP_PATH, TRAJ_PATH, solvent, solventId, chainId, ligand, post_process_file):
+
 def calcDynamicInteractions(TOP, TRAJ, OUTPUT, INTERACTION_TYPE, post_process_file=None, stride=1, solventId=None, solvent=None, chainId=None, ligand=None):
+	"""
+		Calculate non-covalent interaction of specified type for a particular simulation trajectory fragment. 
+	"""
 	print("Begin calculating non-covalent interaction ...")
 	f = createFileWriter(OUTPUT)
 	f.write("Stride:" + str(stride) + "\n")
@@ -682,9 +585,9 @@ def calcDynamicInteractions(TOP, TRAJ, OUTPUT, INTERACTION_TYPE, post_process_fi
 	if(INTERACTION_TYPE == '-pc'):
 		calcPiCationResults(traj, file_writer, TOP_PATH)
 	if(INTERACTION_TYPE == '-ps'):
-		calcFaceToFaceResults(traj, file_writer, TOP_PATH)
+		calcPiStackingResults(traj, file_writer, TOP_PATH)
 	if(INTERACTION_TYPE == '-ts'):
-		calcEdgeToFaceResults(traj, file_writer, TOP_PATH)
+		calcTStackingResults(traj, file_writer, TOP_PATH)
 	if(INTERACTION_TYPE == '-vdw'):
 		calcVanderwaalsResults(traj, file_writer, TOP_PATH)
 

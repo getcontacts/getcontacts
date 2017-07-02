@@ -1,8 +1,9 @@
 # Author: Anthony Kai Kwang Ma
-# Email: akma327@stanford.edu
-# Date: September 29, 2015
+# Email: anthonyma27@gmail.com, akma327@stanford.edu
+# Date: 07/02/17
+# saltbridge.py 
 
-# Molecular Dynamics Trajectory Simulation - Salt Bridge Detection
+### Molecular Dynamics Trajectory Simulation - Salt Bridge Detection ###
 
 from __future__ import print_function, division
 import math
@@ -10,10 +11,11 @@ from itertools import product
 import itertools
 import numpy as np
 import mdtraj as md
+import time
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import compute_distances, compute_angles
 from mdtraj.geometry import _geometry
-from noncovalentInteractionUtils import *
+from contact_utils import *
 
 __all__ = ['initSaltBridgeChainDict', 'calcSaltBridgeFramePairs']
 
@@ -31,7 +33,39 @@ sel_acidic = "(resname ASP or resname GLU) and (name OE* or name OD*)"
 
 CUTOFF_DISTANCE = .40 # 4 A as defined by the paper
 
+
+def initSaltBridgeChainDict(initFrame):
+	"""
+		Determine list of anions and cations in each chain of the protein
+	"""
+	topology = initFrame.topology
+	chainDict = {}
+	for chain_index in range(topology.n_chains):
+		O_List = []
+		N_List = []
+		for index, atom in enumerate(topology.chain(chain_index).atoms):
+			name = atom.name
+			residueName = atom.residue.name
+			if(residueName in ANIONIC_LIST):
+				if(residueName == 'ASP'):
+					appendAminoAcidToList(O_List, (atom, chain_index), ASP_FILTER)
+				if(residueName == 'GLU'):
+					appendAminoAcidToList(O_List, (atom, chain_index), GLU_FILTER)
+			if(residueName in CATIONIC_LIST):
+				if(residueName == 'LYS'):
+					appendAminoAcidToList(N_List, (atom, chain_index), LYS_FILTER)
+				if(residueName == 'ARG'):
+					appendAminoAcidToList(N_List, (atom, chain_index), ARG_FILTER)
+				if(residueName == 'HIS'):
+					appendAminoAcidToList(N_List, (atom, chain_index), HIS_FILTER)
+		chainDict[chain_index] = (O_List, N_List)
+	return chainDict
+
+
 def calcSaltBridgeFramePairs(traj, chainDict):
+	"""
+		Compute all salt bridges in protein throughout the MD simulation
+	"""
 	sbFramePairs = {}
 	for chain_index in chainDict.keys():
 		O_List, N_List = chainDict[chain_index]
@@ -56,30 +90,25 @@ def calcSaltBridgeFramePairs(traj, chainDict):
 	return sbFramePairs
 
 
-def initSaltBridgeChainDict(initFrame):
-	topology = initFrame.topology
-	chainDict = {}
-	for chain_index in range(topology.n_chains):
-		O_List = []
-		N_List = []
-		for index, atom in enumerate(topology.chain(chain_index).atoms):
-			name = atom.name
-			residueName = atom.residue.name
-			if(residueName in ANIONIC_LIST):
-				if(residueName == 'ASP'):
-					appendAminoAcidToList(O_List, (atom, chain_index), ASP_FILTER)
-				if(residueName == 'GLU'):
-					appendAminoAcidToList(O_List, (atom, chain_index), GLU_FILTER)
-			#Handle the nitrogens
-			if(residueName in CATIONIC_LIST):
-				if(residueName == 'LYS'):
-					appendAminoAcidToList(N_List, (atom, chain_index), LYS_FILTER)
-				if(residueName == 'ARG'):
-					appendAminoAcidToList(N_List, (atom, chain_index), ARG_FILTER)
-				if(residueName == 'HIS'):
-					appendAminoAcidToList(N_List, (atom, chain_index), HIS_FILTER)
-		chainDict[chain_index] = (O_List, N_List)
-	return chainDict
-
+def calcSaltBridgeResults(traj, f, PROTEIN_CODE):
+	"""
+		Driver for computing salt bridges 
+	"""
+	print("\n\nSalt Bridges:" + PROTEIN_CODE + "\n")
+	tic = time.clock()
+	chainDict = initSaltBridgeChainDict(traj)
+	sbFramePairs = calcSaltBridgeFramePairs(traj, chainDict)
+	toc = time.clock()
+	computingTime = toc - tic
+	f.write("nFrames:" + str(len(sbFramePairs)) + "\n")
+	f.write("\n\nSalt Bridges:" + PROTEIN_CODE + "\n")
+	for index, sbPairs in enumerate(sbFramePairs):
+		f.write("Salt Bridge Frame: " + str(index) + "\n")
+		for pairs in sbPairs:
+			atom1, atom2 = pairs[0], pairs[1]
+			f.write(str(atom1[0]) + "_" + str(atom1[1]) +  " -- " + str(atom2[0]) + "_" + str(atom2[1]) + "\n")
+	f.write("\nComputing Time:" + str(computingTime) + "\n")
+	print("\nComputing Time:" + str(computingTime) + "\n")
+	return computingTime
 
 

@@ -1,8 +1,9 @@
 # Author: Anthony Kai Kwang Ma
-# Email: akma327@stanford.edu
-# Date: December 14, 2015
+# Email: anthonyma27@gmail.com, akma327@stanford.edu
+# Date: 07/02/17
+# vanderwaal.py
 
-# Molecular Dynamics Trajectory Simulation - Van Der Waals Interaction Detection
+### Molecular Dynamics Trajectory Simulation - Van Der Waals Interaction Detection ###
 
 from __future__ import print_function, division
 import math
@@ -13,7 +14,7 @@ import mdtraj as md
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import compute_distances, compute_angles
 from mdtraj.geometry import _geometry
-from noncovalentInteractionUtils import *
+from contact_utils import *
 
 __all__ = ['calcVDWFramePairs']
 
@@ -30,21 +31,29 @@ ATOM_RADIUS = {'hydrogen': .120,
 				'sulfur': .180}
 
 def fillTimeGaps(timePoints, filtered_candidate_pairs):
+	"""
+		Fill in data for missing time points 
+	"""
 	missingTimes = set(timePoints) - set(filtered_candidate_pairs.keys())
 	for time in missingTimes:
 		filtered_candidate_pairs[time] = []
 	return filtered_candidate_pairs
 
-#given two atoms determine the vanderwaal cutoff as radius1 + radius2 + epsilon
 def VDWCutoff(atom1, atom2):
+	"""
+		Compute the van-der-waals distance between two atoms
+	"""
 	return ATOM_RADIUS[str(atom1.element)] + ATOM_RADIUS[str(atom2.element)] + VDW_EPSILON
 
 
-# Input: the topology for a single chain
-# Output: Utilize the md.compute_distance to find distance between all alpha carbons, filter out
-# the pairs that are too far apart and return a dictionary with key = time, and value being a list
-# of tuples of alpha carbon atoms that are sufficiently close together 
 def filter_alpha_carbon(traj, chain_top):
+	"""
+		Input: Topology for a single chain
+		Output: Compute distances between all alpha carbons in the protein.
+		Filter out the pairs that are too far apart and return a dictionary 
+		mapping time points to a list of tuples representing pairs of alpha
+		carbons that are sufficiently close together. 
+	"""
 	filtered_candidate_pairs = {} # outer dictionary key = time, value = list of tuples (ca_1, ca_2)
 	ca_keys, ca_indices = [], []
 	for ca_atom in chain_top.atoms_by_name('CA'):
@@ -68,11 +77,12 @@ def filter_alpha_carbon(traj, chain_top):
 	return filtered_candidate_pairs
 
 
-# Verify whether two atoms fulfill van der waals criterion 
-# Can't have vdw between two bonded CA atoms because that is a covalent bond
-# Must be within vanderwaal radii 
-# Using the brute force method 
+
 def fulfillVDWCriterion(atom1, atom2, traj, time):
+	"""
+		Determine whether two atoms that are not covalently bonded fulfill the 
+		van der waals distance criterion.
+	"""
 	if(atom1.name == 'CA' and atom2.name == 'CA'): # don't count covalent interactions
 		return False
 	vdwCutoff = VDWCutoff(atom1, atom2)
@@ -83,9 +93,12 @@ def fulfillVDWCriterion(atom1, atom2, traj, time):
 		return True
 	return False
 
-# Iterate through all pairs of alpha carbon, and then do another distance filter for vdw
-# interaction between the individual non alpha carbon atoms within the entire residue 
+
 def calcFramePairs(traj, topology, chain_index, time, ca_pair_list):
+	"""
+		Iterate through all pairs of alpha carbon, and apply a distance filter to identify 
+		van der waal interactions between non-alpha carbon atoms within the entire residues.
+	"""
 	frame_pairs = []
 	for ca_1, ca_2 in ca_pair_list:
 		resid1_atoms = ca_1.residue.atoms
@@ -97,8 +110,10 @@ def calcFramePairs(traj, topology, chain_index, time, ca_pair_list):
 					frame_pairs += pairKey
 	return frame_pairs
 
-# Calculate all the van der waal pairs for all time points in trajectory 
 def calcVDWFramePairs(traj):
+	"""
+		Calculate all Van-der-waals interactions in protein throughout all frames of simulation
+	"""
 	vdwFramePairs = {}
 	topology = traj.topology
 	for chain_index in range(topology.n_chains):
@@ -114,41 +129,23 @@ def calcVDWFramePairs(traj):
 	vdwFramePairs = dictToList(vdwFramePairs)
 	return vdwFramePairs
 
-
-
-
-########################### Other Code #############################
-
-# Verify whether two atoms fulfill van der waals criterion 
-# Can't have vdw between two bonded CA atoms because that is a covalent bond
-# Must be within vanderwaal radii 
-def fulfillVDWCriterion2(pairKey, distance):
-	atom1, atom2 = pairKey[0][0], pairKey[1][0]
-	if(atom1.name == 'CA' and atom2.name == 'CA'): # don't count covalent interactions
-		return False
-	vdwCutoff = VDWCutoff(atom1, atom2)
-	if(distance < vdwCutoff):
-		return True
-	return False
-
-# Iterate through all pairs of alpha carbon, and then do another distance filter for vdw
-# interaction between the individual non alpha carbon atoms within the entire residue 
-def calcFramePairs2(traj, topology, chain_index, time, ca_pair_list):
-	frame_pairs = []
-	for ca_1, ca_2 in ca_pair_list: # might be faster to do the dumb way
-		resid1 = ca_1.residue.index
-		resid2 = ca_2.residue.index
-		resid1_atoms = topology.chain(chain_index).residue(resid1).atoms
-		resid2_atoms = topology.chain(chain_index).residue(resid2).atoms
-		pairKeys, atomPairs = [], []
-		for atom1 in resid1_atoms:
-			for atom2 in resid2_atoms:
-				pairKeys.append([(atom1, chain_index), (atom2, chain_index)])
-				atomPairs.append([atom1.index, atom2.index])
-		atomPairs = np.array(atomPairs)
-		pairDistances = md.compute_distances(traj, atomPairs) # will compute for all time points
-		t_distances = pairDistances[time] #only care about this specific time point
-		vdw_indices = [i for i in range(len(t_distances)) if fulfillVDWCriterion(pairKeys[i], t_distances[i]) == True]
-		frame_pairs += [pairKeys[i] for i in vdw_indices]
-	return frame_pairs
+def calcVanderwaalsResults(traj, f, PROTEIN_CODE):
+	"""
+		Driver for computing Van Der Waals interactions
+	"""
+	print("\n\nVan Der Waals:" + PROTEIN_CODE + "\n")
+	tic = time.clock()
+	vdwFramePairs = calcVDWFramePairs(traj)
+	toc = time.clock()
+	computingTime = toc - tic
+	f.write("nFrames:" + str(len(vdwFramePairs)) + "\n")
+	f.write("\n\nVan Der Waals:" + PROTEIN_CODE + "\n")
+	for index, vanderwaalPairs in enumerate(vdwFramePairs):
+		f.write("Vanderwaal Frame: " + str(index) + "\n")
+		for pair in vanderwaalPairs:
+			atom1, atom2 = pair[0], pair[1]
+			f.write(str(atom1[0]) + "_" + str(atom1[1]) +  " -- " + str(atom2[0]) + "_" + str(atom2[1]) + "\n")
+	f.write("\nComputing Time:" + str(computingTime) + "\n")
+	print("\nComputing Time:" + str(computingTime) + "\n")
+	return computingTime
 

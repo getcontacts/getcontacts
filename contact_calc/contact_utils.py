@@ -1,5 +1,10 @@
-# Molecular Dynamics Trajectory Simulation - Noncovalent Interaction Utilities
-# 10/12/15 - Anthony Ma 
+# Author: Anthony Kai Kwang Ma
+# Email: anthonyma27@gmail.com, akma327@stanford.edu
+# Date: 07/02/17
+# contact_utils.py
+
+### Molecular Dynamics Trajectory Simulation - Noncovalent Interaction Utilities ###
+
 
 from __future__ import print_function, division
 import math
@@ -10,9 +15,11 @@ from mdtraj.geometry import compute_distances, compute_angles
 from mdtraj.geometry import _geometry
 import copy
 
-# Convert dictionary with key and value as list to a list of these values
 def dictToList(timeDict):
-	print("Converting dict to list")
+	"""
+		Input: Dictionary mapping key to value 
+		Output: List of sorted values 
+	"""
 	framePairs = []
 	for time in timeDict.iterkeys():
 		frameInteractions = timeDict[time]
@@ -21,6 +28,10 @@ def dictToList(timeDict):
 
 #take set of two points and return vector pointing from a to b
 def pointsToVec(a, b):
+	"""
+		Input: point a and point b 
+		Output: Vector ab
+	"""
 	returnVec = []
 	for index, val in enumerate(a):
 		returnVec.append(b[index] - a[index])
@@ -28,42 +39,57 @@ def pointsToVec(a, b):
 
 #distance between two points
 def distBetweenTwoPoints(x, y):
+	"""
+		Return euclidean distance between two points 
+	"""
 	dist = 0
 	for index in range(len(x)):
 		dist += (x[index] - y[index])**2
 	return math.sqrt(dist)
 
-#retrieve residue ID and the indicator
 def retrieveAtomProperties(atom):
+	"""
+		Retrieve residue ID and the indicator
+	"""
 	props = str(atom).split("-")
 	residID = props[0]
 	atomIndicator = props[1]
 	return(residID, atomIndicator)
 
 def atomInfo(atom):
+	"""
+		Return atom name and residue 
+	"""
 	return (atom.name, atom.residue.name)
 
 
 #provided trajectory frame and pair of atoms, returns distance
 def pairAtomDistance(trajectoryFrame, atom1, atom2):
+	"""
+		Input: Trajectory frame and pair of atoms
+		Output: Distance between the pair of atom in that particular frame
+	"""
 	atom1_loc = trajectoryFrame.xyz[0, atom1.index, :]
 	atom2_loc = trajectoryFrame.xyz[0, atom2.index, :]
 	pairVec = tuple(atom2_loc - atom1_loc)
 	pairDist = length(pairVec)
 	return pairDist
 
-# Check whether atom is should be appended to candidate list
-# If filter is for OE then accept OE1 and OE2 for distinct salt bridges
 def appendAminoAcidToList(cand_list, atom, filterArray):
+	"""
+		Determine whether atom should be appended to candidate atom list. 
+		(ie if filtering for OE then accepts OE1 and OE2 for distinct salt bridges)
+	"""
 	residID, atomIndicator = retrieveAtomProperties(atom[0])
 	for elem in filterArray:
 		if (elem in atomIndicator):
 			cand_list.append(atom)
 			break
 
-# Check whether atom should be appended to candidate dictionary
-# Purpose is for storing multiple crucial atoms for given residue grouping
 def appendAminoAcidToDict(cand_Dict, atom, filterArray):
+	"""
+		Determine whether atom should be appended to candidate dictionary
+	"""
 	residID, atomIndicator = retrieveAtomProperties(atom[0])
 	if(atomIndicator in filterArray):
 		if residID not in cand_Dict.keys():
@@ -72,22 +98,37 @@ def appendAminoAcidToDict(cand_Dict, atom, filterArray):
 		else:
 			cand_Dict[residID].add(atom)
 
-# cross product of two vectors
+
 def cross(a,b):
+	"""
+		Computes cross product of two vectors
+	"""
 	c = np.array([a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0]]) #used to not be np.array
 	return c
 
 def dotproduct(v1, v2):
+	"""
+		Computes dot product of two vectors
+	"""
 	return sum((a*b) for a, b in zip(v1, v2))
 
 def length(v):
+	"""
+		Compute length of vector
+	"""
 	return math.sqrt(dotproduct(v,v))
 
 def angleBtwnVec(v1,v2):
+	"""
+		Calculates angle between two vectors
+	"""
 	radBtwnVec = math.acos(dotproduct(v1,v2)/(length(v1)* length(v2)))
 	return math.degrees(radBtwnVec)
 
 def getTripletCoord(arom_resid_triplet, traj, time):
+	"""
+		Determine three equally spaced out points on an aromatic ring
+	"""
 	coord1 = tuple(traj.xyz[time, arom_resid_triplet[0][0].index, :])
 	coord2 = tuple(traj.xyz[time, arom_resid_triplet[1][0].index, :])
 	coord3 = tuple(traj.xyz[time, arom_resid_triplet[2][0].index, :])
@@ -97,6 +138,9 @@ def getTripletCoord(arom_resid_triplet, traj, time):
 	return p1, p2, p3 
 
 def calcCentroid(arom_resid_triplet, traj, time):
+	"""
+		Calculates centroid between three points
+	"""
 	p1, p2, p3 = getTripletCoord(arom_resid_triplet, traj, time)
 	x = float(p1[0] + p2[0] + p3[0])/3
 	y = float(p1[1] + p2[1] + p3[1])/3
@@ -105,35 +149,43 @@ def calcCentroid(arom_resid_triplet, traj, time):
 	return centroid 
 
 def calcNormVec(arom_resid_triplet, traj, time):
-	p1, p2, p3 = getTripletCoord(arom_resid_triplet, traj, time) #np arrays
+	"""
+		Calculates the normal vector for a plane
+	"""
+	p1, p2, p3 = getTripletCoord(arom_resid_triplet, traj, time)
 	v1 = p3-p1
 	v2 = p2-p1
 	cp = np.cross(v1, v2)
 	a, b, c = cp
 	d = np.dot(cp, p3)
-	planeCoord = np.array([a, b, c, d]) #used to not be np.array
+	planeCoord = np.array([a, b, c, d])
 	return cp, planeCoord
 
 def projectPointOntoPlane(planeCoord, point):
+	"""
+		Performs a projection of point onto 3D plane
+	"""
 	a, b, c, d = planeCoord[0], planeCoord[1], planeCoord[2], planeCoord[3]
 	s, u, v, = point[0], point[1], point[2]
 	t = (d - a*s - b*u - c*v) / (a*a + b*b + c*c)
 	x = s + a*t
 	y = u + b*t
 	z = v + c*t
-	return np.array([x,y,z]) #used to not be np.array
+	return np.array([x,y,z])
 
-
-#projects the aromatic center 2 onto aromatic 1 plane and finds the
-#distance between projection and aromatic center 1 
 def projectedCenterDist(planeCoord, center1, center2):
+	"""
+		Projects aromatic center2 onto plane of aromatic1 and determines
+		the distance between the projected point and aromatic center1
+	"""
 	projectedCenter = projectPointOntoPlane(planeCoord, center2)
 	projCenterDist = distBetweenTwoPoints(center1, projectedCenter)
 	return projCenterDist
 
-
-#remove duplicates from dictionary
 def removeDuplicate(cand_dict):
+	"""
+		Removes duplicate keys in dictionary
+	"""
 	for key in cand_dict.keys():
 		atomStrSet = set()
 		atomSet = set()
@@ -144,10 +196,11 @@ def removeDuplicate(cand_dict):
 				atomSet.add(atom)
 		cand_dict[key] = list(atomSet)
 
-
-#method takes in aromatic center 1 and 2 and will compute the angle
-#between normvector1 and the vector(center2 - center1)
 def calcPsiAngle(arom_center1, arom_center2, normVec1):
+	"""
+		Input: Aromatic center1 and center2 
+		Output: Angle between normal_vector1 and vector(center2 - center1)
+	"""
 	centerToCenterVec = pointsToVec(arom_center2, arom_center1)
 	psiAngle = angleBtwnVec(normVec1, centerToCenterVec)
 	psiAngle = min(math.fabs(psiAngle - 0), math.fabs(psiAngle - 180))
