@@ -2,6 +2,11 @@
 Library for computing dynamic non-covalent contact networks in proteins throughout MD Simulation
 
 
+## File format
+
+MDContactNetworks is compatible with .nc and .dcd file formats for MD trajectories.
+
+
 ## Running the Code
 
 The code is organized into two steps:
@@ -11,7 +16,7 @@ The code is organized into two steps:
    __Input:__ 
 
 	Required Arguments:
-	
+
 	   TOP - Path to topology
 	   TRAJ - Path to simulation trajectory fragment
 	   OUTPUT - Path of output file 
