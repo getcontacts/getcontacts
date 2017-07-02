@@ -232,3 +232,26 @@ def calcVMDHydrogenBondWaterResults(f, stride_val, TOP_PATH, TRAJ_PATH, solventI
 		toc = time.clock()
 		computingTime = toc - tic 
 		return numFrames - 1, computingTime
+
+
+def calcHydrogenBondWaterResults(f, stride, TOP_PATH, TRAJ_PATH, solventId, chainId):
+	"""
+		Calculate all water mediated hydrogen bonds between protein and water
+	"""
+	f.write("\n\nHydrogen Bond-Water Mediated:" + TOP_PATH + "\n")
+	totalFrames, computingTime = calcVMDHydrogenBondWaterResults(f, stride, TOP_PATH, TRAJ_PATH, solventId, chainId)
+	f.write("nFrames:" + str(totalFrames) + "\n")
+	f.write("\nComputing Time:" + str(computingTime) + "\n")
+	return computingTime
+
+
+def calcLigandHydrogenBondWaterResults(f, stride, TOP_PATH, TRAJ_PATH, solventId, chainId, ligand):
+	"""
+		Calculate all water mediated hydrogen bonds between protein, water, and ligand
+	"""
+	f.write("\n\nLigand Hydrogen Bond-Water Mediated:" + TOP_PATH + "\n")
+	totalFrames, computingTime = calcVMDHydrogenBondWaterResults(f, stride, TOP_PATH, TRAJ_PATH, solventId, chainId, ligand)
+	f.write("nFrames:" + str(totalFrames) + "\n")
+	f.write("\nComputing Time:" + str(computingTime) + "\n")
+	return computingTime
+
