@@ -11,6 +11,7 @@ The code is organized into two steps:
    __Input:__ 
 
 	Required Arguments:
+	
 	   TOP - Path to topology
 	   TRAJ - Path to simulation trajectory fragment
 	   OUTPUT - Path of output file 
@@ -40,6 +41,7 @@ The code is organized into two steps:
 
 
 	Optional Arguments:
+
 		-process <POST_PROCESS_FILE> To compute interaction types (hbbb, hbsb, etc) user must provide path to the full hydrogen bonds interaction output.
 
 		-stride <STRIDE_VALUE> User can provide a stride value to subsample the trajectory
