@@ -6,12 +6,11 @@
 ### Molecular Dynamics Trajectory Simulation - HBond Detection ###
 
 from __future__ import division
-
-import vmd, molecule
-from vmd import *
-import sys
 import os
+import sys
 import subprocess
+from vmd import *
+import vmd, molecule
 import numpy as np
 import time 
 

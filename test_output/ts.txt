@@ -1,0 +1,38 @@
+Stride:1
+TrajectoryPath:/scratch/PI/rondror/akma327/DynamicNetworks/data/DynamicNetworksOutput/InteractionOutput/DOR-inactive-naltrindole-unpublished/condition-naltrindole-bound/rep_1/Prod_0/Prod_0_reimaged.nc
+TopologyPath:/scratch/PI/rondror/akma327/DynamicNetworks/data/DynamicNetworksOutput/InteractionOutput/DOR-inactive-naltrindole-unpublished/condition-naltrindole-bound/step5_assembly.pdb
+nFrames:21
+
+
+T-Stacking:/scratch/PI/rondror/akma327/DynamicNetworks/data/DynamicNetworksOutput/InteractionOutput/DOR-inactive-naltrindole-unpublished/condition-naltrindole-bound/step5_assembly.pdb
+T_Stacking Frame: 0
+T_Stacking Frame: 1
+TYR208_3 -- TRP209_3
+T_Stacking Frame: 2
+T_Stacking Frame: 3
+PHE104_3 -- PHE116_3
+T_Stacking Frame: 4
+T_Stacking Frame: 5
+T_Stacking Frame: 6
+T_Stacking Frame: 7
+TYR208_3 -- TRP209_3
+PHE116_3 -- TRP114_3
+T_Stacking Frame: 8
+T_Stacking Frame: 9
+T_Stacking Frame: 10
+T_Stacking Frame: 11
+PHE104_3 -- PHE116_3
+PHE116_3 -- TRP114_3
+T_Stacking Frame: 12
+T_Stacking Frame: 13
+T_Stacking Frame: 14
+T_Stacking Frame: 15
+PHE116_3 -- TRP114_3
+T_Stacking Frame: 16
+T_Stacking Frame: 17
+PHE116_3 -- TRP114_3
+T_Stacking Frame: 18
+T_Stacking Frame: 19
+T_Stacking Frame: 20
+
+Computing Time:0.08

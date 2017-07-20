@@ -16,10 +16,8 @@ from mdtraj.geometry import compute_distances, compute_angles
 from mdtraj.geometry import _geometry
 from contact_utils import *
 
-__all__ = ['calcVDWFramePairs']
-
-ALPHA_CARBON_DIST_CUTOFF = 1 #10 angstrom
-VDW_EPSILON = .025 #.25 Angstrom
+ALPHA_CARBON_DIST_CUTOFF = 1.0 # 10 angstrom
+VDW_EPSILON = 0.05 # 0.5 Angstrom
 
 AMINO_ACIDS = ['ALA', 'ARG', 'ASN', 'ASP', 'CYS', 'GLN', 'GLU', 'GLY', 'HIS', 'ILE','LEU', 'LYS', 'MET', 'PHE', 'PRO', 'SER', 'THR', 'TRP', 'TYR', 'VAL']
 
@@ -85,6 +83,8 @@ def fulfillVDWCriterion(atom1, atom2, traj, time):
 	"""
 	if(atom1.name == 'CA' and atom2.name == 'CA'): # don't count covalent interactions
 		return False
+	if(str(atom1.element) == "hydrogen" or str(atom2.element) == "hydrogen"): 
+		return False
 	vdwCutoff = VDWCutoff(atom1, atom2)
 	p1 = traj.xyz[time, atom1.index, :]
 	p2 = traj.xyz[time, atom2.index, :]
@@ -101,10 +101,11 @@ def calcFramePairs(traj, topology, chain_index, time, ca_pair_list):
 	"""
 	frame_pairs = []
 	for ca_1, ca_2 in ca_pair_list:
-		resid1_atoms = ca_1.residue.atoms
-		resid2_atoms = ca_2.residue.atoms
-		for atom1 in resid1_atoms:
-			for atom2 in resid2_atoms:
+		resid1 = ca_1.residue
+		resid2 = ca_2.residue
+
+		for atom1 in resid1.atoms:
+			for atom2 in resid2.atoms:
 				if fulfillVDWCriterion(atom1, atom2, traj, time):
 					pairKey = [[(atom1, chain_index), (atom2, chain_index)]]
 					frame_pairs += pairKey

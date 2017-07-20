@@ -6,17 +6,16 @@
 ### Molecular Dynamics Trajectory Simulation - Pi-stacking and T-stacking Interaction Detection ###
 
 from __future__ import print_function, division
-import math
 from itertools import product
+import math
 import numpy as np
+import time
 import mdtraj as md
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import compute_distances, compute_angles
 from mdtraj.geometry import _geometry
-import math
-from noncovalentInteractionUtils import *
 
-__all__ = ['initFaceFaceAromaticChainDict', 'initFaceEdgeAromaticChainDict', 'calcPiStackingFramePairs', 'calcTStackingFramePairs']
+from contact_utils import *
 
 PI_PI_SOFT_CUTOFF_DIST = .8
 PI_PI_INTERACTING_DIST_CUTOFF = .7#7 Ang

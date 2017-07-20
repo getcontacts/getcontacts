@@ -6,18 +6,16 @@
 ### Molecular Dynamics Trajectory Simulation - Salt Bridge Detection ###
 
 from __future__ import print_function, division
-import math
-from itertools import product
 import itertools
+from itertools import product
+import math
 import numpy as np
-import mdtraj as md
 import time
+import mdtraj as md
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import compute_distances, compute_angles
 from mdtraj.geometry import _geometry
 from contact_utils import *
-
-__all__ = ['initSaltBridgeChainDict', 'calcSaltBridgeFramePairs']
 
 ANIONIC_LIST = ['ASP', 'GLU']
 CATIONIC_LIST = ['LYS', 'ARG', 'HIS']

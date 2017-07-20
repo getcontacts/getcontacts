@@ -6,18 +6,15 @@
 ### Molecular Dynamics Trajectory Simulation - pi-Cationic Interaction Detection ###
 
 from __future__ import print_function, division
+from itertools import product
 import math
 import time
-from itertools import product
 import numpy as np
 import mdtraj as md
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import compute_distances, compute_angles
 from mdtraj.geometry import _geometry
 from contact_utils import *
-import math
-
-__all__ = ['pication_detect', 'initPiCationChainDict', 'calcPiCationFramePairs']
 
 SOFT_CUTOFF_DISTANCE = 0.65 # First pass 6.5 Angstrom distance cutof
 CUTOFF_DISTANCE = 0.6 #99% occur within 6 Angstroms

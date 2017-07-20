@@ -7,13 +7,14 @@
 
 
 from __future__ import print_function, division
-import math
 from itertools import product
+import copy
+import math
 import numpy as np
 from mdtraj.utils import ensure_type
 from mdtraj.geometry import compute_distances, compute_angles
 from mdtraj.geometry import _geometry
-import copy
+
 
 def dictToList(timeDict):
 	"""
