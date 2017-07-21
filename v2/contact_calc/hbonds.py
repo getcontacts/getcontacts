@@ -14,6 +14,7 @@
 from vmd import *
 import molecule 
 import time
+from stratify_hbonds import *
 
 __all__ = ['compute_hydrogen_bonds']
 
@@ -66,10 +67,16 @@ def calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, chain_id
 	### Parse atom indices
 	donor_acceptor_lists = donor_acceptor_indices.split("}")
 	donor_list = donor_acceptor_lists[0].split("{")[1].split(" ")
-	donors = [int(d) for d in donor_list]
-
 	acceptor_list = donor_acceptor_lists[1].split("{")[1].split(" ")
-	acceptors = [int(a) for a in acceptor_list]
+
+	donors, acceptors = [], []
+
+	for idx, d in enumerate(donor_list):
+		a = acceptor_list[idx]
+		if(d == "" or a == ""):continue
+		donors.append(int(d))
+		acceptors.append(int(a))
+
 	return donors, acceptors
 
 def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, chain_id, ligand=None, distance_cutoff=3.5, angle_cutoff=70):
@@ -108,5 +115,8 @@ def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_r
 		if(itype == "lhb" and ligand not in donor_label and ligand not in acceptor_label): continue
 		hbonds.append([frame_idx, donor_label, acceptor_label, itype])
 
-	return hbonds
+	### Perform post processing on hbonds list to stratify into different subtypes
+	hbond_subtypes = stratify_hbond_subtypes(hbonds, solvent_resn)
+
+	return hbond_subtypes
 

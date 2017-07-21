@@ -22,6 +22,7 @@ from hbonds import *
 # Global Variables
 ##############################################################################
 
+NUM_PROCESSES = 10
 TRAJ_FRAG_SIZE = 1000
 
 ##############################################################################
@@ -120,6 +121,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES,
 	### Compute contacts for each frame
 	num_frag_frames = molecule.numframes(traj_frag_molid)
 	for frame_idx in range(1, num_frag_frames):
+		if(frame_idx > 1): break
 		fragment_contacts += compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, solvent_resn, chain_id, ligand, index_to_label)
 
 	### Delete trajectory fragment to clear memory
@@ -162,7 +164,7 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, stride, solvent_resn
 	### Serial 
 	# output = []
 	# for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
-	# 	# if(frag_idx > 0): break
+	# 	if(frag_idx > 0): break
 	# 	end_frame = beg_frame + TRAJ_FRAG_SIZE
 	# 	output += compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label)[1]
 
@@ -171,10 +173,11 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, stride, solvent_resn
 
 	### Generate input arguments for each trajectory piece
 	for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
+		if(frag_idx > 0): break
 		end_frame = beg_frame + TRAJ_FRAG_SIZE
 		input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label))
 
-	pool = Pool(processes=6)
+	pool = Pool(processes=NUM_PROCESSES)
 	output = pool.map(compute_fragment_contacts_helper, input_args)
 	pool.close()
 	pool.join()
@@ -184,12 +187,14 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, stride, solvent_resn
 	output = sorted(output, key = lambda x: (x[0]))
 	
 	### Assign absolute frame indices 
+	contact_types = set()
 	full_output = []
 	num_frames = 0
 	for frag_idx, contacts in output:
 		for c in contacts:
 			c[0] = num_frames + c[0] - 1
 			full_output.append(c)
+			contact_types.add(c[3]) ### Keep track of all itypes
 		frag_len = len(set([c[0] for c in contacts]))
 		num_frames += frag_len
 
@@ -197,8 +202,10 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, stride, solvent_resn
 	if not os.path.exists(OUTPUT_DIR):
 		os.makedirs(OUTPUT_DIR)
 
-	fd_map = {itype: open(OUTPUT_DIR + "/" + itype.strip("-") + ".txt", 'w') for itype in ITYPES}
+	print(contact_types)
+
+	fd_map = {itype: open(OUTPUT_DIR + "/" + itype.strip("-") + ".txt", 'w') for itype in contact_types}
 	for contact in full_output:
-		itype_key = "-" + contact[3]
+		itype_key = contact[3]
 		fd_map[itype_key].write("\t".join(map(str, contact)) + "\n")
 
