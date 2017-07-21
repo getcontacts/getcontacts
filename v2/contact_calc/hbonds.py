@@ -7,7 +7,6 @@
 # Email: anthony.ma@yale.edu, anthonyma27@gmail.com, akma327@stanford.edu
 ##############################################################################
 
-
 ##############################################################################
 # Imports
 ##############################################################################
@@ -23,7 +22,6 @@ __all__ = ['compute_hydrogen_bonds']
 ##############################################################################
 WATER_TO_PROTEIN_DIST = 5
 WATER_TO_LIGAND_DIST = 12
-
 
 ##############################################################################
 # Functions
@@ -43,7 +41,6 @@ def filter_duplicates(donors, acceptors):
 		new_acceptors.append(a)
 
 	return new_donors, new_acceptors
-
 
 def calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, chain_id, ligand, distance_cutoff, angle_cutoff):
 	"""
@@ -73,9 +70,7 @@ def calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, chain_id
 
 	acceptor_list = donor_acceptor_lists[1].split("{")[1].split(" ")
 	acceptors = [int(a) for a in acceptor_list]
-
 	return donors, acceptors
-
 
 def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, chain_id, ligand=None, distance_cutoff=3.5, angle_cutoff=70):
 	"""
@@ -108,7 +103,7 @@ def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_r
 	for idx, donor in enumerate(donors):
 		acceptor = acceptors[idx]
 		donor_label, acceptor_label = index_to_label[donor], index_to_label[acceptor]
-
+		
 		### If computing ligand contacts then interaction must involve ligand molecule
 		if(itype == "lhb" and ligand not in donor_label and ligand not in acceptor_label): continue
 		hbonds.append([frame_idx, donor_label, acceptor_label, itype])

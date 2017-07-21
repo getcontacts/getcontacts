@@ -7,7 +7,6 @@
 # Email: anthony.ma@yale.edu, anthonyma27@gmail.com, akma327@stanford.edu
 ##############################################################################
 
-
 ##############################################################################
 # Imports
 ##############################################################################
@@ -22,7 +21,6 @@ def get_file_type(file_name):
 	file_type = file_name.split(".")[-1].strip()
 	if(file_type == "nc"): file_type = 'netcdf'
 	return file_type
-
 
 def load_traj(TOP, TRAJ, beg_frame, end_frame, stride):
 	"""
@@ -47,7 +45,6 @@ def load_traj(TOP, TRAJ, beg_frame, end_frame, stride):
 	trajid = molecule.load(top_file_type, TOP)
 	molecule.read(trajid, traj_file_type, TRAJ, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
 	return trajid
-
 
 def gen_index_to_atom_label(TOP, TRAJ):
 	"""
@@ -89,11 +86,5 @@ def gen_index_to_atom_label(TOP, TRAJ):
 		index_key = int(index)
 		index_to_label[index_key] = atom_label
 
-	return index_to_label
-
-
-
-
-
-
 	molecule.delete(trajid)
+	return index_to_label

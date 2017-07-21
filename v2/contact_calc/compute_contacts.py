@@ -7,7 +7,6 @@
 # Email: anthony.ma@yale.edu, anthonyma27@gmail.com, akma327@stanford.edu
 ##############################################################################
 
-
 ##############################################################################
 # Imports
 ##############################################################################
@@ -18,7 +17,6 @@ from multiprocessing import *
 import MDAnalysis as mda
 from contact_utils import *
 from hbonds import *
-
 
 ##############################################################################
 # Global Variables
@@ -78,7 +76,6 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, solvent_resn, cha
 
 	return frame_contacts
 
-
 def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label):
 	""" 
 	Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
@@ -129,12 +126,8 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES,
 	molecule.delete(traj_frag_molid)
 	return (frag_idx, fragment_contacts)
 
-
-
-
 def compute_fragment_contacts_helper(args):
 	return compute_fragment_contacts(*args)
-
 
 def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, stride, solvent_resn, chain_id, ligand):
 	""" 
@@ -208,15 +201,4 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, stride, solvent_resn
 	for contact in full_output:
 		itype_key = "-" + contact[3]
 		fd_map[itype_key].write("\t".join(map(str, contact)) + "\n")
-
-
-
-
-
-
-
-
-
-
-
 
