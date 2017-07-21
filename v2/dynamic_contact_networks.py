@@ -37,13 +37,10 @@ USAGE_STR = """
 # <optional -ligand flag> To denote the resname of ligand in the simulation.
 
 # Example
-srun -p rondror --qos=rondror --tasks=1 --cpus-per-task=6 --pty bash -i -l
-
-TOP="/scratch/PI/rondror/akma327/github/MDContactNetworks/v2/test_output/simulations/dor_inactive/dor_inactive_rep1.pdb"
-TRAJ="/scratch/PI/rondror/akma327/github/MDContactNetworks/v2/test_output/simulations/dor_inactive/dor_inactive_rep1.dcd"
-OUTPUT_DIR="/scratch/PI/rondror/akma327/github/MDContactNetworks/v2/test_output/contacts"
-cd /scratch/PI/rondror/akma327/github/MDContactNetworks/v2
-python dynamic_contact_networks.py $TOP $TRAJ $OUTPUT_DIR -itype -hb
+TOP=topology.pdb"
+TRAJ="trajectory.dcd"
+OUTPUT_DIR="output"
+python dynamic_contact_networks.py $TOP $TRAJ $OUTPUT_DIR -itype -hb -hlb
 
 """
 
