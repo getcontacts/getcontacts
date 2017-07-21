@@ -13,6 +13,7 @@
 
 from vmd import *
 import molecule
+import itertools
 
 __all__ = ["stratify_hbond_subtypes"]
 
@@ -66,6 +67,94 @@ def stratify_residue_hbonds(residue_hbonds):
 	return hbss, hbsb, hbbb
 
 
+def calc_water_to_residues_map(water_hbonds, solvent_resn):
+	"""
+	Returns
+	-------
+	frame_idx: int
+		Specify frame index with respect to the smaller trajectory fragment
+	water_to_residues: dict mapping string to list of strings
+		Map each water molecule to the list of residues it forms
+		contacts with (ie {"W:TIP3:8719:OH2:29279" : ["A:PHE:159:N:52441", ...]})
+	solvent_bridges: list
+		List of hbond interactions between two water molecules
+		[("W:TIP3:757:OH2:2312", "W:TIP3:8719:OH2:29279"), ...]
+	"""
+	water_to_residues = {}
+	_solvent_bridges = []
+	for frame_idx, atom1_label, atom2_label, itype in water_hbonds:
+		if(solvent_resn in atom1_label and solvent_resn in atom2_label): 
+			# print atom1_label, atom2_label
+			_solvent_bridges.append((atom1_label, atom2_label))
+			continue
+		elif(solvent_resn in atom1_label and solvent_resn not in atom2_label):
+			water = atom1_label
+			protein = atom2_label
+		elif(solvent_resn not in atom1_label and solvent_resn in atom2_label):
+			water = atom2_label
+			protein = atom1_label
+
+		if(water not in water_to_residues):
+			water_to_residues[water] = set()
+		water_to_residues[water].add(protein)
+
+	### Remove duplicate solvent bridges (w1--w2 and w2--w1 are the same)
+	solvent_bridges = set()
+	for water1, water2 in _solvent_bridges:
+		key1 = (water1, water2)
+		key2 = (water2, water1)
+		if(key1 not in solvent_bridges and key2 not in solvent_bridges):
+			solvent_bridges.add(key1)
+	solvent_bridges = sorted(list(solvent_bridges))
+
+	return frame_idx, water_to_residues, solvent_bridges
+
+def stratify_water_bridge(water_hbonds, solvent_resn):
+	"""
+	Infer direct water bridges between residues that both have hbond 
+	with the same water (ie res1 -- water -- res2)
+	"""
+
+	frame_idx, water_to_residues, _ = calc_water_to_residues_map(water_hbonds, solvent_resn)
+	water_bridges = set()
+	### Infer direct water bridges
+	for water in water_to_residues:
+		protein_atoms = sorted(list(water_to_residues[water]))
+		for res_atom_pair in itertools.combinations(protein_atoms, 2):
+			res_atom1, res_atom2 = res_atom_pair
+			if(res_atom1 != res_atom2):
+				water_bridges.add((frame_idx, res_atom1, water, res_atom2, "wb"))
+
+	wb = sorted([list(entry) for entry in water_bridges])
+	return wb
+
+
+def stratify_extended_water_bridge(water_hbonds, solvent_resn):
+	"""
+	Infer extended water bridges between residues that form hbond with 
+	water molecules that also have hbond between them.
+	(ie res1 -- water1 -- water2 -- res2)
+	"""
+
+	frame_idx, water_to_residues, solvent_bridges = calc_water_to_residues_map(water_hbonds, solvent_resn)
+
+	extended_water_bridges = set()
+	for water1, water2 in solvent_bridges:
+		if(water1 not in water_to_residues or water2 not in water_to_residues): continue
+		res_atom1_list, res_atom2_list = water_to_residues[water1], water_to_residues[water2]
+
+		for atom1 in res_atom1_list:
+			for atom2 in res_atom2_list:
+				extended_water_bridges.add((frame_idx, atom1, water1, water2, atom2, "wb2"))
+
+	extended_water_bridges = sorted(list(extended_water_bridges))
+	
+	wb2 = []
+	for frame_idx, atom1, water1, water2, atom2, itype in extended_water_bridges:
+		wb2.append([frame_idx, atom1, water1, water2, atom2, itype])
+
+	return wb2
+
 
 def stratify_hbond_subtypes(hbonds, solvent_resn):
 	"""
@@ -87,8 +176,10 @@ def stratify_hbond_subtypes(hbonds, solvent_resn):
 	"""
 
 	residue_hbonds, water_hbonds = residue_vs_water_hbonds(hbonds, solvent_resn)
+
 	hbss, hbsb, hbbb = stratify_residue_hbonds(residue_hbonds)
+	wb = stratify_water_bridge(hbonds, solvent_resn)
+	wb2 = stratify_extended_water_bridge(hbonds, solvent_resn)
 
-
-	hbonds = hbss + hbsb + hbbb
+	hbonds = hbss + hbsb + hbbb + wb + wb2
 	return hbonds

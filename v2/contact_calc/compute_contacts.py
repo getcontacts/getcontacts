@@ -194,7 +194,7 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, stride, solvent_resn
 		for c in contacts:
 			c[0] = num_frames + c[0] - 1
 			full_output.append(c)
-			contact_types.add(c[3]) ### Keep track of all itypes
+			contact_types.add(c[-1]) ### Keep track of all itypes
 		frag_len = len(set([c[0] for c in contacts]))
 		num_frames += frag_len
 
@@ -206,6 +206,6 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, stride, solvent_resn
 
 	fd_map = {itype: open(OUTPUT_DIR + "/" + itype.strip("-") + ".txt", 'w') for itype in contact_types}
 	for contact in full_output:
-		itype_key = contact[3]
+		itype_key = contact[-1]
 		fd_map[itype_key].write("\t".join(map(str, contact)) + "\n")
 
