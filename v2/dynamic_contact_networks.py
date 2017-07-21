@@ -1,6 +1,6 @@
 ##############################################################################
 # MDContactNetworks: A Python Library for computing non-covalent contacts
-#					throughout Molecular Dynamics Trajectories. 
+#                    throughout Molecular Dynamics Trajectories. 
 # Copyright 2016-2017 Stanford University and the Authors
 #
 # Authors: Anthony Kai Kwang Ma
