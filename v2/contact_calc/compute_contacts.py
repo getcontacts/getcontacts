@@ -22,7 +22,6 @@ from hbonds import *
 # Global Variables
 ##############################################################################
 
-NUM_PROCESSES = 10
 TRAJ_FRAG_SIZE = 1000
 
 ##############################################################################
@@ -121,7 +120,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES,
 	### Compute contacts for each frame
 	num_frag_frames = molecule.numframes(traj_frag_molid)
 	for frame_idx in range(1, num_frag_frames):
-		if(frame_idx > 1): break
+		# if(frame_idx > 1): break
 		fragment_contacts += compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, solvent_resn, chain_id, ligand, index_to_label)
 
 	### Delete trajectory fragment to clear memory
@@ -131,7 +130,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES,
 def compute_fragment_contacts_helper(args):
 	return compute_fragment_contacts(*args)
 
-def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, stride, solvent_resn, chain_id, ligand):
+def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solvent_resn, chain_id, ligand):
 	""" 
 	Computes non-covalent contacts across the entire trajectory and writes to output.
 
@@ -145,6 +144,8 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, stride, solvent_resn
 		Absolute path to output directory 
 	ITYPES: list
 		Denotes the list of non-covalent interaction types to compute contacts for 
+	cores: int, default = 6
+		Number of CPU cores to parallelize over
 	stride: int, default = 1
 		Frequency to skip frames in trajectory
 	solvent_resn: string, default = TIP3
@@ -158,7 +159,7 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, stride, solvent_resn
 
 	index_to_label = gen_index_to_atom_label(TOP, TRAJ)
 
-	sim_length = len(mda.Universe(TOP, TRAJ).trajectory) # Temporary command 
+	sim_length = len(mda.Universe(TOP, TRAJ).trajectory) # Temporary command. Doesn't work for mae 
 	input_args = []
 
 	### Serial 
@@ -173,11 +174,11 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, stride, solvent_resn
 
 	### Generate input arguments for each trajectory piece
 	for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
-		if(frag_idx > 0): break
+		# if(frag_idx > 0): break
 		end_frame = beg_frame + TRAJ_FRAG_SIZE
 		input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label))
 
-	pool = Pool(processes=NUM_PROCESSES)
+	pool = Pool(processes=cores)
 	output = pool.map(compute_fragment_contacts_helper, input_args)
 	pool.close()
 	pool.join()

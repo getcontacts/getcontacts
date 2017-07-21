@@ -88,3 +88,47 @@ def gen_index_to_atom_label(TOP, TRAJ):
 
 	molecule.delete(trajid)
 	return index_to_label
+
+
+
+def calc_water_to_residues_map(water_hbonds, solvent_resn):
+	"""
+	Returns
+	-------
+	frame_idx: int
+		Specify frame index with respect to the smaller trajectory fragment
+	water_to_residues: dict mapping string to list of strings
+		Map each water molecule to the list of residues it forms
+		contacts with (ie {"W:TIP3:8719:OH2:29279" : ["A:PHE:159:N:52441", ...]})
+	solvent_bridges: list
+		List of hbond interactions between two water molecules
+		[("W:TIP3:757:OH2:2312", "W:TIP3:8719:OH2:29279"), ...]
+	"""
+	water_to_residues = {}
+	_solvent_bridges = []
+	for frame_idx, atom1_label, atom2_label, itype in water_hbonds:
+		if(solvent_resn in atom1_label and solvent_resn in atom2_label): 
+			# print atom1_label, atom2_label
+			_solvent_bridges.append((atom1_label, atom2_label))
+			continue
+		elif(solvent_resn in atom1_label and solvent_resn not in atom2_label):
+			water = atom1_label
+			protein = atom2_label
+		elif(solvent_resn not in atom1_label and solvent_resn in atom2_label):
+			water = atom2_label
+			protein = atom1_label
+
+		if(water not in water_to_residues):
+			water_to_residues[water] = set()
+		water_to_residues[water].add(protein)
+
+	### Remove duplicate solvent bridges (w1--w2 and w2--w1 are the same)
+	solvent_bridges = set()
+	for water1, water2 in _solvent_bridges:
+		key1 = (water1, water2)
+		key2 = (water2, water1)
+		if(key1 not in solvent_bridges and key2 not in solvent_bridges):
+			solvent_bridges.add(key1)
+	solvent_bridges = sorted(list(solvent_bridges))
+
+	return frame_idx, water_to_residues, solvent_bridges

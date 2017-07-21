@@ -15,6 +15,7 @@ from vmd import *
 import molecule 
 import time
 from stratify_hbonds import *
+from stratify_ligand_hbonds import *
 
 __all__ = ['compute_hydrogen_bonds']
 
@@ -112,11 +113,13 @@ def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_r
 		donor_label, acceptor_label = index_to_label[donor], index_to_label[acceptor]
 		
 		### If computing ligand contacts then interaction must involve ligand molecule
-		if(itype == "lhb" and ligand not in donor_label and ligand not in acceptor_label): continue
+		# if(itype == "lhb" and ligand not in donor_label and ligand not in acceptor_label): continue
 		hbonds.append([frame_idx, donor_label, acceptor_label, itype])
 
 	### Perform post processing on hbonds list to stratify into different subtypes
-	hbond_subtypes = stratify_hbond_subtypes(hbonds, solvent_resn)
+	if(itype == "hb"):
+		hbond_subtypes = stratify_hbond_subtypes(hbonds, solvent_resn)
+	elif(itype == "lhb"):
+		hbond_subtypes = stratify_ligand_hbond_subtypes(hbonds, solvent_resn, ligand)
 
 	return hbond_subtypes
-
