@@ -20,7 +20,7 @@ __all__ = ['prep_pi_cation_computation', 'compute_pi_cation']
 ##############################################################################
 # Globals
 ##############################################################################
-DISTANCE_CUTOFF = 60.0 # Angstrom
+DISTANCE_CUTOFF = 6.0 # Angstrom
 ANGLE_CUTOFF = 60 # Degree
 
 
@@ -42,7 +42,7 @@ def prep_pi_cation_computation(traj_frag_molid, frame_idx, chain_id):
 		strings formatted as "chain:resname:resid" 
 	"""
 
-	cation_list = get_cation_atoms(traj_frag_molid, frame_idx, chain_id)
+	cation_list = get_cation_atoms(traj_frag_molid, frame_idx, chain_id, pi_cation=True)
 	aromatic_atom_triplet_list = get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id)
 
 	return cation_list, aromatic_atom_triplet_list
@@ -91,13 +91,10 @@ def compute_pi_cation(traj_frag_molid, frame_idx, cation_list, aromatic_atom_tri
 			cation_norm_offset_angle = min(math.fabs(cation_norm_offset_angle - 0), math.fabs(cation_norm_offset_angle - 180))
 			if(cation_norm_offset_angle > ANGLE_CUTOFF): continue
 
-			print(cation_to_centroid_distance, cation_norm_offset_angle)
-
 			### Append three of the aromatic atoms
 			pi_cations.append([frame_idx, cation_atom_label, arom_atom1_label, "pc"])
 			pi_cations.append([frame_idx, cation_atom_label, arom_atom2_label, "pc"])
 			pi_cations.append([frame_idx, cation_atom_label, arom_atom2_label, "pc"])
-
 
 	return pi_cations
 

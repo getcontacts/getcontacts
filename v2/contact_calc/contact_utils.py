@@ -160,7 +160,7 @@ def get_anion_atoms(traj_frag_molid, frame_idx, chain_id):
 
 	return anion_list
 
-def get_cation_atoms(traj_frag_molid, frame_idx, chain_id):
+def get_cation_atoms(traj_frag_molid, frame_idx, chain_id, pi_cation = False):
 	"""
 	Get list of cation atoms that can form salt bridges or pi cation contacts
 
@@ -182,13 +182,16 @@ def get_cation_atoms(traj_frag_molid, frame_idx, chain_id):
 
 	cation_list += get_atom_selection_labels("LYS")
 	cation_list += get_atom_selection_labels("ARG")
-	cation_list += get_atom_selection_labels("HIS")
+
+	if(pi_cation == False):
+		cation_list += get_atom_selection_labels("HIS")
 
 	evaltcl('$LYS delete')
 	evaltcl('$ARG delete')
 	evaltcl('$HIS delete')
 
 	return cation_list
+
 
 def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
 	"""
@@ -528,6 +531,13 @@ def points_to_vector(point1, point2):
 	vector = point2 - point1 
 	return vector
 
+def calc_vector_length(vector):
+	"""
+	Compute length of vector
+	"""
+	vector_length = math.sqrt(np.dot(vector, vector))
+	return vector_length
+
 def calc_angle_between_vectors(vector1, vector2):
 	"""
 	Returns
@@ -535,7 +545,7 @@ def calc_angle_between_vectors(vector1, vector2):
 	angle_between_vectors: float
 		Degrees between two vectors
 	"""
-	radians_between_vectors = math.acos(np.dot(vector1, vector2)/ (np.dot(vector1, vector1) * np.dot(vector2, vector2)))
+	radians_between_vectors = math.acos(np.dot(vector1, vector2)/(calc_vector_length(vector1) * calc_vector_length(vector2)))
 	angle_between_vectors = math.degrees(radians_between_vectors)
 	return angle_between_vectors
 
