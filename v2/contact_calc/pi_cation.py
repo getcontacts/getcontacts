@@ -15,38 +15,35 @@ from vmd import *
 import molecule 
 from contact_utils import *
 
-__all__ = ['prep_salt_bridge_computation', 'compute_salt_bridges']
+__all__ = ['prep_pi_cation_computation', 'compute_pi_cation']
 
-##############################################################################
-# Globals
-##############################################################################
-CUTOFF_DISTANCE = 4.0
 
 ##############################################################################
 # Functions
 ##############################################################################
 
-def prep_salt_bridge_computation(traj_frag_molid, frame_idx, chain_id):
+def prep_pi_cation_computation(traj_frag_molid, frame_idx, chain_id):
 	"""
-	Compute all possible anion and cation atoms from first frame of simulation
+	Compute all possible cation atom and aromatic residues in simulation
 
 	Returns
 	-------
-	anion_list: list of strings
-		List of atom labels for atoms in ASP or GLU that
-		can form salt bridges
 	cation_list: list of strings
 		List of atom labels for atoms in LYS, ARG, HIS that
 		can form salt bridges
+	aromatic_atom_triplet_list: list of strings
+		List of TYR, TRP, PHE residues that can form pi-cation interactions.
+		strings formatted as "chain:resname:resid" 
 	"""
-	anion_list = get_anion_atoms(traj_frag_molid, frame_idx, chain_id)
+
 	cation_list = get_cation_atoms(traj_frag_molid, frame_idx, chain_id)
-	return anion_list, cation_list
+	aromatic_atom_triplet_list = get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id)
 
+	return cation_list, aromatic_atom_triplet_list
 
-def compute_salt_bridges(traj_frag_molid, frame_idx, anion_list, cation_list):
+def compute_pi_cation(traj_frag_molid, frame_idx, cation_list, aromatic_atom_triplet_list):
 	"""
-	Compute salt bridges in a frame of simulation
+	Compute pi-cation interactions in a frame of simulation
 
 	Parameters
 	----------
@@ -54,24 +51,27 @@ def compute_salt_bridges(traj_frag_molid, frame_idx, anion_list, cation_list):
 		Identifier to simulation fragment in VMD
 	frame_idx: int
 		Frame number to query
-	anion_list: list of strings
-		List of atom labels for atoms in ASP or GLU that
-		can form salt bridges
 	cation_list: list of strings
 		List of atom labels for atoms in LYS, ARG, HIS that
 		can form salt bridges
+	aromatic_atom_triplet_list: list of strings
+		List of TYR, TRP, PHE residues that can form pi-cation interactions.
+		strings formatted as "chain:resname:resid" 
 
 	Returns
 	-------
-	salt_bridges: list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
-		itype = "sb"
+	pi_cations = list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
+		itype = "pc"
 	"""
-	salt_bridges = []
-	for anion_atom in anion_list:
-		for cation_atom in cation_list:
-			dist = compute_distance(traj_frag_molid, frame_idx, anion_atom, cation_atom)
-			if(dist < CUTOFF_DISTANCE):
-				salt_bridges.append([frame_idx, anion_atom, cation_atom, "sb"])
 
-	return salt_bridges
+	pi_cations = []
+
+	for cidx, cation_atom in enumerate(cation_list):
+		if(cidx > 0): break
+		print(cation_atom, get_coord(traj_frag_molid, frame_idx, cation_atom))
+
+
+	return pi_cations
+
+
 

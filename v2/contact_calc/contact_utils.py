@@ -132,6 +132,101 @@ def gen_index_to_atom_label(TOP, TRAJ):
 	molecule.delete(trajid)
 	return index_to_label
 
+def get_anion_atoms(traj_frag_molid, frame_idx, chain_id):
+	"""
+	Get list of anion atoms that can form salt bridges
+
+	Returns
+	-------
+	anion_list: list of strings
+		List of atom labels for atoms in ASP or GLU that
+		can form salt bridges
+	"""
+	anion_list = []
+
+	if(chain_id == None):
+		evaltcl("set ASP [atomselect %s \" (resname ASP) and (name OD1 OD2) \" frame %s]" % (traj_frag_molid, frame_idx))
+		evaltcl("set GLU [atomselect %s \" (resname GLU) and (name OE1 OE2) \" frame %s]" % (traj_frag_molid, frame_idx))
+	else:
+		evaltcl("set ASP [atomselect %s \" (resname ASP) and (name OD1 OD2) and (chain %s) \" frame %s]" % (traj_frag_molid, chain_id, frame_idx))
+		evaltcl("set GLU [atomselect %s \" (resname GLU) and (name OE1 OE2) and (chain %s) \" frame %s]" % (traj_frag_molid, chain_id, frame_idx))
+
+	anion_list += get_atom_selection_labels("ASP")
+	anion_list += get_atom_selection_labels("GLU")
+
+	evaltcl('$ASP delete')
+	evaltcl('$GLU delete')
+
+	return anion_list
+
+def get_cation_atoms(traj_frag_molid, frame_idx, chain_id):
+	"""
+	Get list of cation atoms that can form salt bridges or pi cation contacts
+
+	Returns
+	-------
+	cation_list: list of strings
+		List of atom labels for atoms in LYS, ARG, HIS that
+		can form salt bridges
+	"""
+	cation_list = []
+	if(chain_id == None):
+		evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) \" frame %s]" % (traj_frag_molid, frame_idx))
+		evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) \" frame %s]" % (traj_frag_molid, frame_idx))
+		evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) \" frame %s]" % (traj_frag_molid, frame_idx))
+	else:
+		evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) and (chain %s) \" frame %s]" % (traj_frag_molid, chain_id, frame_idx))
+		evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) and (chain %s) \" frame %s]" % (traj_frag_molid, chain_id, frame_idx))
+		evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (chain %s) \" frame %s]" % (traj_frag_molid, chain_id, frame_idx))
+
+	cation_list += get_atom_selection_labels("LYS")
+	cation_list += get_atom_selection_labels("ARG")
+	cation_list += get_atom_selection_labels("HIS")
+
+	evaltcl('$LYS delete')
+	evaltcl('$ARG delete')
+	evaltcl('$HIS delete')
+
+	return cation_list
+
+def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
+	"""
+	Get list of aromatic atom triplets 
+
+	Returns
+	-------
+	aromatic_atom_triplet_list: list of tuples corresponding to three equally spaced points
+	on the 6-membered rings of TYR, TRP, or PHE residues. 
+		[(A:PHE:72:CG:51049, A:PHE:72:CE1:51052, A:PHE:72:CE2:51058), ...]
+	"""
+
+	aromatic_atom_list = []
+	if(chain_id == None):
+		evaltcl("set PHE [atomselect %s \" (resname PHE) and (name CG CE1 CE2) \" frame %s]" % (traj_frag_molid, frame_idx))
+		evaltcl("set TRP [atomselect %s \" (resname TRP) and (name CD2 CZ2 CZ3) \" frame %s]" % (traj_frag_molid, frame_idx))
+		evaltcl("set TYR [atomselect %s \" (resname TYR) and (name CG CE1 CE2) \" frame %s]" % (traj_frag_molid, frame_idx))
+	else:
+		evaltcl("set PHE [atomselect %s \" (resname PHE) and (name CG CE1 CE2) and (chain %s)\" frame %s]" % (traj_frag_molid, frame_idx, chain_id))
+		evaltcl("set TRP [atomselect %s \" (resname TRP) and (name CD2 CZ2 CZ3) and (chain %s)\" frame %s]" % (traj_frag_molid, frame_idx, chain_id))
+		evaltcl("set TYR [atomselect %s \" (resname TYR) and (name CG CE1 CE2) and (chain %s)\" frame %s]" % (traj_frag_molid, frame_idx, chain_id))
+
+	aromatic_atom_list += get_atom_selection_labels("PHE")
+	aromatic_atom_list += get_atom_selection_labels("TRP")
+	aromatic_atom_list += get_atom_selection_labels("TYR")
+
+	evaltcl("$PHE delete")
+	evaltcl("$TRP delete")
+	evaltcl("$TYR delete")
+
+	aromatic_atom_triplet_list = []
+
+	### Generate triplets of the three equidistant atoms on an aromatic ring
+	for i in range(0, len(aromatic_atom_list), 3): 
+		aromatic_atom_triplet_list.append(aromatic_atom_list[i:i+3])
+
+	return aromatic_atom_triplet_list
+
+
 
 
 def calc_water_to_residues_map(water_hbonds, solvent_resn):
@@ -238,6 +333,10 @@ def get_chain(traj_frag_molid, frame_idx, index):
 
 	Parameters
 	----------
+	traj_frag_molid: int 
+		Denotes trajectory id in VMD
+	frame_idx: int 
+		Frame of simulation in trajectory fragment
 	index: string
 		VMD atom index
 
@@ -258,6 +357,10 @@ def get_resname(traj_frag_molid, frame_idx, index):
 
 	Parameters
 	----------
+	traj_frag_molid: int 
+		Denotes trajectory id in VMD
+	frame_idx: int 
+		Frame of simulation in trajectory fragment
 	index: string
 		VMD atom index
 
@@ -278,6 +381,10 @@ def get_resid(traj_frag_molid, frame_idx, index):
 
 	Parameters
 	----------
+	traj_frag_molid: int 
+		Denotes trajectory id in VMD
+	frame_idx: int 
+		Frame of simulation in trajectory fragment
 	index: string
 		VMD atom index
 
@@ -297,6 +404,10 @@ def get_name(traj_frag_molid, frame_idx, index):
 
 	Parameters
 	----------
+	traj_frag_molid: int 
+		Denotes trajectory id in VMD
+	frame_idx: int 
+		Frame of simulation in trajectory fragment
 	index: string
 		VMD atom index
 
@@ -317,6 +428,10 @@ def get_element(traj_frag_molid, frame_idx, index):
 
 	Parameters
 	----------
+	traj_frag_molid: int 
+		Denotes trajectory id in VMD
+	frame_idx: int 
+		Frame of simulation in trajectory fragment
 	index: string
 		VMD atom index
 
@@ -375,5 +490,35 @@ def parse_contacts(contact_string):
 
 	return contact_index_pairs
 
+### Geometry Tools
+
+def get_coord(traj_frag_molid, frame_idx, atom_label):
+	"""
+	Get x, y, z coordinate of an atom specified by its label 
+
+	Parameters
+	----------
+	traj_frag_molid: int 
+		Denotes trajectory id in VMD
+	frame_idx: int 
+		Frame of simulation in trajectory fragment
+	atom_label: string 
+		Atom label (ie "A:GLU:323:OE2:55124")
+
+	Returns
+	-------
+	coord: np.array[x, y, z]
+	"""
+
+	index = atom_label.split(":")[-1]
+	evaltcl("set sel [atomselect %s \" index %s \" frame %s]" % (traj_frag_molid, index, frame_idx))
+	x = float(evaltcl("$sel get x"))
+	y = float(evaltcl("$sel get y"))
+	z = float(evaltcl("$sel get z"))
+	evaltcl("$sel delete")
+
+	coord = np.array([x, y, z])
+	return coord
+	
 
 

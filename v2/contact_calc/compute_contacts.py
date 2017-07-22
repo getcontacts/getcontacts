@@ -18,6 +18,7 @@ import MDAnalysis as mda
 from contact_utils import *
 from hbonds import *
 from salt_bridges import *
+from pi_cation import *
 from vanderwaals import *
 
 ##############################################################################
@@ -70,8 +71,9 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, solvent_resn, cha
 	if("-sb" in ITYPES):
 		anion_list, cation_list = prep_salt_bridge_computation(traj_frag_molid, frame_idx, chain_id)
 		frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, anion_list, cation_list)
-	# if("-pc" in ITYPES):
-	# 	frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, chain_id)
+	if("-pc" in ITYPES):
+		cation_list, aromatic_atom_triplet_list = prep_pi_cation_computation(traj_frag_molid, frame_idx, chain_id)
+		frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, cation_list, aromatic_atom_triplet_list)
 	# if("-ps" in ITYPES):
 	# 	frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id)
 	# if("-ts" in ITYPES):
@@ -83,7 +85,7 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, solvent_resn, cha
 	if("-lhb" in ITYPES):
 		frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, chain_id, ligand)
 
-	print("Finished computing contacts")
+	# print("Finished computing contacts")
 	return frame_contacts
 
 def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label):
@@ -198,7 +200,7 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 	output = sorted(output, key = lambda x: (x[0]))
 	
 	### Assign absolute frame indices 
-	print("Assigning absolute frame indices")
+	# print("Assigning absolute frame indices")
 	contact_types = set()
 	full_output = []
 	num_frames = 0
@@ -211,7 +213,7 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 		num_frames += frag_len
 
 	### Writing output to seperate files, one for each itype
-	print("Writing to output")
+	# print("Writing to output")
 	if not os.path.exists(OUTPUT_DIR):
 		os.makedirs(OUTPUT_DIR)
 
