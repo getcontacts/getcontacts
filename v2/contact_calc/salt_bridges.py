@@ -14,7 +14,6 @@
 from vmd import *
 import molecule 
 from contact_utils import *
-import datetime
 
 __all__ = ['prep_salt_bridge_computation', 'compute_salt_bridges']
 
@@ -94,17 +93,34 @@ def prep_salt_bridge_computation(traj_frag_molid, frame_idx, chain_id):
 	return anion_list, cation_list
 
 
-def compute_salt_bridges(traj_frag_molid, frame_idx, index_to_label, anion_list, cation_list):
+def compute_salt_bridges(traj_frag_molid, frame_idx, anion_list, cation_list):
+	"""
+	Compute salt bridges in a frame of simulation
+
+	Parameters
+	----------
+	traj_frag_molid: int
+		Identifier to simulation fragment in VMD
+	frame_idx: int
+		Frame number to query
+	anion_list: list of strings
+		List of atom labels for atoms in ASP or GLU that
+		can form salt bridges
+	cation_list: list of strings
+		List of atom labels for atoms in LYS, ARG, HIS that
+		can form salt bridges
+
+	Returns
+	-------
+	salt_bridges: list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
+		itype = "sb"
+	"""
 	salt_bridges = []
 	for anion_atom in anion_list:
 		for cation_atom in cation_list:
-			dist = compute_dist(traj_frag_molid, frame_idx, anion_atom, cation_atom)
+			dist = compute_distance(traj_frag_molid, frame_idx, anion_atom, cation_atom)
 			if(dist < CUTOFF_DISTANCE):
 				salt_bridges.append([frame_idx, anion_atom, cation_atom, "sb"])
-				
+
 	return salt_bridges
-
-
-
-
 

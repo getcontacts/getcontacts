@@ -177,7 +177,7 @@ def calc_water_to_residues_map(water_hbonds, solvent_resn):
 	return frame_idx, water_to_residues, solvent_bridges
 
 
-def compute_dist(molid, frame_idx, atom1, atom2):
+def compute_distance(molid, frame_idx, atom1_label, atom2_label):
 	"""
 	Compute distance between two atoms in a specified frame of simulation
 
@@ -187,17 +187,17 @@ def compute_dist(molid, frame_idx, atom1, atom2):
 		Denotes trajectory id in VMD
 	frame_idx: int 
 		Frame of simulation in trajectory fragment
-	atom1: string 
+	atom1_label: string 
 		Atom label (ie "A:GLU:323:OE2:55124")
-	atom2: string 
+	atom2_label: string 
 		Atom label (ie "A:ARG:239:NH1:53746")
 
 	Returns
 	-------
 	distance: float 
 	"""
-	atom_index1 = atom1.split(":")[-1]
-	atom_index2 = atom2.split(":")[-1]
+	atom_index1 = atom1_label.split(":")[-1]
+	atom_index2 = atom2_label.split(":")[-1]
 	distance = float(evaltcl("measure bond {%s %s} molid %s frame %s" % (atom_index1, atom_index2, molid, frame_idx)))
 	return distance
 
@@ -229,3 +229,151 @@ def compute_angle(molid, frame_idx, atom1, atom2, atom3):
 	
 	angle = float(evaltcl("measure angle {%s %s %s} molid %s frame %s" % (atom_index1, atom_index2, atom_index3, molid, frame_idx)))
 	return angle
+
+
+### Atom property getter functions
+def get_chain(traj_frag_molid, frame_idx, index):
+	"""
+	Parse atom label and return element 
+
+	Parameters
+	----------
+	index: string
+		VMD atom index
+
+	Returns
+	-------
+	chain: string (ie "A", "B")
+	"""
+
+	evaltcl("set sel [atomselect %s \" index %s \" frame %s]" % (traj_frag_molid, index, frame_idx))
+	chain = evaltcl("$sel get chain")
+	evaltcl("$sel delete")
+	return chain
+
+
+def get_resname(traj_frag_molid, frame_idx, index):
+	"""
+	Parse atom label and return element 
+
+	Parameters
+	----------
+	index: string
+		VMD atom index
+
+	Returns
+	-------
+	resname: string (ie "ASP", "GLU")
+	"""
+
+	evaltcl("set sel [atomselect %s \" index %s \" frame %s]" % (traj_frag_molid, index, frame_idx))
+	resname = evaltcl("$sel get resname")
+	evaltcl("$sel delete")
+	return resname
+
+
+def get_resid(traj_frag_molid, frame_idx, index):
+	"""
+	Parse atom label and return element 
+
+	Parameters
+	----------
+	index: string
+		VMD atom index
+
+	Returns
+	-------
+	resid: string (ie "115", "117")
+	"""
+
+	evaltcl("set sel [atomselect %s \" index %s \" frame %s]" % (traj_frag_molid, index, frame_idx))
+	resid = evaltcl("$sel get resid")
+	evaltcl("$sel delete")
+	return resid
+
+def get_name(traj_frag_molid, frame_idx, index):
+	"""
+	Parse atom label and return element 
+
+	Parameters
+	----------
+	index: string
+		VMD atom index
+
+	Returns
+	-------
+	name: string (ie "CA", "NZ", )
+	"""
+
+	evaltcl("set sel [atomselect %s \" index %s \" frame %s]" % (traj_frag_molid, index, frame_idx))
+	name = evaltcl("$sel get name")
+	evaltcl("$sel delete")
+	return name
+
+
+def get_element(traj_frag_molid, frame_idx, index):
+	"""
+	Parse atom label and return element 
+
+	Parameters
+	----------
+	index: string
+		VMD atom index
+
+	Returns
+	-------
+	element: string (ie "C", "H", "O", "N", "S")
+	"""
+
+	evaltcl("set sel [atomselect %s \" index %s \" frame %s]" % (traj_frag_molid, index, frame_idx))
+	element = evaltcl("$sel get element")
+	evaltcl("$sel delete")
+	return element
+
+def get_atom_label(traj_frag_molid, frame_idx, index):
+	chain = get_chain(traj_frag_molid, frame_idx, index)
+	resname = get_resname(traj_frag_molid, frame_idx, index)
+	resid = get_resid(traj_frag_molid, frame_idx, index)
+	name = get_name(traj_frag_molid, frame_idx, index)
+
+	atom_label = "%s:%s:%s:%s:%s" % (chain, resname, resid, name, index)
+	return atom_label
+
+
+def parse_contacts(contact_string):
+	"""
+	Parameters
+	----------
+	contact_string: string 
+		Output from measure contacts function {indices} {indices}
+
+	Returns
+	-------
+	contact_index_pairs: list of tuples
+		List of index int pairs
+	"""
+
+	contact_index_pairs = []
+
+	### Handle case where only one pair of atoms form contacts
+	if("} {" not in contact_string):
+		atom1_index, atom2_index = map(int, contact_string.split(" "))
+		contact_index_pairs.append((atom1_index, atom2_index))
+	else:
+		contacts_list = contact_string.split("} {")
+		atom1_list_str = contacts_list[0].strip("{}")
+		atom2_list_str = contacts_list[1].strip("{}")
+		if(atom1_list_str == "" or atom2_list_str == ""): return []
+
+		atom1_list = map(int, atom1_list_str.split(" "))
+		atom2_list = map(int, atom2_list_str.split(" "))
+
+		for idx in range(len(atom1_list)):
+			atom1_index = atom1_list[idx]
+			atom2_index = atom2_list[idx]
+			contact_index_pairs.append((atom1_index, atom2_index))
+
+	return contact_index_pairs
+
+
+
