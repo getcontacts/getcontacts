@@ -14,6 +14,7 @@
 from vmd import *
 import molecule
 import numpy as np
+import math
 
 def get_file_type(file_name):
 	"""
@@ -519,6 +520,59 @@ def get_coord(traj_frag_molid, frame_idx, atom_label):
 
 	coord = np.array([x, y, z])
 	return coord
-	
 
+def points_to_vector(point1, point2):
+	"""
+	Return vector from point1 to point2
+	"""
+	vector = point2 - point1 
+	return vector
+
+def calc_angle_between_vectors(vector1, vector2):
+	"""
+	Returns
+	-------
+	angle_between_vectors: float
+		Degrees between two vectors
+	"""
+	radians_between_vectors = math.acos(np.dot(vector1, vector2)/ (np.dot(vector1, vector1) * np.dot(vector2, vector2)))
+	angle_between_vectors = math.degrees(radians_between_vectors)
+	return angle_between_vectors
+
+def calc_geom_distance(point1, point2):
+	"""
+	Compute distance between two points 
+
+	Returns
+	-------
+	distance: float
+	"""
+	distance = np.linalg.norm(point1 - point2)
+	return distance
+	
+def calc_geom_centroid(point1, point2, point3):
+	"""
+	Compute centroid between three points 
+
+	Returns
+	-------
+	centroid: np.array[x, y, z]
+	"""
+	centroid = (point1 + point2 + point3)/3
+	return centroid
+
+def calc_geom_normal_vector(point1, point2, point3):
+	"""
+	Compute normal vector to the plane constructed by three points
+
+	Returns
+	-------
+	normal_vector: np.array[x, y, z]
+
+	"""
+
+	v1 = point3 - point1
+	v2 = point2 - point1
+	normal_vector = np.cross(v1, v2)
+	return normal_vector
 
