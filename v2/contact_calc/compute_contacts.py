@@ -17,6 +17,7 @@ from multiprocessing import *
 import MDAnalysis as mda
 from contact_utils import *
 from hbonds import *
+from salt_bridges import *
 
 ##############################################################################
 # Global Variables
@@ -57,10 +58,17 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, solvent_resn, cha
 
 	"""
 
+	### NOTE
+	# Eventually we will pass in 
+	# prep_computation = {"index_to_label": index_to_label, "salt_bridge": (anion_list, cation_list), etc}
+	# And pull feed these pre computed information into the calculator. This avoids repeating the 
+	# same calculation throughout simulation. 
+
 	frame_contacts = []
 
-	# if("-sb" in ITYPES):
-	# 	frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, index_to_label, chain_id)
+	if("-sb" in ITYPES):
+		anion_list, cation_list = prep_salt_bridge_computation(traj_frag_molid, frame_idx, chain_id)
+		frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, index_to_label, anion_list, cation_list)
 	# if("-pc" in ITYPES):
 	# 	frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, chain_id)
 	# if("-ps" in ITYPES):

@@ -13,6 +13,7 @@
 
 from vmd import *
 import molecule
+import numpy as np
 
 def get_file_type(file_name):
 	"""
@@ -46,6 +47,52 @@ def load_traj(TOP, TRAJ, beg_frame, end_frame, stride):
 	molecule.read(trajid, traj_file_type, TRAJ, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
 	return trajid
 
+def get_atom_selection_labels(selection_id):
+	"""
+	Returns list of atom labels for each atom in selection_id
+	"""
+	chains, resnames, resids, names, indices = get_atom_selection_properties(selection_id)
+	atom_labels = []
+	for idx in range(len(chains)):
+		chain, resname, resid, name, index = chains[idx], resnames[idx], resids[idx], names[idx], indices[idx]
+		atom_labels.append("%s:%s:%s:%s:%s" % (chain, resname, resid, name, index))
+
+	return atom_labels
+
+def get_atom_selection_properties(selection_id):
+	"""
+	After executing an evaltcl atom selection command, this function
+	is called to retrieve the chain, resname, resid, name, and index 
+	of each atom in the selection 
+
+	Parameters
+	----------
+	selection_id: string
+		Denotes the atom selection identifier 
+
+	Returns
+	-------
+	chains: list of strings 
+		Chain identifier for each atom ["A", "B", "A", ...]
+	resnames: list of strings 
+		Resname for each atom ["ASP", "GLU", "TYR", ...]
+	resids: list of strings 
+		Residue index for each atom ["12", "45", ...]
+	names: list of strings
+		Atom name of each atom ["NZ", "CA", "N", ...]
+	indices: list of strings
+		VMD based index for each atom ["12304", "1231", ...]
+	"""
+
+	chains = map(str, evaltcl("$%s get chain" % (selection_id)).split(" "))
+	resnames = map(str, evaltcl("$%s get resname" % (selection_id)).split(" "))
+	resids = map(str, evaltcl("$%s get resid" % (selection_id)).split(" "))
+	names = map(str, evaltcl("$%s get name" % (selection_id)).split(" "))
+	indices = map(str, evaltcl("$%s get index" % (selection_id)).split(" "))
+
+	return chains, resnames, resids, names, indices
+
+
 def gen_index_to_atom_label(TOP, TRAJ):
 	"""
 	Read in first frame of simulation and generate mapping from 
@@ -67,12 +114,8 @@ def gen_index_to_atom_label(TOP, TRAJ):
 	trajid = load_traj(TOP, TRAJ, 1, 2, 1)
 	all_atom_sel = "set all_atoms [atomselect %s \" all \" frame %s]" % (trajid, 0)
 	all_atoms = evaltcl(all_atom_sel)
-
-	chains = map(str, evaltcl("$all_atoms get chain").split(" "))
-	resnames = map(str, evaltcl("$all_atoms get resname").split(" "))
-	resids = map(str, evaltcl("$all_atoms get resid").split(" "))
-	names = map(str, evaltcl("$all_atoms get name").split(" "))
-	indices = map(str, evaltcl("$all_atoms get index").split(" "))
+	chains, resnames, resids, names, indices = get_atom_selection_properties("all_atoms")
+	evaltcl('$all_atoms delete')
 
 	### Generate mapping
 	index_to_label = {}
@@ -132,3 +175,57 @@ def calc_water_to_residues_map(water_hbonds, solvent_resn):
 	solvent_bridges = sorted(list(solvent_bridges))
 
 	return frame_idx, water_to_residues, solvent_bridges
+
+
+def compute_dist(molid, frame_idx, atom1, atom2):
+	"""
+	Compute distance between two atoms in a specified frame of simulation
+
+	Parameters
+	----------
+	molid: int 
+		Denotes trajectory id in VMD
+	frame_idx: int 
+		Frame of simulation in trajectory fragment
+	atom1: string 
+		Atom label (ie "A:GLU:323:OE2:55124")
+	atom2: string 
+		Atom label (ie "A:ARG:239:NH1:53746")
+
+	Returns
+	-------
+	distance: float 
+	"""
+	atom_index1 = atom1.split(":")[-1]
+	atom_index2 = atom2.split(":")[-1]
+	distance = float(evaltcl("measure bond {%s %s} molid %s frame %s" % (atom_index1, atom_index2, molid, frame_idx)))
+	return distance
+
+def compute_angle(molid, frame_idx, atom1, atom2, atom3):
+	"""
+	Compute distance between two atoms in a specified frame of simulation
+
+	Parameters
+	----------
+	molid: int 
+		Denotes trajectory id in VMD
+	frame_idx: int 
+		Frame of simulation in trajectory fragment
+	atom1: string 
+		Atom label (ie "A:GLU:323:OE2:55124")
+	atom2: string 
+		Atom label (ie "A:ARG:239:NH1:53746")
+	atom2: string 
+		Atom label (ie "A:GLU:118:OE1:51792")
+
+	Returns
+	-------
+	angle: float
+		Expressed in degrees
+	"""
+	atom_index1 = atom1.split(":")[-1]
+	atom_index2 = atom2.split(":")[-1]
+	atom_index3 = atom3.split(":")[-1]
+	
+	angle = float(evaltcl("measure angle {%s %s %s} molid %s frame %s" % (atom_index1, atom_index2, atom_index3, molid, frame_idx)))
+	return angle
