@@ -72,8 +72,7 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, solvent_resn, cha
 		anion_list, cation_list = prep_salt_bridge_computation(traj_frag_molid, frame_idx, chain_id)
 		frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, anion_list, cation_list)
 	if("-pc" in ITYPES):
-		cation_list, aromatic_atom_triplet_list = prep_pi_cation_computation(traj_frag_molid, frame_idx, chain_id)
-		frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, cation_list, aromatic_atom_triplet_list)
+		frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, chain_id)
 	# if("-ps" in ITYPES):
 	# 	frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id)
 	# if("-ts" in ITYPES):
@@ -132,7 +131,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES,
 	### Compute contacts for each frame
 	num_frag_frames = molecule.numframes(traj_frag_molid)
 	for frame_idx in range(1, num_frag_frames):
-		if(frame_idx > 1): break
+		# if(frame_idx > 1): break
 		fragment_contacts += compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, solvent_resn, chain_id, ligand, index_to_label)
 
 	### Delete trajectory fragment to clear memory
@@ -186,7 +185,7 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 
 	### Generate input arguments for each trajectory piece
 	for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
-		if(frag_idx > 0): break
+		# if(frag_idx > 0): break
 		end_frame = beg_frame + TRAJ_FRAG_SIZE
 		input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label))
 

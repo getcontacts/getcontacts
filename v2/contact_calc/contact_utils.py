@@ -160,7 +160,7 @@ def get_anion_atoms(traj_frag_molid, frame_idx, chain_id):
 
 	return anion_list
 
-def get_cation_atoms(traj_frag_molid, frame_idx, chain_id, pi_cation = False):
+def get_cation_atoms(traj_frag_molid, frame_idx, chain_id):
 	"""
 	Get list of cation atoms that can form salt bridges or pi cation contacts
 
@@ -182,9 +182,7 @@ def get_cation_atoms(traj_frag_molid, frame_idx, chain_id, pi_cation = False):
 
 	cation_list += get_atom_selection_labels("LYS")
 	cation_list += get_atom_selection_labels("ARG")
-
-	if(pi_cation == False):
-		cation_list += get_atom_selection_labels("HIS")
+	cation_list += get_atom_selection_labels("HIS")
 
 	evaltcl('$LYS delete')
 	evaltcl('$ARG delete')
