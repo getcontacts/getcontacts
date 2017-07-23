@@ -584,3 +584,24 @@ def calc_geom_normal_vector(point1, point2, point3):
 	normal_vector = np.cross(v1, v2)
 	return normal_vector
 
+def calc_geom_psi_angle(center1, center2, normal_vector):
+	"""
+	Parameters
+	----------
+	center1: np.array of floats
+		Coordinates of the center of aromatic plane 1
+	center2: np.array of floats
+		Coordinates of the center of aromatic plane 2
+	normal_vector: np.array of floats 
+		Vector coordinate pointing from aromatic plane 1
+
+	Returns
+	-------
+	psi_angle: float in degrees 
+		Angle between normal vector and vector(center2 - center1)
+	"""
+	center_to_center_vector = points_to_vector(center2, center1)
+	psi_angle = calc_angle_between_vectors(normal_vector, center_to_center_vector)
+	psi_angle = min(math.fabs(psi_angle - 0), math.fabs(psi_angle - 180))
+	return psi_angle
+
