@@ -136,7 +136,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES,
 
 	### Delete trajectory fragment to clear memory
 	molecule.delete(traj_frag_molid)
-	return (frag_idx, fragment_contacts)
+	return (frag_idx, num_frag_frames - 1, fragment_contacts)
 
 def compute_fragment_contacts_helper(args):
 	return compute_fragment_contacts(*args)
@@ -174,27 +174,27 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 	input_args = []
 
 	### Serial 
-	output = []
-	for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
-		if(frag_idx > 0): break
-		end_frame = beg_frame + TRAJ_FRAG_SIZE
-		frag_idx, fragment_contacts = compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label)
-		output.append((frag_idx, fragment_contacts))
+	# output = []
+	# for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
+	# 	# if(frag_idx > 0): break
+	# 	end_frame = beg_frame + TRAJ_FRAG_SIZE
+	# 	frag_idx, num_frag_frames, fragment_contacts = compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label)
+	# 	output.append((frag_idx, num_frag_frames, fragment_contacts))
 
 	# for o in output: 
 		# print o
 	# print(len(output))
 
-	# ### Generate input arguments for each trajectory piece
-	# for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
-	# 	# if(frag_idx > 0): break
-	# 	end_frame = beg_frame + TRAJ_FRAG_SIZE
-	# 	input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label))
+	### Generate input arguments for each trajectory piece
+	for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
+		# if(frag_idx > 0): break
+		end_frame = beg_frame + TRAJ_FRAG_SIZE
+		input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label))
 
-	# pool = Pool(processes=cores)
-	# output = pool.map(compute_fragment_contacts_helper, input_args)
-	# pool.close()
-	# pool.join()
+	pool = Pool(processes=cores)
+	output = pool.map(compute_fragment_contacts_helper, input_args)
+	pool.close()
+	pool.join()
 
 
 	### Sort output by trajectory fragments
@@ -205,13 +205,12 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 	contact_types = set()
 	full_output = []
 	num_frames = 0
-	for frag_idx, contacts in output:
+	for frag_idx, num_frag_frames, contacts in output:
 		for c in contacts:
 			c[0] = num_frames + c[0] - 1
 			full_output.append(c)
 			contact_types.add(c[-1]) ### Keep track of all itypes
-		frag_len = len(set([c[0] for c in contacts]))
-		num_frames += frag_len
+		num_frames += num_frag_frames
 
 	### Writing output to seperate files, one for each itype
 	# print("Writing to output")
