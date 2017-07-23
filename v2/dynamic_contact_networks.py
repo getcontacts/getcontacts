@@ -24,13 +24,14 @@ USAGE_STR = """
 # Computes non-covalent contacts in MD simulation for any protein of study
 
 # Usage
-# python DynamicContactNetworks.py <TOP> <TRAJ> <OUTPUT_DIR> <stride> <solv> <chain> <ligand> <INTERACTION_TYPES>
+# python DynamicContactNetworks.py <TOP> <TRAJ> <OUTPUT_DIR> <cores> <stride> <solv> <chain> <ligand> <INTERACTION_TYPES>
 
 # Arguments
 # <TOP> Absolute path to topology
 # <TRAJ> Absolute path to reimaged MD trajectory
 # <OUTPUT_DIR> Absolute path to output directory to store contacts data
 # <INTERACTION_TYPES> -itypes flag followed by a list of non-covalent interaction types to compute (ie -sb -pc -ps -ts -vdw, etc)
+# <optional -cores flag> To denote how many CPU cores to use for parallelization
 # <optional -stride flag> To denote a stride value other than default of 1
 # <optional -solv flag> To denote a solvent id other than default of TIP3
 # <optional -chain flag> To denote the specific chain ID to query when using VMD's hydrogen bond calculator 
@@ -56,10 +57,15 @@ if __name__ == "__main__":
 	ITYPES = sys.argv[sys.argv.index('-itype') + 1:]
 
 	### Optional Arguments
+	cores = 6
 	stride = 1 # default
 	solvent_resn = "TIP3" # default
 	chain_id = None
 	ligand = None
+
+	if("-cores" in sys.argv):
+		core_index = sys.argv.index("-cores")
+		cores = int(sys.argv[core_index + 1])
 
 	if("-stride" in sys.argv):
 		stride_index = sys.argv.index("-stride")
@@ -78,7 +84,7 @@ if __name__ == "__main__":
 		ligand = str(sys.argv[ligand_index + 1])
 
 	tic = datetime.datetime.now()
-	compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, stride, solvent_resn, chain_id, ligand)
+	compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solvent_resn, chain_id, ligand)
 	toc = datetime.datetime.now()
 	print("Computation Time: " + str((toc-tic).total_seconds()))
 

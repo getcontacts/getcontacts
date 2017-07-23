@@ -16,10 +16,10 @@ import molecule
 from multiprocessing import *
 import MDAnalysis as mda
 from contact_utils import *
+from aromatics import *
 from hbonds import *
 from salt_bridges import *
 from pi_cation import *
-from pi_stacking import *
 from vanderwaals import *
 
 ##############################################################################
@@ -76,8 +76,8 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, solvent_resn, cha
 		frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, chain_id)
 	if("-ps" in ITYPES):
 		frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id)
-	# if("-ts" in ITYPES):
-	# 	frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id)
+	if("-ts" in ITYPES):
+		frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id)
 	if("-vdw" in ITYPES):
 		frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, chain_id)
 	if("-hb" in ITYPES):
@@ -85,7 +85,6 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, solvent_resn, cha
 	if("-lhb" in ITYPES):
 		frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, chain_id, ligand)
 
-	# print("Finished computing contacts")
 	return frame_contacts
 
 def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label):
@@ -177,7 +176,7 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 	### Serial 
 	output = []
 	for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
-		# if(frag_idx > 0): break
+		if(frag_idx > 0): break
 		end_frame = beg_frame + TRAJ_FRAG_SIZE
 		frag_idx, fragment_contacts = compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label)
 		output.append((frag_idx, fragment_contacts))

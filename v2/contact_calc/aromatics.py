@@ -15,15 +15,7 @@ from vmd import *
 import molecule 
 from contact_utils import *
 
-__all__ = ['compute_pi_stacking']
-
-##############################################################################
-# Globals
-##############################################################################
-DISTANCE_CUTOFF = 7.0 # Angstrom
-SOFT_DISTANCE_CUTOFF = 10.0 # Angstroms
-PI_STACKING_ANGLE_CUTOFF = 30
-PSI_ANGLE_CUTOFF = 45
+__all__ = ['compute_pi_stacking', 'compute_t_stacking']
 
 ##############################################################################
 # Functions
@@ -57,9 +49,9 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label):
 	return aromatic_atom_triplet
 
 
-def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id):
+def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, chain_id, itype, SOFT_DISTANCE_CUTOFF, DISTANCE_CUTOFF, ANGLE_CUTOFF, PSI_ANGLE_CUTOFF):
 	"""
-	Compute pi-stacking interactions in a frame of simulation
+	Compute aromatic interactions in a frame of simulation
 
 	Parameters
 	----------
@@ -72,13 +64,24 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id):
 		{11205: "A:ASP:114:CA:11205, ...}
 	chain_id: string, default = None
 		Specify chain of protein to perform computation on 
+	itype: string
+		Specify which type of aromatics ("ps" or "ts") to compute
+	SOFT_DISTANCE_CUTOFF: float
+		Soft distance cutoff to find candidate aromatic pairs 
+	DISTANCE_CUTOFF: float
+		Cutoff distance between aromatic centers
+	ANGLE_CUTOFF: float
+		Cutoff angle for the angle between normal vectors of aromatic planes 
+	PSI_ANGLE_CUTOFF: float
+		Cutoff angle for how aligned two aromatic planes are 
 
 	Returns
 	-------
-	pi_stacking = list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
-		itype = "ps"
+	aromatics = list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
+		itype = "ps" or "ts"
 	"""
-	pi_stacking = []
+
+	aromatics = []
 
 	if(chain_id == None):
 		aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" ((resname PHE) and (name CG CE1 CE2)) or ((resname TRP) and (name CD2 CZ2 CZ3)) or ((resname TYR) and (name CG CE1 CE2)) \" frame %s]" % (traj_frag_molid, frame_idx)
@@ -139,7 +142,7 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id):
 		aromatic_plane_alignment_angle = calc_angle_between_vectors(aromatic1_normal_vector, aromatic2_normal_vector)
 		aromatic_plane_alignment_angle = min(math.fabs(aromatic_plane_alignment_angle - 0), math.fabs(aromatic_plane_alignment_angle - 180))
 
-		if(aromatic_plane_alignment_angle > PI_STACKING_ANGLE_CUTOFF): continue 
+		if(aromatic_plane_alignment_angle > ANGLE_CUTOFF): continue 
 
 
 		### Psi Angle cutoff 
@@ -147,15 +150,74 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id):
 		psi_angle2 = calc_geom_psi_angle(aromatic2_centroid, aromatic1_centroid, aromatic2_normal_vector)
 		psi_angle = min(psi_angle1, psi_angle2)
 		if(psi_angle > PSI_ANGLE_CUTOFF): continue 
-
 		
 		# print(frame_idx, aromatic1_res, aromatic2_res, aromatic_centers_distance, aromatic_plane_alignment_angle)
 		for arom1_atom_label in aromatic1_atom_labels:
 			for arom2_atom_label in aromatic2_atom_labels:
-				pi_stacking.append([frame_idx, arom1_atom_label, arom2_atom_label, "ps"])
+				aromatics.append([frame_idx, arom1_atom_label, arom2_atom_label, itype])
 
+	return aromatics
+
+
+def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id):
+	"""
+	Compute pi-stacking interactions in a frame of simulation
+
+	Parameters
+	----------
+	traj_frag_molid: int
+		Identifier to simulation fragment in VMD
+	frame_idx: int
+		Frame number to query
+	index_to_label: dict 
+		Maps VMD atom index to label "chain:resname:resid:name:index"
+		{11205: "A:ASP:114:CA:11205, ...}
+	chain_id: string, default = None
+		Specify chain of protein to perform computation on 
+
+	Returns
+	-------
+	pi_stacking = list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
+		itype = "ps"
+	"""
+
+	PI_STACK_SOFT_DISTANCE_CUTOFF = 10.0 # angstroms
+	PI_STACK_DISTANCE_CUTOFF = 7.0 # angstrom
+	PI_STACK_ANGLE_CUTOFF = 30 # degrees
+	PI_STACK_PSI_ANGLE_CUTOFF = 45 # degrees
+
+	pi_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, chain_id, "ps", PI_STACK_SOFT_DISTANCE_CUTOFF, PI_STACK_DISTANCE_CUTOFF, PI_STACK_ANGLE_CUTOFF, PI_STACK_PSI_ANGLE_CUTOFF)
 	return pi_stacking
 
 
+def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id):
+	"""
+	Compute t-stacking interactions in a frame of simulation
+
+	Parameters
+	----------
+	traj_frag_molid: int
+		Identifier to simulation fragment in VMD
+	frame_idx: int
+		Frame number to query
+	index_to_label: dict 
+		Maps VMD atom index to label "chain:resname:resid:name:index"
+		{11205: "A:ASP:114:CA:11205, ...}
+	chain_id: string, default = None
+		Specify chain of protein to perform computation on 
+
+	Returns
+	-------
+	t_stacking = list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
+		itype = "ts"
+	"""
+
+	T_STACK_SOFT_DISTANCE_CUTOFF = 6.0 # angstroms
+	T_STACK_DISTANCE_CUTOFF = 5.0 # angstrom
+	T_STACK_ANGLE_CUTOFF = 30 # degrees
+	T_STACK_PSI_ANGLE_CUTOFF = 45 # degrees
+
+	t_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, chain_id, "ts", T_STACK_SOFT_DISTANCE_CUTOFF, T_STACK_DISTANCE_CUTOFF, T_STACK_ANGLE_CUTOFF, T_STACK_PSI_ANGLE_CUTOFF)
+	return t_stacking
 
 
