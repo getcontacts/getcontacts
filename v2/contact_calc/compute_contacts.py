@@ -175,25 +175,27 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 	input_args = []
 
 	### Serial 
-	# output = []
-	# for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
-	# 	if(frag_idx > 0): break
-	# 	end_frame = beg_frame + TRAJ_FRAG_SIZE
-	# 	output += compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label)[1]
+	output = []
+	for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
+		# if(frag_idx > 0): break
+		end_frame = beg_frame + TRAJ_FRAG_SIZE
+		frag_idx, fragment_contacts = compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label)
+		output.append((frag_idx, fragment_contacts))
 
-	# for o in output: print o
+	# for o in output: 
+		# print o
 	# print(len(output))
 
-	### Generate input arguments for each trajectory piece
-	for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
-		if(frag_idx > 0): break
-		end_frame = beg_frame + TRAJ_FRAG_SIZE
-		input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label))
+	# ### Generate input arguments for each trajectory piece
+	# for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
+	# 	# if(frag_idx > 0): break
+	# 	end_frame = beg_frame + TRAJ_FRAG_SIZE
+	# 	input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label))
 
-	pool = Pool(processes=cores)
-	output = pool.map(compute_fragment_contacts_helper, input_args)
-	pool.close()
-	pool.join()
+	# pool = Pool(processes=cores)
+	# output = pool.map(compute_fragment_contacts_helper, input_args)
+	# pool.close()
+	# pool.join()
 
 
 	### Sort output by trajectory fragments

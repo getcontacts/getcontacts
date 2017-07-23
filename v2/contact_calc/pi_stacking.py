@@ -138,9 +138,10 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id):
 		aromatic2_normal_vector = calc_geom_normal_vector(arom2_atom1_coord, arom2_atom2_coord, arom2_atom3_coord)
 		aromatic_plane_alignment_angle = calc_angle_between_vectors(aromatic1_normal_vector, aromatic2_normal_vector)
 		aromatic_plane_alignment_angle = min(math.fabs(aromatic_plane_alignment_angle - 0), math.fabs(aromatic_plane_alignment_angle - 180))
+
 		if(aromatic_plane_alignment_angle > PI_STACKING_ANGLE_CUTOFF): continue 
 
-		print(frame_idx, aromatic1_res, aromatic2_res)
+
 		### Psi Angle cutoff 
 		psi_angle1 = calc_geom_psi_angle(aromatic1_centroid, aromatic2_centroid, aromatic1_normal_vector)
 		psi_angle2 = calc_geom_psi_angle(aromatic2_centroid, aromatic1_centroid, aromatic2_normal_vector)
@@ -148,10 +149,10 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id):
 		if(psi_angle > PSI_ANGLE_CUTOFF): continue 
 
 		
-
-		# for arom1_atom_label in aromatic1_atom_labels:
-		# 	for arom2_atom_label in aromatic2_atom_labels:
-		# 		pi_stacking.append([frame_idx, arom1_atom_label, arom2_atom_label, "ps"])
+		# print(frame_idx, aromatic1_res, aromatic2_res, aromatic_centers_distance, aromatic_plane_alignment_angle)
+		for arom1_atom_label in aromatic1_atom_labels:
+			for arom2_atom_label in aromatic2_atom_labels:
+				pi_stacking.append([frame_idx, arom1_atom_label, arom2_atom_label, "ps"])
 
 	return pi_stacking
 
