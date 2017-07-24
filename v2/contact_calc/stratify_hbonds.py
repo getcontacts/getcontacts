@@ -43,7 +43,6 @@ def stratify_residue_hbonds(residue_hbonds):
 	Stratify residue to residue hbonds into those between sidechain-sidechain,
 	sidechain-backbone, and backbone-backbone
 	"""
-
 	backbone_atoms = ['N', 'O']
 	hbss, hbsb, hbbb = [], [], []
 
@@ -52,15 +51,12 @@ def stratify_residue_hbonds(residue_hbonds):
 		atom1 = atom1_label.split(":")[3]
 		atom2 = atom2_label.split(":")[3]
 
-		# hbss
 		if(atom1 not in backbone_atoms and atom2 not in backbone_atoms): 
 			hbss.append([frame_idx, atom1_label, atom2_label, "hbss"])
 
-		# hbsb
 		if((atom1 not in backbone_atoms and atom2 in backbone_atoms) or (atom1 in backbone_atoms and atom2 not in backbone_atoms)):
 			hbsb.append([frame_idx, atom1_label, atom2_label, "hbsb"])
 
-		# hbbb
 		if(atom1 in backbone_atoms and atom2 in backbone_atoms):
 			hbbb.append([frame_idx, atom1_label, atom2_label, "hbbb"])
 
@@ -71,7 +67,6 @@ def stratify_water_bridge(water_hbonds, solvent_resn):
 	Infer direct water bridges between residues that both have hbond 
 	with the same water (ie res1 -- water -- res2)
 	"""
-
 	frame_idx, water_to_residues, _ = calc_water_to_residues_map(water_hbonds, solvent_resn)
 	water_bridges = set()
 	### Infer direct water bridges
@@ -92,9 +87,7 @@ def stratify_extended_water_bridge(water_hbonds, solvent_resn):
 	water molecules that also have hbond between them.
 	(ie res1 -- water1 -- water2 -- res2)
 	"""
-
 	frame_idx, water_to_residues, solvent_bridges = calc_water_to_residues_map(water_hbonds, solvent_resn)
-
 	extended_water_bridges = set()
 	for water1, water2 in solvent_bridges:
 		if(water1 not in water_to_residues or water2 not in water_to_residues): continue
@@ -105,7 +98,7 @@ def stratify_extended_water_bridge(water_hbonds, solvent_resn):
 				extended_water_bridges.add((frame_idx, atom1, water1, water2, atom2, "wb2"))
 
 	extended_water_bridges = sorted(list(extended_water_bridges))
-	
+
 	wb2 = []
 	for frame_idx, atom1, water1, water2, atom2, itype in extended_water_bridges:
 		wb2.append([frame_idx, atom1, water1, water2, atom2, itype])
@@ -133,12 +126,10 @@ def stratify_hbond_subtypes(hbonds, solvent_resn):
 		corresponding to sidechain-sidechain, sidechain-backbone, backbone-backbone,
 		water bridge and extended water bridge respectively.
 	"""
-
 	residue_hbonds, water_hbonds = residue_vs_water_hbonds(hbonds, solvent_resn)
 
 	hbss, hbsb, hbbb = stratify_residue_hbonds(residue_hbonds)
 	wb = stratify_water_bridge(water_hbonds, solvent_resn)
 	wb2 = stratify_extended_water_bridge(water_hbonds, solvent_resn)
-
 	hbonds = hbss + hbsb + hbbb + wb + wb2
 	return hbonds

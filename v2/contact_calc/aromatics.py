@@ -42,7 +42,6 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label):
 	"""
 
 	residue_to_atom_names = {"PHE": "CG CE1 CE2", "TRP": "CD2 CZ2 CZ3", "TYR": "CG CE1 CE2"}
-
 	chain, resname, resid = aromatic_residue_label.split(":")
 	evaltcl("set aromatic_atoms [atomselect %s \" (chain %s) and (resname %s) and (resid %s) and (name %s)\" frame %s]" %(traj_frag_molid, chain, resname, resid, residue_to_atom_names[resname], frame_idx))
 	aromatic_atom_triplet = get_atom_selection_labels("aromatic_atoms")	
@@ -117,10 +116,8 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, chain_id, ityp
 
 	### Perform strict geometric criterion on candidate aromatic pairs
 	for aromatic1_res, aromatic2_res in res_pairs:
-		# print(frame_idx, aromatic1_res, aromatic2_res)
 		aromatic1_atom_labels = residue_to_atom_labels[aromatic1_res]
 		aromatic2_atom_labels = residue_to_atom_labels[aromatic2_res]
-
 
 		### Distance between two aromatic centers must be below DISTANCE_CUTOFF
 		arom1_atom1_coord = get_coord(traj_frag_molid, frame_idx, aromatic1_atom_labels[0])
@@ -140,10 +137,12 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, chain_id, ityp
 		aromatic1_normal_vector = calc_geom_normal_vector(arom1_atom1_coord, arom1_atom2_coord, arom1_atom3_coord)
 		aromatic2_normal_vector = calc_geom_normal_vector(arom2_atom1_coord, arom2_atom2_coord, arom2_atom3_coord)
 		aromatic_plane_alignment_angle = calc_angle_between_vectors(aromatic1_normal_vector, aromatic2_normal_vector)
-		aromatic_plane_alignment_angle = min(math.fabs(aromatic_plane_alignment_angle - 0), math.fabs(aromatic_plane_alignment_angle - 180))
-
-		if(aromatic_plane_alignment_angle > ANGLE_CUTOFF): continue 
-
+		if(itype == "ps"):
+			aromatic_plane_alignment_angle = min(math.fabs(aromatic_plane_alignment_angle - 0), math.fabs(aromatic_plane_alignment_angle - 180))
+			if(aromatic_plane_alignment_angle > ANGLE_CUTOFF): continue 
+		elif(itype == "ts"):
+			aromatic_plane_perpendicular_angle = math.fabs(calc_angle_between_vectors(aromatic1_normal_vector, aromatic2_normal_vector) - 90)
+			if(aromatic_plane_perpendicular_angle > ANGLE_CUTOFF): continue
 
 		### Psi Angle cutoff 
 		psi_angle1 = calc_geom_psi_angle(aromatic1_centroid, aromatic2_centroid, aromatic1_normal_vector)
@@ -151,7 +150,7 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, chain_id, ityp
 		psi_angle = min(psi_angle1, psi_angle2)
 		if(psi_angle > PSI_ANGLE_CUTOFF): continue 
 		
-		# print(frame_idx, aromatic1_res, aromatic2_res, aromatic_centers_distance, aromatic_plane_alignment_angle)
+		### Return aromatic interaction atom pairs
 		for arom1_atom_label in aromatic1_atom_labels:
 			for arom2_atom_label in aromatic2_atom_labels:
 				aromatics.append([frame_idx, arom1_atom_label, arom2_atom_label, itype])

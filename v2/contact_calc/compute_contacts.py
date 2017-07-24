@@ -60,13 +60,6 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, solvent_resn, cha
 	frame_contacts: list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
 
 	"""
-
-	### NOTE
-	# Eventually we will pass in 
-	# prep_computation = {"index_to_label": index_to_label, "salt_bridge": (anion_list, cation_list), etc}
-	# And pull feed these pre computed information into the calculator. This avoids repeating the 
-	# same calculation throughout simulation. 
-
 	frame_contacts = []
 
 	if("-sb" in ITYPES):
@@ -124,7 +117,6 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, ITYPES,
 	fragment_contacts: list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
 
 	"""
-
 	traj_frag_molid = load_traj(TOP, TRAJ, beg_frame, end_frame, stride)
 	fragment_contacts = []
 
@@ -167,7 +159,6 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 		Include ligand resname if computing contacts between ligand and binding pocket residues
 
 	"""
-
 	index_to_label = gen_index_to_atom_label(TOP, TRAJ)
 
 	sim_length = len(mda.Universe(TOP, TRAJ).trajectory) # Temporary command. Doesn't work for mae 
@@ -196,12 +187,10 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 	pool.close()
 	pool.join()
 
-
 	### Sort output by trajectory fragments
 	output = sorted(output, key = lambda x: (x[0]))
 	
 	### Assign absolute frame indices 
-	# print("Assigning absolute frame indices")
 	contact_types = set()
 	full_output = []
 	num_frames = 0
@@ -213,11 +202,8 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 		num_frames += num_frag_frames
 
 	### Writing output to seperate files, one for each itype
-	# print("Writing to output")
 	if not os.path.exists(OUTPUT_DIR):
 		os.makedirs(OUTPUT_DIR)
-
-	print(contact_types)
 
 	fd_map = {itype: open(OUTPUT_DIR + "/" + itype.strip("-") + ".txt", 'w') for itype in contact_types}
 	for contact in full_output:

@@ -28,7 +28,6 @@ def ligand_residue_vs_water_hbonds(hbonds, solvent_resn, ligand):
 	Split hbonds into those involving residue and ligand directly and those
 	mediated by water molecules.
 	"""
-
 	ligand_residue_hbonds, water_hbonds = [], []
 	for hbond in hbonds:
 		frame_idx, atom1_label, atom2_label, itype = hbond
@@ -45,7 +44,6 @@ def stratify_ligand_residue_hbonds(ligand_residue_hbonds, ligand):
 	Stratify ligand to residue hbonds into those involving sidechain 
 	or backbone atoms. 
 	"""
-
 	backbone_atoms = ['N', 'O']
 	hls, hlb = [], []
 
@@ -90,6 +88,7 @@ def stratify_ligand_water_bridge(water_hbonds, solvent_resn, ligand):
 
 	for water in water_to_ligand_residues:
 		ligand_atoms, protein_atoms = stratify_ligand_vs_protein(water_to_ligand_residues[water], ligand)
+		
 		### Form ligand -- water -- protein pairs
 		for lig_atom in ligand_atoms:
 			for res_atom in protein_atoms:

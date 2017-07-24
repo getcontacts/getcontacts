@@ -24,7 +24,6 @@ DISTANCE_CUTOFF = 6.0 # Angstrom
 SOFT_DISTANCE_CUTOFF = 10.0 # Angstroms
 ANGLE_CUTOFF = 60 # Degree
 
-
 ##############################################################################
 # Functions
 ##############################################################################
@@ -50,7 +49,6 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, chain_id):
 	pi_cations = list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
 		itype = "pc"
 	"""
-
 	pi_cations = []
 
 	if(chain_id == None):
@@ -78,7 +76,6 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, chain_id):
 			pi_cation_aromatic_grouping[pi_cation_aromatic_res_key] = set()
 		pi_cation_aromatic_grouping[pi_cation_aromatic_res_key].add(aromatic_label)
 
-
 	### Apply strict geometric criterion
 	for pi_cation_aromatic_res_key in pi_cation_aromatic_grouping:
 		cation_atom_label = ":".join(pi_cation_aromatic_res_key.split(":")[0:5])
@@ -86,7 +83,6 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, chain_id):
 		if(len(aromatic_atom_labels) != 3): continue
 		aromatic_atom_labels = sorted(list(aromatic_atom_labels))
 		arom_atom1_label, arom_atom2_label, arom_atom3_label = aromatic_atom_labels
-
 
 		### Compute coordinates of cation and aromatic atoms
 		cation_coord = get_coord(traj_frag_molid, frame_idx, cation_atom_label)

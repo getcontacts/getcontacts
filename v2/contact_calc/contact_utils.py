@@ -41,7 +41,6 @@ def load_traj(TOP, TRAJ, beg_frame, end_frame, stride):
 	trajid: int
 	simulation molid object 
 	"""
-
 	top_file_type = get_file_type(TOP)
 	traj_file_type = get_file_type(TRAJ)
 	trajid = molecule.load(top_file_type, TOP)
@@ -84,15 +83,12 @@ def get_atom_selection_properties(selection_id):
 	indices: list of strings
 		VMD based index for each atom ["12304", "1231", ...]
 	"""
-
 	chains = map(str, evaltcl("$%s get chain" % (selection_id)).split(" "))
 	resnames = map(str, evaltcl("$%s get resname" % (selection_id)).split(" "))
 	resids = map(str, evaltcl("$%s get resid" % (selection_id)).split(" "))
 	names = map(str, evaltcl("$%s get name" % (selection_id)).split(" "))
 	indices = map(str, evaltcl("$%s get index" % (selection_id)).split(" "))
-
 	return chains, resnames, resids, names, indices
-
 
 def gen_index_to_atom_label(TOP, TRAJ):
 	"""
@@ -120,7 +116,6 @@ def gen_index_to_atom_label(TOP, TRAJ):
 
 	### Generate mapping
 	index_to_label = {}
-
 	for idx, index in enumerate(indices):
 		chain = chains[idx]
 		resname = resnames[idx]
@@ -157,7 +152,6 @@ def get_anion_atoms(traj_frag_molid, frame_idx, chain_id):
 
 	evaltcl('$ASP delete')
 	evaltcl('$GLU delete')
-
 	return anion_list
 
 def get_cation_atoms(traj_frag_molid, frame_idx, chain_id):
@@ -190,7 +184,6 @@ def get_cation_atoms(traj_frag_molid, frame_idx, chain_id):
 
 	return cation_list
 
-
 def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
 	"""
 	Get list of aromatic atom triplets 
@@ -201,7 +194,6 @@ def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
 	on the 6-membered rings of TYR, TRP, or PHE residues. 
 		[(A:PHE:72:CG:51049, A:PHE:72:CE1:51052, A:PHE:72:CE2:51058), ...]
 	"""
-
 	aromatic_atom_list = []
 	if(chain_id == None):
 		evaltcl("set PHE [atomselect %s \" (resname PHE) and (name CG CE1 CE2) \" frame %s]" % (traj_frag_molid, frame_idx))
@@ -227,9 +219,6 @@ def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
 		aromatic_atom_triplet_list.append(aromatic_atom_list[i:i+3])
 
 	return aromatic_atom_triplet_list
-
-
-
 
 def calc_water_to_residues_map(water_hbonds, solvent_resn):
 	"""
@@ -272,7 +261,6 @@ def calc_water_to_residues_map(water_hbonds, solvent_resn):
 	solvent_bridges = sorted(list(solvent_bridges))
 
 	return frame_idx, water_to_residues, solvent_bridges
-
 
 def compute_distance(molid, frame_idx, atom1_label, atom2_label):
 	"""
@@ -327,7 +315,6 @@ def compute_angle(molid, frame_idx, atom1, atom2, atom3):
 	angle = float(evaltcl("measure angle {%s %s %s} molid %s frame %s" % (atom_index1, atom_index2, atom_index3, molid, frame_idx)))
 	return angle
 
-
 ### Atom property getter functions
 def get_chain(traj_frag_molid, frame_idx, index):
 	"""
@@ -346,12 +333,10 @@ def get_chain(traj_frag_molid, frame_idx, index):
 	-------
 	chain: string (ie "A", "B")
 	"""
-
 	evaltcl("set sel [atomselect %s \" index %s \" frame %s]" % (traj_frag_molid, index, frame_idx))
 	chain = evaltcl("$sel get chain")
 	evaltcl("$sel delete")
 	return chain
-
 
 def get_resname(traj_frag_molid, frame_idx, index):
 	"""
@@ -370,12 +355,10 @@ def get_resname(traj_frag_molid, frame_idx, index):
 	-------
 	resname: string (ie "ASP", "GLU")
 	"""
-
 	evaltcl("set sel [atomselect %s \" index %s \" frame %s]" % (traj_frag_molid, index, frame_idx))
 	resname = evaltcl("$sel get resname")
 	evaltcl("$sel delete")
 	return resname
-
 
 def get_resid(traj_frag_molid, frame_idx, index):
 	"""
@@ -394,7 +377,6 @@ def get_resid(traj_frag_molid, frame_idx, index):
 	-------
 	resid: string (ie "115", "117")
 	"""
-
 	evaltcl("set sel [atomselect %s \" index %s \" frame %s]" % (traj_frag_molid, index, frame_idx))
 	resid = evaltcl("$sel get resid")
 	evaltcl("$sel delete")
@@ -417,12 +399,10 @@ def get_name(traj_frag_molid, frame_idx, index):
 	-------
 	name: string (ie "CA", "NZ", )
 	"""
-
 	evaltcl("set sel [atomselect %s \" index %s \" frame %s]" % (traj_frag_molid, index, frame_idx))
 	name = evaltcl("$sel get name")
 	evaltcl("$sel delete")
 	return name
-
 
 def get_element(traj_frag_molid, frame_idx, index):
 	"""
@@ -441,7 +421,6 @@ def get_element(traj_frag_molid, frame_idx, index):
 	-------
 	element: string (ie "C", "H", "O", "N", "S")
 	"""
-
 	evaltcl("set sel [atomselect %s \" index %s \" frame %s]" % (traj_frag_molid, index, frame_idx))
 	element = evaltcl("$sel get element")
 	evaltcl("$sel delete")
@@ -456,7 +435,6 @@ def get_atom_label(traj_frag_molid, frame_idx, index):
 	atom_label = "%s:%s:%s:%s:%s" % (chain, resname, resid, name, index)
 	return atom_label
 
-
 def parse_contacts(contact_string):
 	"""
 	Parameters
@@ -469,7 +447,6 @@ def parse_contacts(contact_string):
 	contact_index_pairs: list of tuples
 		List of index int pairs
 	"""
-
 	contact_index_pairs = []
 
 	### Handle case where only one pair of atoms form contacts
@@ -493,7 +470,6 @@ def parse_contacts(contact_string):
 	return contact_index_pairs
 
 ### Geometry Tools
-
 def get_coord(traj_frag_molid, frame_idx, atom_label):
 	"""
 	Get x, y, z coordinate of an atom specified by its label 
@@ -511,14 +487,12 @@ def get_coord(traj_frag_molid, frame_idx, atom_label):
 	-------
 	coord: np.array[x, y, z]
 	"""
-
 	index = atom_label.split(":")[-1]
 	evaltcl("set sel [atomselect %s \" index %s \" frame %s]" % (traj_frag_molid, index, frame_idx))
 	x = float(evaltcl("$sel get x"))
 	y = float(evaltcl("$sel get y"))
 	z = float(evaltcl("$sel get z"))
 	evaltcl("$sel delete")
-
 	coord = np.array([x, y, z])
 	return coord
 
@@ -578,7 +552,6 @@ def calc_geom_normal_vector(point1, point2, point3):
 	normal_vector: np.array[x, y, z]
 
 	"""
-
 	v1 = point3 - point1
 	v2 = point2 - point1
 	normal_vector = np.cross(v1, v2)
