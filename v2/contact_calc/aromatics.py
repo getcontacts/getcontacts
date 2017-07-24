@@ -45,6 +45,7 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label):
 	chain, resname, resid = aromatic_residue_label.split(":")
 	evaltcl("set aromatic_atoms [atomselect %s \" (chain %s) and (resname %s) and (resid %s) and (name %s)\" frame %s]" %(traj_frag_molid, chain, resname, resid, residue_to_atom_names[resname], frame_idx))
 	aromatic_atom_triplet = get_atom_selection_labels("aromatic_atoms")	
+	evaltcl('$aromatic_atoms delete')
 	return aromatic_atom_triplet
 
 

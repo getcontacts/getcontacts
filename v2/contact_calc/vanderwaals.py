@@ -65,6 +65,7 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, chain_id):
 
 	contacts = evaltcl("measure contacts %s $full_protein" % (SOFT_VDW_CUTOFF))
 	contact_index_pairs = parse_contacts(contacts)
+	evaltcl('$full_protein delete')
 	for atom1_index, atom2_index in contact_index_pairs:
 		atom1_label, atom2_label = index_to_label[atom1_index], index_to_label[atom2_index]
 		element1 = atom1_label.split(":")[3][0]
