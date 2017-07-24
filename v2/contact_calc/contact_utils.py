@@ -15,6 +15,13 @@ from vmd import *
 import molecule
 import numpy as np
 import math
+import re
+
+def atoi(text):
+    return int(text) if text.isdigit() else text
+
+def natural_keys(text):
+    return [ atoi(c) for c in re.split('(\d+)', text) ]
 
 def get_file_type(file_name):
 	"""

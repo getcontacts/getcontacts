@@ -12,8 +12,10 @@
 ##############################################################################
 
 from vmd import *
+import os
 import molecule
 import datetime
+import glob
 from multiprocessing import *
 from contact_utils import *
 from aromatics import *
@@ -26,7 +28,7 @@ from vanderwaals import *
 # Global Variables
 ##############################################################################
 
-TRAJ_FRAG_SIZE = 1000
+TRAJ_FRAG_SIZE = 100
 sem = Semaphore()
 
 ##############################################################################
@@ -142,19 +144,56 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_
 	### Write directly out to temporary output 
 	print("Writing output to seperate files, one for each itype ...")
 	
-	# fd_map = {itype: open(OUTPUT_DIR + "/" + itype.strip("-") + "_temp.txt", 'a') for itype in contact_types}
+	fd_map = {itype: open(OUTPUT_DIR + "/" + itype.strip("-") + "_frag_" + str(frag_idx) + ".txt", 'w') for itype in contact_types}
 
 	for contact in fragment_contacts:
 		itype_key = contact[-1]
-		output_string = str(frag_idx) + "\t" + str(num_frag_frames -1) + "\t" + "\t".join(map(str, contact)) + "\n"
+		output_string = str(frag_idx) + "\t" + "\t".join(map(str, contact)) + "\n"
+		fd_map[itype_key].write(output_string)
 		# with sem:
 		# 	fd_map[itype_key].write(str(frag_idx) + "\t" + str(num_frag_frames -1) + "\t" + "\t".join(map(str, contact)) + "\n")
 
-	# for itype in fd_map:
-	# 	fd_map[itype].close()
+	for itype in fd_map:
+		fd_map[itype].close()
+	return (frag_idx, num_frag_frames - 1)
 
 def compute_fragment_contacts_helper(args):
 	return compute_fragment_contacts(*args)
+
+def stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length):
+	"""
+	Stitch together multiple fragments of non-covalent contacts into
+	single file and delete individual fragment files. 
+
+	Parameters
+	----------
+	itype: Type of non-covalent contact
+	OUTPUT_DIR: string
+		Absolute path to output directory 
+	frag_contact_files: list of strings
+		List of paths to fragment contact files
+	frag_idx_to_length: dict from int to int 
+		Map the fragment index to length of fragment 
+	"""
+	print("Stitching %s ..." % (itype))
+	fo = open(OUTPUT_DIR + "/" + itype + ".txt", 'w')
+
+	num_frames = 0
+	for frag_contact_file in frag_contact_files:
+		frag_idx = int(frag_contact_file.split("/")[-1].strip(".txt").split("_")[2])
+		ffrag = open(frag_contact_file, 'r')		
+		for line in ffrag:
+			linfo = line.split("\t")
+			frame_idx = int(linfo[1])
+			new_frame_idx = num_frames + frame_idx - 1
+			output_string = str(new_frame_idx) + "\t" + "\t".join(linfo[2:])
+			fo.write(output_string)
+		num_frames += frag_idx_to_length[frag_idx]
+		ffrag.close()
+		os.remove(frag_contact_file)
+
+	fo.close()
+
 
 def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solvent_resn, chain_id, ligand):
 	""" 
@@ -196,11 +235,6 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 		else:
 			contact_types += [itype.strip("-")]
 
-	for itype in contact_types:
-		open(OUTPUT_DIR + "/" + itype.strip("-") + "_temp.txt", 'w')
-
-	# fd_map = {itype: open(OUTPUT_DIR + "/" + itype.strip("-") + "_temp.txt", 'w') for itype in contact_types}
-	# for itype in fd_map: print itype
 
 	index_to_label = gen_index_to_atom_label(TOP, TRAJ)
 	sim_length = estimate_simulation_length(TOP, TRAJ)
@@ -211,7 +245,8 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 	# for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
 	# 	if(frag_idx > 0): break
 	# 	end_frame = beg_frame + TRAJ_FRAG_SIZE
-	# 	compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, fd_map, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label)
+	# 	frag_idx, frag_length = compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label)
+	# 	output.append((frag_idx, frag_length))
 
 	### Generate input arguments for each trajectory piece
 	print("MDContactNetworks processing TRAJ: %s with %s total frames with stride %s ..." % (TRAJ, str(sim_length), str(stride)))
@@ -228,29 +263,20 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 
 
 
-	# ### Sort output by trajectory fragments
-	# print("Sort output by trajectory fragments ... ")
-	# output = sorted(output, key = lambda x: (x[0]))
+	### Sort output by trajectory fragments
+	print("Map fragments to length")
+	frag_idx_to_length = {}
+	output = sorted(output, key = lambda x: (x[0]))
+	for frag_idx, frag_length in output:
+		frag_idx_to_length[frag_idx] = frag_length
+		print(frag_idx, frag_length)
+
+	### Combine fragments to single large stitched files
+	for itype in contact_types:
+		frag_contact_files = glob.glob(OUTPUT_DIR + "/" + itype + "_frag*")
+		frag_contact_files.sort(key=natural_keys)
+		stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length)
+
+
 	
-	# ### Assign absolute frame indices 
-	# print("Assign absolute frame indices ...")
-	# contact_types = set()
-	# full_output = []
-	# num_frames = 0
-	# for frag_idx, num_frag_frames, contacts in output:
-	# 	for c in contacts:
-	# 		c[0] = num_frames + c[0] - 1
-	# 		full_output.append(c)
-	# 		contact_types.add(c[-1]) ### Keep track of all itypes
-	# 	num_frames += num_frag_frames
-
-	### Writing output to seperate files, one for each itype
-	# print("Writing output to seperate files, one for each itype ...")
-	# if not os.path.exists(OUTPUT_DIR):
-	# 	os.makedirs(OUTPUT_DIR)
-
-	# fd_map = {itype: open(OUTPUT_DIR + "/" + itype.strip("-") + ".txt", 'w') for itype in contact_types}
-	# for contact in full_output:
-	# 	itype_key = contact[-1]
-	# 	fd_map[itype_key].write("\t".join(map(str, contact)) + "\n")
 
