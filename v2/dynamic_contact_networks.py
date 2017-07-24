@@ -12,11 +12,10 @@
 # Imports
 ##############################################################################
 
-
 import os
 import sys
 import datetime
-from contact_calc.compute_contacts import *
+from contact_calc.compute_contacts_memory_intensive import *
 
 USAGE_STR = """
 

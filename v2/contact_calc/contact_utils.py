@@ -47,6 +47,20 @@ def load_traj(TOP, TRAJ, beg_frame, end_frame, stride):
 	molecule.read(trajid, traj_file_type, TRAJ, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
 	return trajid
 
+def estimate_simulation_length(TOP, TRAJ):
+	"""
+	Estimates an upper bound for simulation length for the purpose
+	allocating chunks of frames for parallelization
+	"""
+
+	trajid = load_traj(TOP, TRAJ, 0, -1, 100)
+
+	num_subsampled_frames = int(evaltcl("molinfo %s get numframes" % (trajid)))
+	num_frames = (num_subsampled_frames - 1)*100
+	return num_frames
+
+
+
 def get_atom_selection_labels(selection_id):
 	"""
 	Returns list of atom labels for each atom in selection_id

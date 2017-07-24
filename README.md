@@ -19,37 +19,33 @@ The code is organized into two steps:
 
 	   TOP - Path to topology
 	   TRAJ - Path to simulation trajectory fragment
-	   OUTPUT - Path of output file 
-	   INTERACTION_TYPE - User specifies what type of non-covalent interaction to compute using the following flags. 
+	   OUTPUT_DIR - Path of output directory
+	   INTERACTION_TYPES - User specifies what type of non-covalent interaction to compute using the following flags. 
 
 		   -sb, Salt bridges
 		   -pc, Pi-cation 
 		   -ps, Pi-stacking
 		   -ts, T-stacking
 		   -vdw, Van Der Waals
-		   -hbw, Hydrogen Bonds
-		   -lhbw, Ligand Hydrogen Bonds
+		   -hb, Hydrogen Bonds
+		   -lhb, Ligand Hydrogen Bonds
 
-		   The following options require an additional -process flag
+		   Hydrogen bonds are automatically stratified to following subtypes
 
 		   -hbbb, Backbone-backbone hydrogen bonds
 		   -hbsb, Backbone-sidechain hydrogen bonds
 		   -hbss, Sidechain-sidechain hydrogen bonds
-		   -rw, Residue-water hydrogen bond
 		   -wb, Water-mediated hydrogen bond
 		   -wb2, Extended water-mediated hydrogen bond
 		   -hlb, Ligand-backbone hydrogen bonds
 		   -hls, Ligand-sidechain hydrogen bonds
-		   -lw, Ligand-water hydrogen bond
 		   -lwb, Ligand water-mediated hydrogen bond
 		   -lwb2, Ligand extended water-mediated hydrogen bond
 
 
 	Optional Arguments:
 
-		-process <POST_PROCESS_FILE> To compute interaction types (hbbb, hbsb, etc) user must provide path to the already computed full hydrogen bonds interaction output hbw.txt
-
-		-stride <STRIDE_VALUE> User can provide a stride value to subsample the trajectory
+		-cores <NUM_CORES> User can specify number of cpu cores to run computations on
 
 		-solv <SOLVENT_ID> Specify solvent identifier in simulation other than the default of TIP3
 
@@ -62,9 +58,7 @@ The code is organized into two steps:
 
    __Examples:__
 
-	python DynamicInteractionCalculator.py TOP.pdb TRAJ.nc hbw.txt -hbw -stride 5 -solv IP3 -chain A -ligand EJ4
-
-	python DynamicInteractionCalculator.py TOP.pdb TRAJ.nc hbsb.txt -hbsb -process hbw.txt 
+	python dynamic_contact_networks.py TOP.pdb TRAJ.nc -cores 12 -solv IP3 -chain A -ligand EJ4 -itype -hb -lhb
 
 
 ### 2. Visualizing dynamic contact networks
