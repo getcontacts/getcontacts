@@ -1,5 +1,5 @@
 # MDContactNetworks
-Library for computing dynamic non-covalent contact networks in proteins throughout MD Simulation
+Library for computing dynamic non-covalent contact networks in proteins throughout MD Simulation/
 
 
 ## File format
@@ -43,13 +43,13 @@ MDContactNetworks is compatible with all topology and trajectory file formats re
 
 	Optional Arguments:
 
-		-cores <NUM_CORES> Number of cpu cores to parallelize computations on
+		-cores <NUM_CORES> Number of cpu cores to parallelize computations on.
 
-		-solv <SOLVENT_ID> Solvent identifier in simulation. default = "TIP3"
+		-ligand <LIGAND_NAME> Resname of ligand molecule.
 
-		-sele <SELECTION_QUERY> VMD selection query to compute contacts in specified region of protein
+		-sele <SELECTION_QUERY> VMD selection query to compute contacts in specified region of protein.
 
-		-ligand <LIGAND_NAME> Resname of ligand molecule
+		-solv <SOLVENT_ID> Solvent identifier in simulation, default = "TIP3"
 
    
    __Output:__ Tables storing non-covalent contacts. Tab delimited rows are formatted to include 
@@ -58,4 +58,6 @@ MDContactNetworks is compatible with all topology and trajectory file formats re
    __Examples:__
 
 	python dynamic_contact_networks.py TOP.pdb TRAJ.nc -cores 12 -solv IP3 -sele "chain A and resid 100 to 160" -ligand EJ4 -itype -sb -hb -lhb
+
+	python dynamic_contact_networks.py TOP.psf TRAJ.dcd -cores 6 -itype -pc -ps -vdw
 
