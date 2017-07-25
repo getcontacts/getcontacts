@@ -43,7 +43,7 @@ MDContactNetworks is compatible with all topology and trajectory file formats re
 
 	Optional Arguments:
 
-		-cores <NUM_CORES> Number of cpu cores to run computations on
+		-cores <NUM_CORES> Number of cpu cores to parallelize computations on
 
 		-solv <SOLVENT_ID> Solvent identifier in simulation. default = "TIP3"
 
@@ -57,5 +57,5 @@ MDContactNetworks is compatible with all topology and trajectory file formats re
 
    __Examples:__
 
-	python dynamic_contact_networks.py TOP.pdb TRAJ.nc -cores 12 -solv IP3 -sele "chain A and resid 100 to 160" -ligand EJ4 -itype -hb -lhb
+	python dynamic_contact_networks.py TOP.pdb TRAJ.nc -cores 12 -solv IP3 -sele "chain A and resid 100 to 160" -ligand EJ4 -itype -sb -hb -lhb
 

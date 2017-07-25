@@ -55,6 +55,10 @@ if __name__ == "__main__":
 	### Required Arguments
 	(TOP, TRAJ, OUTPUT_DIR) = (sys.argv[1], sys.argv[2], sys.argv[3])
 	ITYPES = sys.argv[sys.argv.index('-itype') + 1:]
+	if("-all" in ITYPES):
+		ITYPES = ["-sb", "-pc", "-ps", "-ts", "-vdw", "-hb", "-hlb"]
+
+	print ITYPES
 
 	### Optional Arguments
 	cores = 6
