@@ -56,6 +56,8 @@ interaction type flags:
 	-vdw				vanderwaals
 	-hb				hydrogen bonds
 	-lhb				ligand hydrogen bonds
+
+output interaction subtypes:
 	-hbbb				backbone-backbone hydrogen bonds
 	-hbsb				backbone-sidechain hydrogen bonds
 	-hbss				sidechain-sidechain hydrogen bonds
@@ -74,8 +76,7 @@ def validate_itypes(ITYPES):
 	"""
 	Throws error if user specified interaction type is mispelled
 	"""
-	valid_itypes = ["-sb", "-pc", "-ps", "-ts", "-vdw", "-hb", "-hlb", "-hbbb", 
-			"-hbsb", "-hbss", "-wb", "-wb2", "-hls", "-hlb", "-lwb", "-lwb2"]
+	valid_itypes = ["-sb", "-pc", "-ps", "-ts", "-vdw", "-hb", "-lhb"]
 
 	for itype in ITYPES:
 		if(itype not in valid_itypes):
@@ -96,7 +97,7 @@ def process_args(args):
 	return topology, trajectory, output_dir, cores, ligand, solv, sele, stride
 
 def main():
-	if("--help" in sys.argv):
+	if("--help" in sys.argv or "-h" in sys.argv):
 		print (HELP_STR)
 		exit(1)
 	if("--itype" not in sys.argv):

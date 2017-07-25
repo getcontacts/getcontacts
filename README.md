@@ -15,10 +15,10 @@ MDContactNetworks is compatible with all topology and trajectory file formats re
 
 	Required Arguments:
 
-	   TOP - Path to topology
-	   TRAJ - Path to simulation trajectory fragment
-	   OUTPUT_DIR - Path of output directory
-	   INTERACTION_TYPES - User specifies what type of non-covalent interaction to compute using the following flags. 
+	   --topology TOPOLOGY - Path to topology
+	   --trajectory TRAJECTORY - Path to simulation trajectory fragment
+	   --output_dir OUTPUT_DIRECTORY - Path of output directory
+	   --itypes INTERACTION_TYPES - User specifies what type of non-covalent interaction to compute using the following flags. 
 
 		   -sb, Salt bridges
 		   -pc, Pi-cation 
@@ -28,7 +28,7 @@ MDContactNetworks is compatible with all topology and trajectory file formats re
 		   -hb, Hydrogen Bonds
 		   -lhb, Ligand Hydrogen Bonds
 
-		   Hydrogen bonds are automatically stratified to following subtypes
+		   Hydrogen bonds are automatically stratified to following subtypes and written as output.
 
 		   -hbbb, Backbone-backbone hydrogen bonds
 		   -hbsb, Backbone-sidechain hydrogen bonds
@@ -43,13 +43,13 @@ MDContactNetworks is compatible with all topology and trajectory file formats re
 
 	Optional Arguments:
 
-		-cores <NUM_CORES> Number of cpu cores to parallelize computations on.
+		-cores NUM_CORES Number of cpu cores to parallelize computations on, default = 6
 
-		-ligand <LIGAND_NAME> Resname of ligand molecule.
+		-ligand LIGAND Resname of ligand molecule, default = None
 
-		-sele <SELECTION_QUERY> VMD selection query to compute contacts in specified region of protein.
+		-sele SELECTION VMD selection query to compute contacts in specified region of protein, default = None
 
-		-solv <SOLVENT_ID> Solvent identifier in simulation, default = "TIP3"
+		-solv SOLVENT Solvent identifier in simulation, default = "TIP3"
 
    
    __Output:__ Tables storing non-covalent contacts. Tab delimited rows are formatted to include 
@@ -57,7 +57,7 @@ MDContactNetworks is compatible with all topology and trajectory file formats re
 
    __Examples:__
 
-	python dynamic_contact_networks.py TOP.pdb TRAJ.nc -cores 12 -solv IP3 -sele "chain A and resid 100 to 160" -ligand EJ4 -itype -sb -hb -lhb
+	python dynamic_contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype -sb -hb -lhb
 
-	python dynamic_contact_networks.py TOP.psf TRAJ.dcd -cores 6 -itype -pc -ps -vdw
+	python dynamic_contact_networks.py --topology TOP.psf --trajectory TRAJ.dcd --cores 6 --itype -pc -ps -vdw
 
