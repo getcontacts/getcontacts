@@ -15,7 +15,8 @@
 import os
 import sys
 import datetime
-from contact_calc.compute_contacts_memory_intensive import *
+# from contact_calc.compute_contacts_memory_intensive import *
+from contact_calc.compute_contacts import *
 
 USAGE_STR = """
 
@@ -23,7 +24,7 @@ USAGE_STR = """
 # Computes non-covalent contacts in MD simulation for any protein of study
 
 # Usage
-# python DynamicContactNetworks.py <TOP> <TRAJ> <OUTPUT_DIR> <cores> <stride> <solv> <chain> <ligand> <INTERACTION_TYPES>
+# python DynamicContactNetworks.py <TOP> <TRAJ> <OUTPUT_DIR> <cores> <stride> <solv> <sele> <ligand> <INTERACTION_TYPES>
 
 # Arguments
 # <TOP> Absolute path to topology
@@ -33,7 +34,7 @@ USAGE_STR = """
 # <optional -cores flag> To denote how many CPU cores to use for parallelization
 # <optional -stride flag> To denote a stride value other than default of 1
 # <optional -solv flag> To denote a solvent id other than default of TIP3
-# <optional -chain flag> To denote the specific chain ID to query when using VMD's hydrogen bond calculator 
+# <optional -sele flag> To denote a VMD selection query to compute contacts upon
 # <optional -ligand flag> To denote the resname of ligand in the simulation.
 
 # Example
@@ -59,7 +60,7 @@ if __name__ == "__main__":
 	cores = 6
 	stride = 1 # default
 	solvent_resn = "TIP3" # default
-	chain_id = None
+	sele_id = None
 	ligand = None
 
 	if("-cores" in sys.argv):
@@ -74,16 +75,16 @@ if __name__ == "__main__":
 		solv_index = sys.argv.index("-solv")
 		solvent_resn = sys.argv[solvIndex + 1]
 
-	if("-chain" in sys.argv):
-		chain_index = sys.argv.index("-chain")
-		chain_id = str(sys.argv[chain_index + 1])
+	if("-sele" in sys.argv):
+		sele_index = sys.argv.index("-sele")
+		sele_id = str(sys.argv[sele_index + 1])
 
 	if("-ligand" in sys.argv):
 		ligand_index = sys.argv.index("-ligand")
 		ligand = str(sys.argv[ligand_index + 1])
 
 	tic = datetime.datetime.now()
-	compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solvent_resn, chain_id, ligand)
+	compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solvent_resn, sele_id, ligand)
 	toc = datetime.datetime.now()
 	print("Computation Time: " + str((toc-tic).total_seconds()))
 

@@ -4,12 +4,10 @@ Library for computing dynamic non-covalent contact networks in proteins througho
 
 ## File format
 
-MDContactNetworks is compatible with .nc and .dcd file formats for MD trajectories.
+MDContactNetworks is compatible with all topology and trajectory file formats readable in VMD.
 
 
 ## Running the Code
-
-The code is organized into two steps:
 
 ### 1. Computing non-covalent contacts in a protein throughout every frame of a MD Simulation fragment
    
@@ -45,27 +43,19 @@ The code is organized into two steps:
 
 	Optional Arguments:
 
-		-cores <NUM_CORES> User can specify number of cpu cores to run computations on
+		-cores <NUM_CORES> Number of cpu cores to run computations on
 
-		-solv <SOLVENT_ID> Specify solvent identifier in simulation other than the default of TIP3
+		-solv <SOLVENT_ID> Solvent identifier in simulation. default = "TIP3"
 
-		-chain <CHAIN_ID> Specify specific chain of protein to compute non-covalent contacts
+		-sele <SELECTION_QUERY> VMD selection query to compute contacts in specified region of protein
 
-		-ligand <LIGAND_NAME> Specify name of ligand if computing hydrogen bonds involving ligand
+		-ligand <LIGAND_NAME> Resname of ligand molecule
 
    
-   __Output:__ List of non-covalent contacts of specified type for each frame of simulation fragment 
+   __Output:__ Tables storing non-covalent contacts. Tab delimited rows are formatted to include 
+   frame index, atom labels, and interaction types. 
 
    __Examples:__
 
-	python dynamic_contact_networks.py TOP.pdb TRAJ.nc -cores 12 -solv IP3 -chain A -ligand EJ4 -itype -hb -lhb
-
-
-### 2. Visualizing dynamic contact networks
-
-   __Input:__ Directory containing non-covalent contacts computed for each fragment of simulation
-
-   
-   __Output:__ JSON file that has keys representing interactions between a pair of atoms. Values being the time points that the interaction was formed in simulation. Formatted to be visualized with flareplots (https://gpcrviz.github.io/flareplot/)
-
+	python dynamic_contact_networks.py TOP.pdb TRAJ.nc -cores 12 -solv IP3 -sele "chain A and resid 100 to 160" -ligand EJ4 -itype -hb -lhb
 

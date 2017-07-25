@@ -109,6 +109,8 @@ def get_atom_selection_properties(selection_id):
 	resids = map(str, evaltcl("$%s get resid" % (selection_id)).split(" "))
 	names = map(str, evaltcl("$%s get name" % (selection_id)).split(" "))
 	indices = map(str, evaltcl("$%s get index" % (selection_id)).split(" "))
+	if(chains == [''] or resnames == [''] or resids == [''] or names == [''] or indices == ['']):
+		return [], [], [], [], []
 	return chains, resnames, resids, names, indices
 
 def gen_index_to_atom_label(TOP, TRAJ):
@@ -149,7 +151,7 @@ def gen_index_to_atom_label(TOP, TRAJ):
 	molecule.delete(trajid)
 	return index_to_label
 
-def get_anion_atoms(traj_frag_molid, frame_idx, chain_id):
+def get_anion_atoms(traj_frag_molid, frame_idx, sele_id):
 	"""
 	Get list of anion atoms that can form salt bridges
 
@@ -161,12 +163,12 @@ def get_anion_atoms(traj_frag_molid, frame_idx, chain_id):
 	"""
 	anion_list = []
 
-	if(chain_id == None):
+	if(sele_id == None):
 		evaltcl("set ASP [atomselect %s \" (resname ASP) and (name OD1 OD2) \" frame %s]" % (traj_frag_molid, frame_idx))
 		evaltcl("set GLU [atomselect %s \" (resname GLU) and (name OE1 OE2) \" frame %s]" % (traj_frag_molid, frame_idx))
 	else:
-		evaltcl("set ASP [atomselect %s \" (resname ASP) and (name OD1 OD2) and (chain %s) \" frame %s]" % (traj_frag_molid, chain_id, frame_idx))
-		evaltcl("set GLU [atomselect %s \" (resname GLU) and (name OE1 OE2) and (chain %s) \" frame %s]" % (traj_frag_molid, chain_id, frame_idx))
+		evaltcl("set ASP [atomselect %s \" (resname ASP) and (name OD1 OD2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
+		evaltcl("set GLU [atomselect %s \" (resname GLU) and (name OE1 OE2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
 
 	anion_list += get_atom_selection_labels("ASP")
 	anion_list += get_atom_selection_labels("GLU")
@@ -175,7 +177,7 @@ def get_anion_atoms(traj_frag_molid, frame_idx, chain_id):
 	evaltcl('$GLU delete')
 	return anion_list
 
-def get_cation_atoms(traj_frag_molid, frame_idx, chain_id):
+def get_cation_atoms(traj_frag_molid, frame_idx, sele_id):
 	"""
 	Get list of cation atoms that can form salt bridges or pi cation contacts
 
@@ -186,14 +188,14 @@ def get_cation_atoms(traj_frag_molid, frame_idx, chain_id):
 		can form salt bridges
 	"""
 	cation_list = []
-	if(chain_id == None):
+	if(sele_id == None):
 		evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) \" frame %s]" % (traj_frag_molid, frame_idx))
 		evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) \" frame %s]" % (traj_frag_molid, frame_idx))
 		evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) \" frame %s]" % (traj_frag_molid, frame_idx))
 	else:
-		evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) and (chain %s) \" frame %s]" % (traj_frag_molid, chain_id, frame_idx))
-		evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) and (chain %s) \" frame %s]" % (traj_frag_molid, chain_id, frame_idx))
-		evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (chain %s) \" frame %s]" % (traj_frag_molid, chain_id, frame_idx))
+		evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
+		evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
+		evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
 
 	cation_list += get_atom_selection_labels("LYS")
 	cation_list += get_atom_selection_labels("ARG")
@@ -258,7 +260,6 @@ def calc_water_to_residues_map(water_hbonds, solvent_resn):
 	_solvent_bridges = []
 	for frame_idx, atom1_label, atom2_label, itype in water_hbonds:
 		if(solvent_resn in atom1_label and solvent_resn in atom2_label): 
-			# print atom1_label, atom2_label
 			_solvent_bridges.append((atom1_label, atom2_label))
 			continue
 		elif(solvent_resn in atom1_label and solvent_resn not in atom2_label):

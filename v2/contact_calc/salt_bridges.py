@@ -26,7 +26,7 @@ CUTOFF_DISTANCE = 4.0
 # Functions
 ##############################################################################
 
-def prep_salt_bridge_computation(traj_frag_molid, frame_idx, chain_id):
+def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id):
 	"""
 	Compute all possible anion and cation atoms from first frame of simulation
 
@@ -39,8 +39,8 @@ def prep_salt_bridge_computation(traj_frag_molid, frame_idx, chain_id):
 		List of atom labels for atoms in LYS, ARG, HIS that
 		can form salt bridges
 	"""
-	anion_list = get_anion_atoms(traj_frag_molid, frame_idx, chain_id)
-	cation_list = get_cation_atoms(traj_frag_molid, frame_idx, chain_id)
+	anion_list = get_anion_atoms(traj_frag_molid, frame_idx, sele_id)
+	cation_list = get_cation_atoms(traj_frag_molid, frame_idx, sele_id)
 	return anion_list, cation_list
 
 

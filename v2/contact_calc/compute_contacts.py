@@ -27,9 +27,7 @@ from vanderwaals import *
 ##############################################################################
 # Global Variables
 ##############################################################################
-
 TRAJ_FRAG_SIZE = 100
-sem = Semaphore()
 
 ##############################################################################
 # Functions
@@ -40,7 +38,7 @@ sem = Semaphore()
 ### also the IO time (which would happen anyways). Figure out best output
 ### format and most efficient way to write to disk. 
 
-def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, solvent_resn, chain_id, ligand, index_to_label):
+def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, solvent_resn, sele_id, ligand, index_to_label):
 	"""
 	Computes each of the specified non-covalent interaction type for a single frame
 
@@ -56,6 +54,8 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, solvent
 		Denotes the list of non-covalent interaction types to compute contacts for 
 	solvent_resn: string, default = TIP3
 		Denotes the resname of solvent in simulation
+	sele_id: string, default = None
+		Compute contacts on subset of atom selection based on VMD query
 	chain_id: string, default = None
 		Specify chain of protein to perform computation on 
 	ligand: string, default = None
@@ -73,26 +73,26 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, solvent
 	frame_contacts = []
 
 	if("-sb" in ITYPES):
-		anion_list, cation_list = prep_salt_bridge_computation(traj_frag_molid, frame_idx, chain_id)
+		anion_list, cation_list = prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id)
 		frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, anion_list, cation_list)
 	if("-pc" in ITYPES):
-		frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, chain_id)
+		frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id)
 	if("-ps" in ITYPES):
-		frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id)
+		frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id)
 	if("-ts" in ITYPES):
-		frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id)
+		frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id)
 	if("-vdw" in ITYPES):
-		frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, chain_id)
+		frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id)
 	if("-hb" in ITYPES):
-		frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, chain_id)
+		frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id)
 	if("-lhb" in ITYPES):
-		frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, chain_id, ligand)
+		frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, ligand)
 
 	toc = datetime.datetime.now()
 	print("Finished computing contacts for frag %s frame %s in %s s" % (frag_idx, frame_idx, (toc-tic).total_seconds()))
 	return frame_contacts
 
-def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label):
+def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, stride, solvent_resn, sele_id, ligand, index_to_label):
 	""" 
 	Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
 
@@ -114,8 +114,8 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_
 		Frequency to skip frames in trajectory
 	solvent_resn: string, default = TIP3
 		Denotes the resname of solvent in simulation
-	chain_id: string, default = None
-		Specify chain of protein to perform computation on 
+	sele_id: string, default = None
+		Compute contacts on subset of atom selection based on VMD query
 	ligand: string, default = None
 		Include ligand resname if computing contacts between ligand and binding pocket residues
 	index_to_label: dict 
@@ -136,7 +136,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_
 	num_frag_frames = molecule.numframes(traj_frag_molid)
 	for frame_idx in range(1, num_frag_frames):
 		# if(frame_idx > 1): break
-		fragment_contacts += compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, solvent_resn, chain_id, ligand, index_to_label)
+		fragment_contacts += compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, solvent_resn, sele_id, ligand, index_to_label)
 
 	### Delete trajectory fragment to clear memory
 	molecule.delete(traj_frag_molid)
@@ -145,13 +145,10 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_
 	print("Writing output to seperate files, one for each itype ...")
 	
 	fd_map = {itype: open(OUTPUT_DIR + "/" + itype.strip("-") + "_frag_" + str(frag_idx) + ".txt", 'w') for itype in contact_types}
-
 	for contact in fragment_contacts:
 		itype_key = contact[-1]
 		output_string = str(frag_idx) + "\t" + "\t".join(map(str, contact)) + "\n"
 		fd_map[itype_key].write(output_string)
-		# with sem:
-		# 	fd_map[itype_key].write(str(frag_idx) + "\t" + str(num_frag_frames -1) + "\t" + "\t".join(map(str, contact)) + "\n")
 
 	for itype in fd_map:
 		fd_map[itype].close()
@@ -195,7 +192,7 @@ def stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_
 	fo.close()
 
 
-def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solvent_resn, chain_id, ligand):
+def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solvent_resn, sele_id, ligand):
 	""" 
 	Computes non-covalent contacts across the entire trajectory and writes to output.
 
@@ -215,13 +212,14 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 		Frequency to skip frames in trajectory
 	solvent_resn: string, default = TIP3
 		Denotes the resname of solvent in simulation
+	sele_id: string, default = None
+		Compute contacts on subset of atom selection based on VMD query
 	chain_id: string, default = None
 		Specify chain of protein to perform computation on 
 	ligand: string, default = None
 		Include ligand resname if computing contacts between ligand and binding pocket residues
 
 	"""
-
 	### Set up file descriptors for writing output
 	if not os.path.exists(OUTPUT_DIR):
 		os.makedirs(OUTPUT_DIR)
@@ -245,7 +243,7 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 	# for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
 	# 	if(frag_idx > 0): break
 	# 	end_frame = beg_frame + TRAJ_FRAG_SIZE
-	# 	frag_idx, frag_length = compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label)
+	# 	frag_idx, frag_length = compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, stride, solvent_resn, sele_id, chain_id, ligand, index_to_label)
 	# 	output.append((frag_idx, frag_length))
 
 	### Generate input arguments for each trajectory piece
@@ -254,14 +252,12 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 		# if(frag_idx > 0): break
 		end_frame = beg_frame + TRAJ_FRAG_SIZE
 		print("Processing fragment %s beg_frame %s end_frame %s" % (frag_idx, beg_frame, end_frame))
-		input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, stride, solvent_resn, chain_id, ligand, index_to_label))
+		input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, stride, solvent_resn, sele_id, ligand, index_to_label))
 
 	pool = Pool(processes=cores)
 	output = pool.map(compute_fragment_contacts_helper, input_args)
 	pool.close()
 	pool.join()
-
-
 
 	### Sort output by trajectory fragments
 	print("Map fragments to length")

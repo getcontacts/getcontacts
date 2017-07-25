@@ -36,7 +36,7 @@ ATOM_RADIUS = {'H': 1.20,
 # Functions
 ##############################################################################
 
-def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, chain_id):
+def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id):
 	"""
 	Compute all vanderwaals interactions in a frame of simulation
 
@@ -49,8 +49,8 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, chain_id):
 	index_to_label: dict 
 		Maps VMD atom index to label "chain:resname:resid:name:index"
 		{11205: "A:ASP:114:CA:11205, ...}
-	chain_id: string, default = None
-		Specify chain of protein to perform computation on 
+	sele_id: string, default = None
+		Compute contacts on subset of atom selection based on VMD query
 
 	Returns
 	-------
@@ -58,10 +58,10 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, chain_id):
 		itype = "vdw"
 	"""
 	vanderwaals = []
-	if(chain_id == None):
+	if(sele_id == None):
 		evaltcl("set full_protein [atomselect %s \" noh and protein \" frame %s]" % (traj_frag_molid, frame_idx))
 	else:
-		evaltcl("set full_protein [atomselect %s \" noh and protein and chain %s \" frame %s]" % (traj_frag_molid, chain_id, frame_idx))
+		evaltcl("set full_protein [atomselect %s \" noh and protein and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
 
 	contacts = evaltcl("measure contacts %s $full_protein" % (SOFT_VDW_CUTOFF))
 	contact_index_pairs = parse_contacts(contacts)

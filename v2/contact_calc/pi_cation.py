@@ -28,7 +28,7 @@ ANGLE_CUTOFF = 60 # Degree
 # Functions
 ##############################################################################
 
-def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, chain_id):
+def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id):
 	"""
 	Compute pi-cation interactions in a frame of simulation
 
@@ -41,8 +41,8 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, chain_id):
 	index_to_label: dict 
 		Maps VMD atom index to label "chain:resname:resid:name:index"
 		{11205: "A:ASP:114:CA:11205, ...}
-	chain_id: string, default = None
-		Specify chain of protein to perform computation on 
+	sele_id: string, default = None
+		Compute contacts on subset of atom selection based on VMD query
 
 	Returns
 	-------
@@ -51,12 +51,12 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, chain_id):
 	"""
 	pi_cations = []
 
-	if(chain_id == None):
+	if(sele_id == None):
 		cation_atom_sel = "set cation_atoms [atomselect %s \" ((resname LYS) and (name NZ)) or ((resname ARG) and (name NH1 NH2)) or ((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2)) \" frame %s]" % (traj_frag_molid, frame_idx)
 		aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" ((resname PHE) and (name CG CE1 CE2)) or ((resname TRP) and (name CD2 CZ2 CZ3)) or ((resname TYR) and (name CG CE1 CE2)) \" frame %s]" % (traj_frag_molid, frame_idx)
 	else:
-		cation_atom_sel = "set cation_atoms [atomselect %s \" ((resname LYS) and (name NZ)) or ((resname ARG) and (name NH1 NH2)) or ((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2)) and chain %s\" frame %s]" % (traj_frag_molid, chain_id, frame_idx)
-		aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" ((resname PHE) and (name CG CE1 CE2)) or ((resname TRP) and (name CD2 CZ2 CZ3)) or ((resname TYR) and (name CG CE1 CE2)) and chain %s\" frame %s]" % (traj_frag_molid, chain_id, frame_idx)
+		cation_atom_sel = "set cation_atoms [atomselect %s \" ((resname LYS) and (name NZ) and (%s)) or ((resname ARG) and (name NH1 NH2) and (%s)) or ((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s))\" frame %s]" % (traj_frag_molid, sele_id, sele_id, sele_id, frame_idx)
+		aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" ((resname PHE) and (name CG CE1 CE2) and (%s)) or ((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or ((resname TYR) and (name CG CE1 CE2) and (%s))\" frame %s]" % (traj_frag_molid, sele_id, sele_id, sele_id, frame_idx)
 
 	evaltcl(cation_atom_sel)
 	evaltcl(aromatic_atom_sel)

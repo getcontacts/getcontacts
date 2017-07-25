@@ -49,7 +49,7 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label):
 	return aromatic_atom_triplet
 
 
-def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, chain_id, itype, SOFT_DISTANCE_CUTOFF, DISTANCE_CUTOFF, ANGLE_CUTOFF, PSI_ANGLE_CUTOFF):
+def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, itype, SOFT_DISTANCE_CUTOFF, DISTANCE_CUTOFF, ANGLE_CUTOFF, PSI_ANGLE_CUTOFF):
 	"""
 	Compute aromatic interactions in a frame of simulation
 
@@ -62,8 +62,8 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, chain_id, ityp
 	index_to_label: dict 
 		Maps VMD atom index to label "chain:resname:resid:name:index"
 		{11205: "A:ASP:114:CA:11205, ...}
-	chain_id: string, default = None
-		Specify chain of protein to perform computation on 
+	sele_id: string, default = None
+		Compute contacts on subset of atom selection based on VMD query
 	itype: string
 		Specify which type of aromatics ("ps" or "ts") to compute
 	SOFT_DISTANCE_CUTOFF: float
@@ -83,10 +83,10 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, chain_id, ityp
 
 	aromatics = []
 
-	if(chain_id == None):
+	if(sele_id == None):
 		aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" ((resname PHE) and (name CG CE1 CE2)) or ((resname TRP) and (name CD2 CZ2 CZ3)) or ((resname TYR) and (name CG CE1 CE2)) \" frame %s]" % (traj_frag_molid, frame_idx)
 	else:
-		aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" ((resname PHE) and (name CG CE1 CE2)) or ((resname TRP) and (name CD2 CZ2 CZ3)) or ((resname TYR) and (name CG CE1 CE2)) and chain %s\" frame %s]" % (traj_frag_molid, chain_id, frame_idx)
+		aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" ((resname PHE) and (name CG CE1 CE2) and (%s)) or ((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or ((resname TYR) and (name CG CE1 CE2) and (%s)) \" frame %s]" % (traj_frag_molid, sele_id, sele_id, sele_id, frame_idx)
 
 	evaltcl(aromatic_atom_sel)
 	contacts = evaltcl("measure contacts %s $aromatic_atoms" % (SOFT_DISTANCE_CUTOFF))
@@ -159,7 +159,7 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, chain_id, ityp
 	return aromatics
 
 
-def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id):
+def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id):
 	"""
 	Compute pi-stacking interactions in a frame of simulation
 
@@ -172,8 +172,8 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id):
 	index_to_label: dict 
 		Maps VMD atom index to label "chain:resname:resid:name:index"
 		{11205: "A:ASP:114:CA:11205, ...}
-	chain_id: string, default = None
-		Specify chain of protein to perform computation on 
+	sele_id: string, default = None
+		Compute contacts on subset of atom selection based on VMD query
 
 	Returns
 	-------
@@ -186,11 +186,11 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id):
 	PI_STACK_ANGLE_CUTOFF = 30 # degrees
 	PI_STACK_PSI_ANGLE_CUTOFF = 45 # degrees
 
-	pi_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, chain_id, "ps", PI_STACK_SOFT_DISTANCE_CUTOFF, PI_STACK_DISTANCE_CUTOFF, PI_STACK_ANGLE_CUTOFF, PI_STACK_PSI_ANGLE_CUTOFF)
+	pi_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, "ps", PI_STACK_SOFT_DISTANCE_CUTOFF, PI_STACK_DISTANCE_CUTOFF, PI_STACK_ANGLE_CUTOFF, PI_STACK_PSI_ANGLE_CUTOFF)
 	return pi_stacking
 
 
-def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id):
+def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id):
 	"""
 	Compute t-stacking interactions in a frame of simulation
 
@@ -203,8 +203,8 @@ def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id):
 	index_to_label: dict 
 		Maps VMD atom index to label "chain:resname:resid:name:index"
 		{11205: "A:ASP:114:CA:11205, ...}
-	chain_id: string, default = None
-		Specify chain of protein to perform computation on 
+	sele_id: string, default = None
+		Compute contacts on subset of atom selection based on VMD query
 
 	Returns
 	-------
@@ -217,7 +217,7 @@ def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, chain_id):
 	T_STACK_ANGLE_CUTOFF = 30 # degrees
 	T_STACK_PSI_ANGLE_CUTOFF = 45 # degrees
 
-	t_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, chain_id, "ts", T_STACK_SOFT_DISTANCE_CUTOFF, T_STACK_DISTANCE_CUTOFF, T_STACK_ANGLE_CUTOFF, T_STACK_PSI_ANGLE_CUTOFF)
+	t_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, "ts", T_STACK_SOFT_DISTANCE_CUTOFF, T_STACK_DISTANCE_CUTOFF, T_STACK_ANGLE_CUTOFF, T_STACK_PSI_ANGLE_CUTOFF)
 	return t_stacking
 
 
