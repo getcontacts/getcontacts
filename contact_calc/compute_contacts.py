@@ -38,7 +38,7 @@ TRAJ_FRAG_SIZE = 100
 ### also the IO time (which would happen anyways). Figure out best output
 ### format and most efficient way to write to disk. 
 
-def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, solvent_resn, sele_id, ligand, index_to_label):
+def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele_id, ligand, index_to_label):
 	"""
 	Computes each of the specified non-covalent interaction type for a single frame
 
@@ -52,6 +52,8 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, solvent
 		Frame number to query
 	ITYPES: list
 		Denotes the list of non-covalent interaction types to compute contacts for 
+	geom_criterion_values: dict
+		Dictionary containing the cutoff values for all geometric criteria
 	solvent_resn: string, default = TIP3
 		Denotes the resname of solvent in simulation
 	sele_id: string, default = None
@@ -70,29 +72,43 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, solvent
 
 	"""
 	tic = datetime.datetime.now()
-	frame_contacts = []
 
+	### Extract geometric criterion 
+	SALT_BRIDGE_CUTOFF_DISTANCE = geom_criterion_values['SALT_BRIDGE_CUTOFF_DISTANCE']
+	PI_CATION_CUTOFF_DISTANCE = geom_criterion_values['PI_CATION_CUTOFF_DISTANCE']
+	PI_CATION_CUTOFF_ANGLE = geom_criterion_values['PI_CATION_CUTOFF_ANGLE']
+	PI_STACK_CUTOFF_DISTANCE = geom_criterion_values['PI_STACK_CUTOFF_DISTANCE']
+	PI_STACK_CUTOFF_ANGLE = geom_criterion_values['PI_STACK_CUTOFF_ANGLE']
+	PI_STACK_PSI_ANGLE = geom_criterion_values['PI_STACK_PSI_ANGLE']
+	T_STACK_CUTOFF_DISTANCE = geom_criterion_values['T_STACK_CUTOFF_DISTANCE']
+	T_STACK_CUTOFF_ANGLE = geom_criterion_values['T_STACK_CUTOFF_ANGLE']
+	T_STACK_PSI_ANGLE = geom_criterion_values['T_STACK_PSI_ANGLE']
+	HBOND_CUTOFF_DISTANCE = geom_criterion_values['HBOND_CUTOFF_DISTANCE']
+	HBOND_CUTOFF_ANGLE = geom_criterion_values['HBOND_CUTOFF_ANGLE']
+	VDW_EPSILON = geom_criterion_values['VDW_EPSILON']
+	
+
+	frame_contacts = []
 	if("-sb" in ITYPES):
-		anion_list, cation_list = prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id)
-		frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, anion_list, cation_list)
+		frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, SALT_BRIDGE_CUTOFF_DISTANCE)
 	if("-pc" in ITYPES):
-		frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id)
+		frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, PI_CATION_CUTOFF_DISTANCE, PI_CATION_CUTOFF_ANGLE)
 	if("-ps" in ITYPES):
-		frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id)
+		frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, PI_STACK_CUTOFF_DISTANCE, PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
 	if("-ts" in ITYPES):
-		frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id)
+		frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
 	if("-vdw" in ITYPES):
-		frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id)
+		frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW_EPSILON)
 	if("-hb" in ITYPES):
-		frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id)
+		frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, None, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
 	if("-lhb" in ITYPES):
-		frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, ligand)
+		frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, ligand, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
 
 	toc = datetime.datetime.now()
 	print("Finished computing contacts for frag %s frame %s in %s s" % (frag_idx, frame_idx, (toc-tic).total_seconds()))
 	return frame_contacts
 
-def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, stride, solvent_resn, sele_id, ligand, index_to_label):
+def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label):
 	""" 
 	Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
 
@@ -110,6 +126,8 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_
 		In .nc or .dcd format
 	ITYPES: list
 		Denotes the list of non-covalent interaction types to compute contacts for 
+	geom_criterion_values: dict
+		Dictionary containing the cutoff values for all geometric criteria
 	stride: int, default = 1
 		Frequency to skip frames in trajectory
 	solvent_resn: string, default = TIP3
@@ -136,7 +154,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_
 	num_frag_frames = molecule.numframes(traj_frag_molid)
 	for frame_idx in range(1, num_frag_frames):
 		# if(frame_idx > 1): break
-		fragment_contacts += compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, solvent_resn, sele_id, ligand, index_to_label)
+		fragment_contacts += compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele_id, ligand, index_to_label)
 
 	### Delete trajectory fragment to clear memory
 	molecule.delete(traj_frag_molid)
@@ -192,7 +210,7 @@ def stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_
 	fo.close()
 
 
-def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solvent_resn, sele_id, ligand):
+def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_values, cores, stride, solvent_resn, sele_id, ligand):
 	""" 
 	Computes non-covalent contacts across the entire trajectory and writes to output.
 
@@ -206,6 +224,8 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 		Absolute path to output directory 
 	ITYPES: list
 		Denotes the list of non-covalent interaction types to compute contacts for 
+	geom_criterion_values: dict
+		Dictionary containing the cutoff values for all geometric criteria
 	cores: int, default = 6
 		Number of CPU cores to parallelize over
 	stride: int, default = 1
@@ -243,7 +263,7 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 	# for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
 	# 	if(frag_idx > 0): break
 	# 	end_frame = beg_frame + TRAJ_FRAG_SIZE
-	# 	frag_idx, frag_length = compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, stride, solvent_resn, sele_id, chain_id, ligand, index_to_label)
+	# 	frag_idx, frag_length = compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label)
 	# 	output.append((frag_idx, frag_length))
 
 	### Generate input arguments for each trajectory piece
@@ -252,7 +272,7 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solve
 		# if(frag_idx > 0): break
 		end_frame = beg_frame + TRAJ_FRAG_SIZE
 		print("Processing fragment %s beg_frame %s end_frame %s" % (frag_idx, beg_frame, end_frame))
-		input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, stride, solvent_resn, sele_id, ligand, index_to_label))
+		input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label))
 
 	pool = Pool(processes=cores)
 	output = pool.map(compute_fragment_contacts_helper, input_args)

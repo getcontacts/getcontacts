@@ -24,7 +24,6 @@ __all__ = ["compute_vanderwaals"]
 
 ALPHA_CARBON_DIST_CUTOFF = 10.0 # Angstroms
 SOFT_VDW_CUTOFF = 5.0 # Angstroms
-VDW_EPSILON = 0.5 # Angstroms
 ATOM_RADIUS = {'H': 1.20,
 				'C': 1.70,
 				'N': 1.55,
@@ -36,7 +35,7 @@ ATOM_RADIUS = {'H': 1.20,
 # Functions
 ##############################################################################
 
-def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id):
+def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW_EPSILON):
 	"""
 	Compute all vanderwaals interactions in a frame of simulation
 
@@ -51,6 +50,8 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id):
 		{11205: "A:ASP:114:CA:11205, ...}
 	sele_id: string, default = None
 		Compute contacts on subset of atom selection based on VMD query
+	VDW_EPSILON: float, default = 0.5 angstroms 
+		amount of padding for calculating vanderwaals contacts 
 
 	Returns
 	-------

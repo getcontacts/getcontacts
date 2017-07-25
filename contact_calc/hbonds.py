@@ -44,21 +44,21 @@ def filter_duplicates(donors, acceptors):
 
 	return new_donors, new_acceptors
 
-def calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id, ligand, distance_cutoff, angle_cutoff):
+def calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id, ligand, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE):
 	"""
 	Compute donor and acceptor atom pairs for hydrogen bonds in terms of numeric VMD indices
 	"""
 	### Measure Hbonds command
 	if(ligand == None):
 		if(sele_id == None):
-			measure_hbonds_command = "measure hbonds %s %s [atomselect %s \"(resname %s and within %s of protein) or protein and not lipid and not carbon and not sulfur\" frame %s]" % (distance_cutoff, angle_cutoff, traj_frag_molid, solvent_resn, WATER_TO_PROTEIN_DIST, frame_idx)
+			measure_hbonds_command = "measure hbonds %s %s [atomselect %s \"(resname %s and within %s of protein) or protein and not lipid and not carbon and not sulfur\" frame %s]" % (HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE, traj_frag_molid, solvent_resn, WATER_TO_PROTEIN_DIST, frame_idx)
 		else:
-			measure_hbonds_command = "measure hbonds %s %s [atomselect %s \"(resname %s and within %s of (protein and (%s))) or protein and (%s) and not lipid and not carbon and not sulfur\" frame %s]" % (distance_cutoff, angle_cutoff, traj_frag_molid, solvent_resn, WATER_TO_PROTEIN_DIST, sele_id, sele_id, frame_idx)
+			measure_hbonds_command = "measure hbonds %s %s [atomselect %s \"(resname %s and within %s of (protein and (%s))) or protein and (%s) and not lipid and not carbon and not sulfur\" frame %s]" % (HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE, traj_frag_molid, solvent_resn, WATER_TO_PROTEIN_DIST, sele_id, sele_id, frame_idx)
 	else:
 		if(sele_id == None):
-			measure_hbonds_command = "measure hbonds %s %s [atomselect %s \"(resname %s and within %s of resname %s) or (not carbon and not sulfur and protein within %s of resname %s) or (not carbon and not sulfur and resname %s) and (not lipid)\" frame %s]" % (distance_cutoff, angle_cutoff, traj_frag_molid, solvent_resn, WATER_TO_LIGAND_DIST, ligand, WATER_TO_LIGAND_DIST, ligand, ligand, frame_idx)
+			measure_hbonds_command = "measure hbonds %s %s [atomselect %s \"(resname %s and within %s of resname %s) or (not carbon and not sulfur and protein within %s of resname %s) or (not carbon and not sulfur and resname %s) and (not lipid)\" frame %s]" % (HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE, traj_frag_molid, solvent_resn, WATER_TO_LIGAND_DIST, ligand, WATER_TO_LIGAND_DIST, ligand, ligand, frame_idx)
 		else:
-			measure_hbonds_command = "measure hbonds %s %s [atomselect %s \"(resname %s and within %s of resname %s) or ((not carbon and not sulfur and protein and (%s)) and within %s of resname %s) or (not carbon and not sulfur and resname %s) and (not lipid)\" frame %s]" % (distance_cutoff, angle_cutoff, traj_frag_molid, solvent_resn, WATER_TO_LIGAND_DIST, ligand, sele_id, WATER_TO_LIGAND_DIST, ligand, ligand, frame_idx)
+			measure_hbonds_command = "measure hbonds %s %s [atomselect %s \"(resname %s and within %s of resname %s) or ((not carbon and not sulfur and protein and (%s)) and within %s of resname %s) or (not carbon and not sulfur and resname %s) and (not lipid)\" frame %s]" % (HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE, traj_frag_molid, solvent_resn, WATER_TO_LIGAND_DIST, ligand, sele_id, WATER_TO_LIGAND_DIST, ligand, ligand, frame_idx)
 
 	donor_acceptor_indices = evaltcl(measure_hbonds_command)
 
@@ -76,7 +76,7 @@ def calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id,
 
 	return donors, acceptors
 
-def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, ligand=None, distance_cutoff=3.5, angle_cutoff=70):
+def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, ligand=None, HBOND_CUTOFF_DISTANCE=3.5, HBOND_CUTOFF_ANGLE=70):
 	"""
 	Compute hydrogen bonds involving protein for a single frame of simulation
 
@@ -90,8 +90,8 @@ def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_r
 		Denotes the resname of solvent in simulation
 	sele_id: string, default = None
 		Compute contacts on subset of atom selection based on VMD query
-	distance_cutoff: float, default = 3.5 Angstroms
-	angle_cutoff: float, default = 70 degrees
+	HBOND_CUTOFF_DISTANCE: float, default = 3.5 Angstroms
+	HBOND_CUTOFF_ANGLE: float, default = 70 degrees
 
 	Return
 	------
@@ -101,7 +101,7 @@ def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_r
 	if(ligand != None): itype = "lhb"
 
 	hbonds = []
-	donors, acceptors = calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id, ligand, distance_cutoff, angle_cutoff)
+	donors, acceptors = calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id, ligand, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
 	donors, acceptors = filter_duplicates(donors, acceptors)
 
 	for idx, donor in enumerate(donors):

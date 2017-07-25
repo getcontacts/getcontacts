@@ -20,15 +20,13 @@ __all__ = ['compute_pi_cation']
 ##############################################################################
 # Globals
 ##############################################################################
-DISTANCE_CUTOFF = 6.0 # Angstrom
 SOFT_DISTANCE_CUTOFF = 10.0 # Angstroms
-ANGLE_CUTOFF = 60 # Degree
 
 ##############################################################################
 # Functions
 ##############################################################################
 
-def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id):
+def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, PI_CATION_CUTOFF_DISTANCE=6.0, PI_CATION_CUTOFF_ANGLE=60):
 	"""
 	Compute pi-cation interactions in a frame of simulation
 
@@ -43,6 +41,13 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id):
 		{11205: "A:ASP:114:CA:11205, ...}
 	sele_id: string, default = None
 		Compute contacts on subset of atom selection based on VMD query
+	PI_CATION_CUTOFF_DISTANCE: float, default = 6.0 angstroms
+		cutoff for distance between cation and centroid of aromatic ring
+	PI_CATION_CUTOFF_ANGLE: float, default = 60 degrees
+		cutoff for angle between normal vector projecting
+		from aromatic plane and vector from aromatic center
+		to cation atom
+
 
 	Returns
 	-------
@@ -93,14 +98,14 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id):
 		### Perform distance criterion
 		aromatic_centroid = calc_geom_centroid(arom_atom1_coord, arom_atom2_coord, arom_atom3_coord)
 		cation_to_centroid_distance = calc_geom_distance(cation_coord, aromatic_centroid)
-		if(cation_to_centroid_distance > DISTANCE_CUTOFF): continue 
+		if(cation_to_centroid_distance > PI_CATION_CUTOFF_DISTANCE): continue 
 
 		### Perform angle criterion
 		aromatic_plane_norm_vec = calc_geom_normal_vector(arom_atom1_coord, arom_atom2_coord, arom_atom3_coord)
 		aromatic_center_to_cation_vec = points_to_vector(aromatic_centroid, cation_coord)
 		cation_norm_offset_angle = calc_angle_between_vectors(aromatic_plane_norm_vec, aromatic_center_to_cation_vec)
 		cation_norm_offset_angle = min(math.fabs(cation_norm_offset_angle - 0), math.fabs(cation_norm_offset_angle - 180))
-		if(cation_norm_offset_angle > ANGLE_CUTOFF): continue
+		if(cation_norm_offset_angle > PI_CATION_CUTOFF_ANGLE): continue
 
 		### Append three of the aromatic atoms
 		pi_cations.append([frame_idx, cation_atom_label, arom_atom1_label, "pc"])

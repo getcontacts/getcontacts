@@ -159,7 +159,7 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, itype
 	return aromatics
 
 
-def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id):
+def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, PI_STACK_CUTOFF_DISTANCE=7.0, PI_STACK_CUTOFF_ANGLE=30, PI_STACK_PSI_ANGLE=45):
 	"""
 	Compute pi-stacking interactions in a frame of simulation
 
@@ -174,6 +174,14 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id):
 		{11205: "A:ASP:114:CA:11205, ...}
 	sele_id: string, default = None
 		Compute contacts on subset of atom selection based on VMD query
+	PI_STACK_CUTOFF_DISTANCE: float, default = 7.0 angstroms
+		cutoff for distance between centroids of two aromatic rings 
+	PI_STACK_CUTOFF_ANGLE: float, default = 30 degrees 
+		cutoff for angle between the normal vectors projecting 
+		from each aromatic plane.
+	PI_STACK_PSI_ANGLE: float, default = 45 degrees
+		cutoff for angle between normal vector projecting from
+		aromatic plane 1 and vector between the two aromatic centroids
 
 	Returns
 	-------
@@ -182,15 +190,11 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id):
 	"""
 
 	PI_STACK_SOFT_DISTANCE_CUTOFF = 10.0 # angstroms
-	PI_STACK_DISTANCE_CUTOFF = 7.0 # angstrom
-	PI_STACK_ANGLE_CUTOFF = 30 # degrees
-	PI_STACK_PSI_ANGLE_CUTOFF = 45 # degrees
-
-	pi_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, "ps", PI_STACK_SOFT_DISTANCE_CUTOFF, PI_STACK_DISTANCE_CUTOFF, PI_STACK_ANGLE_CUTOFF, PI_STACK_PSI_ANGLE_CUTOFF)
+	pi_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, "ps", PI_STACK_SOFT_DISTANCE_CUTOFF, PI_STACK_CUTOFF_DISTANCE, PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
 	return pi_stacking
 
 
-def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id):
+def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, T_STACK_CUTOFF_DISTANCE=5.0, T_STACK_CUTOFF_ANGLE=30, T_STACK_PSI_ANGLE=45):
 	"""
 	Compute t-stacking interactions in a frame of simulation
 
@@ -205,6 +209,15 @@ def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id):
 		{11205: "A:ASP:114:CA:11205, ...}
 	sele_id: string, default = None
 		Compute contacts on subset of atom selection based on VMD query
+	T_STACK_CUTOFF_DISTANCE: float, default = 5.0 angstroms 
+		cutoff for distance between centroids of two aromatic rings
+	T_STACK_CUTOFF_ANGLE: float, default = 30 degrees
+		cutoff for angle between the normal vectors projecting
+		from each aromatic plane minus 90 degrees
+	T_STACK_PSI_ANGLE: float, default = 45 degrees
+		cutoff for angle between normal vector projecting from
+		aromatic plane 1 and vector between the two aromatic
+		centroids
 
 	Returns
 	-------
@@ -213,11 +226,7 @@ def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id):
 	"""
 
 	T_STACK_SOFT_DISTANCE_CUTOFF = 6.0 # angstroms
-	T_STACK_DISTANCE_CUTOFF = 5.0 # angstrom
-	T_STACK_ANGLE_CUTOFF = 30 # degrees
-	T_STACK_PSI_ANGLE_CUTOFF = 45 # degrees
-
-	t_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, "ts", T_STACK_SOFT_DISTANCE_CUTOFF, T_STACK_DISTANCE_CUTOFF, T_STACK_ANGLE_CUTOFF, T_STACK_PSI_ANGLE_CUTOFF)
+	t_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, "ts", T_STACK_SOFT_DISTANCE_CUTOFF, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
 	return t_stacking
 
 
