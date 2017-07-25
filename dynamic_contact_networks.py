@@ -15,80 +15,120 @@
 import os
 import sys
 import datetime
+import argparse
 from contact_calc.compute_contacts import *
 
-USAGE_STR = """
+HELP_STR = """
+ ===============================================
+|                 Anthony Ma, 2017              |
+|               Stanford University             |
+|                  Version 1.0.0                |
+ ===============================================
 
-# Purpose 
-# Computes non-covalent contacts in MD simulation for any protein of study
+Command was:
+python dynamic_contact_networks.py --help
 
-# Usage
-# python DynamicContactNetworks.py <TOP> <TRAJ> <OUTPUT_DIR> <cores> <stride> <solv> <sele> <ligand> <INTERACTION_TYPES>
+usage: python dynamic_contact_networks.py [--help] [--topology TOPOLOGY] 
+					  [--trajectory TRAJECTORY]
+					  [--output_dir OUTPUT_DIRECTORY] 
+					  [--itype INTERACTION_TYPES]
+					  [--cores NUM_CORES]
+					  [--solv SOLVENT]
+					  [--sele SELECTION]
+					  [--ligand LIGAND]
 
-# Arguments
-# <TOP> Absolute path to topology
-# <TRAJ> Absolute path to reimaged MD trajectory
-# <OUTPUT_DIR> Absolute path to output directory to store contacts data
-# <INTERACTION_TYPES> -itypes flag followed by a list of non-covalent interaction types to compute (ie -sb -pc -ps -ts -vdw, etc)
-# <optional -cores flag> To denote how many CPU cores to use for parallelization
-# <optional -stride flag> To denote a stride value other than default of 1
-# <optional -solv flag> To denote a solvent id other than default of TIP3
-# <optional -sele flag> To denote a VMD selection query to compute contacts upon
-# <optional -ligand flag> To denote the resname of ligand in the simulation.
+optional arguments:
+	--help				show this help message and exit
+	--topology TOPOLOGY		path to topology file 
+	--trajectory TRAJECTORY		path to trajectory file
+	--output_dir OUTPUT_DIRECTORY	path to output directory
+	--itype INTERACTION_TYPES	list of interaction type flags
+	--cores NUM_CORES		number of cpu cores to parallelize upon
+	--solv SOLVENT 			resname of solvent molecule
+	--sele SELECTION 		atom selection query in VMD
+	--ligand LIGAND 		resname of ligand molecule 
 
-# Example
-TOP=topology.pdb"
-TRAJ="trajectory.dcd"
-OUTPUT_DIR="output"
-python dynamic_contact_networks.py $TOP $TRAJ $OUTPUT_DIR -itype -hb -hlb
+interaction type flags:
+	-sb				salt bridges 
+	-pc				pi-cation 
+	-ps				pi-stacking
+	-ts				t-stacking
+	-vdw				vanderwaals
+	-hb				hydrogen bonds
+	-lhb				ligand hydrogen bonds
+	-hbbb				backbone-backbone hydrogen bonds
+	-hbsb				backbone-sidechain hydrogen bonds
+	-hbss				sidechain-sidechain hydrogen bonds
+	-wb				water bridges
+	-wb2				extended water bridges 
+	-hls				ligand-sidechain residue hydrogen bonds 
+	-hlb				ligand-backbone residue hydrogen bonds 
+	-lwb				ligand water bridges
+	-lwb2 				extended ligand water bridges 
 
 """
+DESCRIPTION="Computes non-covalent contact networks in MD simulations."
 
-K_MIN_ARG = 4
 
-if __name__ == "__main__":
-	if(len(sys.argv) < K_MIN_ARG):
-		print(USAGE_STR)
+def validate_itypes(ITYPES):
+	"""
+	Throws error if user specified interaction type is mispelled
+	"""
+	valid_itypes = ["-sb", "-pc", "-ps", "-ts", "-vdw", "-hb", "-hlb", "-hbbb", 
+			"-hbsb", "-hbss", "-wb", "-wb2", "-hls", "-hlb", "-lwb", "-lwb2"]
+
+	for itype in ITYPES:
+		if(itype not in valid_itypes):
+			print("%s not a valid interaction type ..." % (itype))
+			exit(1)
+
+def process_args(args):
+	topology = args.topology
+	trajectory = args.trajectory
+	output_dir = args.output_dir 
+	cores = args.cores 
+	ligand = args.ligand 
+	solv = args.solv 
+	sele = args.sele 
+	stride = args.stride
+	
+
+	return topology, trajectory, output_dir, cores, ligand, solv, sele, stride
+
+def main():
+	if("--help" in sys.argv):
+		print (HELP_STR)
+		exit(1)
+	if("--itype" not in sys.argv):
+		print("Need to specifiy interaction types ...")
 		exit(1)
 
-	### Required Arguments
-	(TOP, TRAJ, OUTPUT_DIR) = (sys.argv[1], sys.argv[2], sys.argv[3])
-	ITYPES = sys.argv[sys.argv.index('-itype') + 1:]
+	### Process arguments
+	parser = argparse.ArgumentParser(prog='PROG', add_help=False)
+	parser.add_argument('--topology', type=str, default=None, help='path to topology file ')
+	parser.add_argument('--trajectory', type=str, default=None, help='path to trajectory file')
+	parser.add_argument('--output_dir', type=str, default=None, help='path to output directory')
+	parser.add_argument('--cores', type=int, default=6, help='number of cpu cores to parallelize upon')
+	parser.add_argument('--solv', type=str, default="TIP3", help='resname of solvent molecule')
+	parser.add_argument('--sele', type=str, default=None, help='atom selection query in VMD')
+	parser.add_argument('--stride', type=int, default=1, help='skip frames with specified frequency')
+	parser.add_argument('--ligand', type=str, default=None, help='resname of ligand molecule ')
+	namespace = argparse.Namespace()
+	args, unknown = parser.parse_known_args()
+
+	TOP, TRAJ, OUTPUT_DIR, cores, ligand, solv, sele, stride = process_args(args)
+	ITYPES = sys.argv[sys.argv.index('--itype') + 1:]
 	if("-all" in ITYPES):
 		ITYPES = ["-sb", "-pc", "-ps", "-ts", "-vdw", "-hb", "-hlb"]
 
-	print ITYPES
+	validate_itypes(ITYPES)
 
-	### Optional Arguments
-	cores = 6
-	stride = 1 # default
-	solvent_resn = "TIP3" # default
-	sele_id = None
-	ligand = None
-
-	if("-cores" in sys.argv):
-		core_index = sys.argv.index("-cores")
-		cores = int(sys.argv[core_index + 1])
-
-	if("-stride" in sys.argv):
-		stride_index = sys.argv.index("-stride")
-		stride = int(sys.argv[stride_index + 1])
-
-	if("-solv" in sys.argv):
-		solv_index = sys.argv.index("-solv")
-		solvent_resn = sys.argv[solvIndex + 1]
-
-	if("-sele" in sys.argv):
-		sele_index = sys.argv.index("-sele")
-		sele_id = str(sys.argv[sele_index + 1])
-
-	if("-ligand" in sys.argv):
-		ligand_index = sys.argv.index("-ligand")
-		ligand = str(sys.argv[ligand_index + 1])
-
+	### Begin computation
 	tic = datetime.datetime.now()
-	compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solvent_resn, sele_id, ligand)
+	compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, cores, stride, solv, sele, ligand)
 	toc = datetime.datetime.now()
 	print("Computation Time: " + str((toc-tic).total_seconds()))
 
+if __name__ == "__main__":
+	main()
 
