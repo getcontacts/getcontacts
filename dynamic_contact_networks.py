@@ -15,7 +15,6 @@
 import os
 import sys
 import datetime
-# from contact_calc.compute_contacts_memory_intensive import *
 from contact_calc.compute_contacts import *
 
 USAGE_STR = """
