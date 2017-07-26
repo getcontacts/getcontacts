@@ -102,12 +102,12 @@ MDContactNetworks is compatible with all topology and trajectory file formats re
 
    __Examples:__
 
-   	Computing salt bridges and hydrogen bonds for a particular selection of residues:
+   	Salt bridges and hydrogen bonds for residues 100 to 160:
 	python dynamic_contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype -sb -hb -lhb
 
-	Computing all pi-cation, pi-stacking, and vanderwaals contacts in the full protein:
+	Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
 	python dynamic_contact_networks.py --topology TOP.psf --trajectory TRAJ.dcd --cores 6 --itype -pc -ps -vdw
 
-	Computing salt bridges and hydrogen bonds in full protein with modified distance cutoffs:
+	Salt bridges and hydrogen bonds in the entire protein with modified distance cutoffs:
 	python dynamic_contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype -sb -hb
 
