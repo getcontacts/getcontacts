@@ -51,7 +51,7 @@ MDContactNetworks is compatible with all topology and trajectory file formats re
 
 		--solv SOLVENT Solvent identifier in simulation, default = "TIP3"
 
-	Arguments for adjusting Geometric Criteria:
+	Arguments for adjusting geometric criteria:
 		--sb_cutoff_dist SALT_BRIDGE_CUTOFF_DISTANCE
 						cutoff for distance between anion and cation 
 						atoms [default = 4.0 angstroms]
