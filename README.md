@@ -4,7 +4,7 @@ Library for computing dynamic non-covalent contact networks in proteins througho
 
 ## File format
 
-MDContactNetworks is compatible with all topology and trajectory file formats readable in VMD.
+MDContactNetworks is compatible with all topology and reimaged trajectory file formats readable in VMD.
 
 
 ## Running the Code
