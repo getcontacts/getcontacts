@@ -28,7 +28,8 @@ MDContactNetworks is compatible with all topology and trajectory file formats re
 		   -hb, Hydrogen Bonds
 		   -lhb, Ligand Hydrogen Bonds
 
-		   Hydrogen bonds are automatically stratified to following subtypes and written as output.
+		   Hydrogen bonds are automatically stratified to following subtypes and 
+		   written as output.
 
 		   -hbbb, Backbone-backbone hydrogen bonds
 		   -hbsb, Backbone-sidechain hydrogen bonds
@@ -43,11 +44,13 @@ MDContactNetworks is compatible with all topology and trajectory file formats re
 
 	Optional Arguments:
 
-		--cores NUM_CORES Number of cpu cores to parallelize computations on, default = 6
+		--cores NUM_CORES Number of cpu cores for parallelization,
+		   default = 6
 
 		--ligand LIGAND Resname of ligand molecule, default = None
 
-		--sele SELECTION VMD selection query to compute contacts in specified region of protein, default = None
+		--sele SELECTION VMD selection query to compute contacts in specified 
+		  region of protein, default = None
 
 		--solv SOLVENT Solvent identifier in simulation, default = "TIP3"
 
@@ -77,7 +80,8 @@ MDContactNetworks is compatible with all topology and trajectory file formats re
 						rings [default = 5.0 angstroms]
 		--ts_cutoff_ang T_STACK_CUTOFF_ANGLE
 						cutoff for angle between the normal vectors projecting
-						from each aromatic plane minus 90 degrees [default = 30 degrees]
+						from each aromatic plane minus 90 degrees 
+						[default = 30 degrees]
 		--ts_psi_ang T_STACK_PSI_ANGLE
 						cutoff for angle between normal vector projecting from
 						aromatic plane 1 and vector between the two aromatic
@@ -98,9 +102,12 @@ MDContactNetworks is compatible with all topology and trajectory file formats re
 
    __Examples:__
 
+   	Computing salt bridges and hydrogen bonds for a particular selection of residues:
 	python dynamic_contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype -sb -hb -lhb
 
+	Computing all pi-cation, pi-stacking, and vanderwaals contacts in the full protein:
 	python dynamic_contact_networks.py --topology TOP.psf --trajectory TRAJ.dcd --cores 6 --itype -pc -ps -vdw
 
-	python dynamic_contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype -pc -ps -vdw
+	Computing salt bridges and hydrogen bonds in full protein with modified distance cutoffs:
+	python dynamic_contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype -sb -hb
 
