@@ -18,7 +18,8 @@ MDContactNetworks is compatible with all topology and reimaged trajectory file f
 	   	--topology TOPOLOGY - Path to topology
 	   	--trajectory TRAJECTORY - Path to simulation trajectory fragment
 	   	--output_dir OUTPUT_DIRECTORY - Path of output directory
-	   	--itypes INTERACTION_TYPES - User specifies what type of non-covalent interaction to compute using the following flags. 
+	   	--itypes INTERACTION_TYPES - User specifies what type of non-covalent 
+	   	interaction to compute using the following flags. 
 
 		   -sb, Salt bridges
 		   -pc, Pi-cation 
@@ -103,11 +104,11 @@ MDContactNetworks is compatible with all topology and reimaged trajectory file f
    __Examples:__
 
 	Salt bridges and hydrogen bonds for residues 100 to 160:
-	python dynamic_contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype -sb -hb -lhb
+	python dynamic_contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --output_dir OUTPUT_DIR --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype -sb -hb -lhb
 
 	Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
-	python dynamic_contact_networks.py --topology TOP.psf --trajectory TRAJ.dcd --cores 6 --itype -pc -ps -vdw
+	python dynamic_contact_networks.py --topology TOP.psf --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 --itype -pc -ps -vdw
 
 	Salt bridges and hydrogen bonds in the entire protein with modified distance cutoffs:
-	python dynamic_contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype -sb -hb
+	python dynamic_contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype -sb -hb
 
