@@ -157,6 +157,15 @@ def process_main_args(args):
 	sele = args.sele 
 	stride = args.stride
 	
+	if(topology == None):
+		print("Missing topology file ...")
+		exit(1)
+	elif(trajectory == None):
+		print("Missing trajectory file ...")
+		exit(1)
+	elif(output_dir == None):
+		print("Missing output directory ...")
+		exit(1)
 
 	return topology, trajectory, output_dir, cores, ligand, solv, sele, stride
 
