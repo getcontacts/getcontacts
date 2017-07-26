@@ -146,6 +146,9 @@ def validate_itypes(ITYPES):
 		if(itype not in valid_itypes):
 			print("%s not a valid interaction type ..." % (itype))
 			exit(1)
+	if(ITYPES == []):
+		print("Need to specify an itype ...")
+		exit(1)
 
 def process_main_args(args):
 	topology = args.topology
