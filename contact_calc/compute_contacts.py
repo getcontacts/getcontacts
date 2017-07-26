@@ -256,6 +256,7 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
 
 	index_to_label = gen_index_to_atom_label(TOP, TRAJ)
 	sim_length = estimate_simulation_length(TOP, TRAJ)
+	print("sim_length", sim_length)
 	input_args = []
 
 	### Serial 

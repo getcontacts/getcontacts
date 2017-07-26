@@ -130,7 +130,7 @@ output interaction subtypes:
 
 example:
 
-python dynamic_contact_networks.py TOP.psf TRAJ.nc -cores 12 -solv IP3 -sele "chain A and resid 100 to 160" -ligand EJ4 -itype -sb -hb -lhb
+python dynamic_contact_networks.py --topology TOP.psf --trajectory TRAJ.nc --output_dir OUTPUT_DIR --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype -sb -hb -lhb
 """
 
 DESCRIPTION="Computes non-covalent contact networks in MD simulations."
