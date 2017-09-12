@@ -23,7 +23,7 @@ from hbonds import *
 from salt_bridges import *
 from pi_cation import *
 from vanderwaals import *
-from output_frequencies import *
+from output_additional import *
 
 ##############################################################################
 # Global Variables
@@ -297,7 +297,7 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
 		frag_contact_files = glob.glob(OUTPUT_DIR + "/" + itype + "_frag*")
 		frag_contact_files.sort(key=natural_keys)
 		stitched_filename = stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length)
-		make_frequencies_file(itype, OUTPUT_DIR, stitched_filename, sim_length)
+		make_additional_files(itype, OUTPUT_DIR, stitched_filename, sim_length)
 
 
 	
