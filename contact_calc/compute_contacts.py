@@ -23,6 +23,7 @@ from hbonds import *
 from salt_bridges import *
 from pi_cation import *
 from vanderwaals import *
+from output_frequencies import *
 
 ##############################################################################
 # Global Variables
@@ -191,7 +192,8 @@ def stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_
 		Map the fragment index to length of fragment 
 	"""
 	print("Stitching %s ..." % (itype))
-	fo = open(OUTPUT_DIR + "/" + itype + ".txt", 'w')
+	stitched_filename = OUTPUT_DIR + "/" + itype + ".txt" 
+	fo = open(stitched_filename, 'w')
 
 	num_frames = 0
 	for frag_contact_file in frag_contact_files:
@@ -208,6 +210,8 @@ def stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_
 		os.remove(frag_contact_file)
 
 	fo.close()
+
+	return stitched_filename
 
 
 def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_values, cores, stride, solvent_resn, sele_id, ligand):
@@ -292,7 +296,8 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
 	for itype in contact_types:
 		frag_contact_files = glob.glob(OUTPUT_DIR + "/" + itype + "_frag*")
 		frag_contact_files.sort(key=natural_keys)
-		stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length)
+		stitched_filename = stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length)
+		make_frequencies_file(itype, OUTPUT_DIR, stitched_filename, sim_length)
 
 
 	
