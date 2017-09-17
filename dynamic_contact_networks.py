@@ -13,6 +13,7 @@
 ##############################################################################
 
 import os
+import errno
 import sys
 import datetime
 import argparse
@@ -141,6 +142,12 @@ python dynamic_contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --ou
 
 DESCRIPTION="Computes non-covalent contact networks in MD simulations."
 
+def open_dir(dirname):
+	try:
+		os.makedirs(dirname)
+	except OSError as e:
+		if e.errno != errno.EEXIST:
+			raise
 
 def validate_itypes(ITYPES):
 	"""
@@ -249,6 +256,7 @@ def main():
 
 	TOP, TRAJ, OUTPUT_DIR, cores, ligand, solv, sele, stride = process_main_args(args)
 	geom_criterion_values = process_geometric_criterion_args(args)
+	open_dir(OUTPUT_DIR)
 
 	ITYPES = sys.argv[sys.argv.index('--itype') + 1:]
 	if("-all" in ITYPES):
