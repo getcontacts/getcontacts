@@ -25,10 +25,10 @@ def create_dynamic_jsons(output_filename, interaction_to_frames):
 def create_frequencies_file(frequency_filename, sim_length, respair_to_frames):
 	#write out .csv file
 	with open(frequency_filename, 'w+') as fq:
-		fq.write('Res1,Res2,Freq,NumFrames,,TotalFrames:,%d\n' % sim_length)
+		fq.write('Res1,Res2,Freq,NumFrames,TotalFrames:%d\n' % sim_length)
 		for interaction in respair_to_frames:
 			interaction_frequency = len(respair_to_frames[interaction])/sim_length
-			fq.write("%s,%.8f,%d\n" % (interaction, interaction_frequency, len(respair_to_frames[interaction])))
+			fq.write("%s,%.8f,%d,%d\n" % (interaction, interaction_frequency, len(respair_to_frames[interaction]), sim_length))
 
 def get_atompair_set(itype, stitched_lines):
 	atompair_to_frames = defaultdict(set)

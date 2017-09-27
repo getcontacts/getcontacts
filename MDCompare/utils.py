@@ -2,7 +2,7 @@ from __future__ import division
 import os
 import errno
 
-def prepend_to_filename(filename, some_string):
+def append_to_filename(filename, some_string):
 	before, after = os.path.splitext(filename)
 	return "%s_%s%s" % (before, some_string, after)
 	# return '/'.join(filename.split('/')[:-1] + ["generic_" + filename.split('/')[-1]])

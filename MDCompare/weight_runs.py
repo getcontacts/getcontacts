@@ -23,7 +23,7 @@ def compile_interaction_reps(basename, repitition_paths):
 	return totFrames, interaction_stats
 
 def smash_raw_outputs(output_dir, repitition_paths):
-	new_filenames = [output_dir + filename for filename in os.listdir(repitition_paths[0]) if re.match(".*_frequencies\.csv$", filename) and not filename[0] == '.']
+	new_filenames = [output_dir + filename for filename in os.listdir(repitition_paths[0]) if re.match(".*_frequencies_generic\.csv$", filename) and not filename[0] == '.']
 	for new_filename in new_filenames:
 		totFrames, interaction_stats = compile_interaction_reps(os.path.basename(new_filename), repitition_paths)
 		with open(new_filename, 'w+') as wopen:
