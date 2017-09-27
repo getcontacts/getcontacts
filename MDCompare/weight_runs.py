@@ -16,7 +16,7 @@ def compile_interaction_reps(basename, repitition_paths):
 		with open(freq_filename, 'r') as open_freq_file:
 			interaction_lines = [line.strip().split(',') for line in open_freq_file.readlines()]
 		header = interaction_lines[0]
-		totFrames += int(header[-1])
+		totFrames += int(header[-1].split(':')[1])
 		for interaction_line in interaction_lines[1:]:
 			respair = ','.join(interaction_line[0:2])
 			interaction_stats[respair] += int(interaction_line[3])
