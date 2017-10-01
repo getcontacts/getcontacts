@@ -35,8 +35,7 @@ def mdcompare(argv):
 
 	open_dir(output_directory) #open output directory if it doesn't already exist
 	paths_database, proteins_database = extract_databases(input_file)
-	should_genericize = len(set(proteins_database.values())) > 1 #if there is more than one protein 
-																															 #in the database, must genericize
+	should_genericize = len(set(proteins_database.values())) > 1 
 	if should_genericize and results.generic_dict is None:
 		assert "Input file has more than one protein, so a genericization file must be provided"
 
@@ -44,11 +43,13 @@ def mdcompare(argv):
 	if should_genericize:
 		generic_dict = results.generic_dict
 		for descriptor in paths_database:
+			print descriptor
 			for path in paths_database[descriptor]:
 				command = ["python", "genericize.py", path, proteins_database[descriptor], generic_dict]
 
 				#ad hoc lines to deal with incorrectly numbered M3 case --- remove for all other applications
-				if re.search("M3_Inactive", descriptor):
+				if re.search("ACM3_HUMAN-Inactive", descriptor):
+					print descriptor, "Special Case"
 					command.append("0")
 
 				sp = subprocess.Popen(command)

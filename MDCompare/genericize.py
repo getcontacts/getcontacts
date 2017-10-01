@@ -9,9 +9,9 @@ from collections import defaultdict
 def build_database(generic_dict):
 	database = defaultdict(dict)
 	with open(generic_dict, 'r') as generic_open:
-		lines = [line.strip().split(',') for line in generic_open.readlines()]
+		lines = [line.strip().split(',') for line in generic_open.readlines() if len(line.strip()) > 0]
 	protein_names = lines[0][1:]
-	residues_names = lines[1:]
+	residue_names = lines[1:]
 	for line in residue_names:
 		generic_name = line[0]
 		specific_names = line[1:]
@@ -19,10 +19,12 @@ def build_database(generic_dict):
 			specific_name = specific_names[i]
 			protein_name = protein_names[i]
 			if specific_name != '-':
-				database[protein_names][specific_name] = generic_name
+				database[protein_name][specific_name] = generic_name
 	return database
 
 def get_generic_res(old_res, protein):
+	if (old_res, protein) in to_omit:
+		return "No residue found"
 	aa, pos = old_res.split(':')
 	if special_case:
 		pos = str(int(pos) + 1)
@@ -30,6 +32,7 @@ def get_generic_res(old_res, protein):
 
 	if new_res not in database[protein]:
 		print "Residue %s in protein %s is not in genericization database, and interactions involving this residue will be omitted in genericized files" % (new_res, protein)
+		to_omit.append((old_res, protein))
 		return "No residue found"
 	return database[protein][new_res]
 
@@ -69,12 +72,14 @@ def genericize(argv):
 	global seq1
 	global database
 	global special_case
+	global to_omit
 
 	#grab command line arguments
 	dirname = argv[1]
 	protein = argv[2]
 	generic_dict = argv[3]
 	special_case = len(argv) > 4 #kind of hacky, to remove
+	to_omit = []
 
 	with open("./utils/seq1.json", 'r') as seq1_open:
 		seq1 = json.load(seq1_open) #defines mapping from 3-letter amino acid codes to 1-letter codes

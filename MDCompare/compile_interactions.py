@@ -10,6 +10,8 @@ def compile_interaction_files(outputs_filename, interaction_files):
 	descriptor_database = defaultdict(dict)
 	interaction_database = set()
 	for filename in interaction_files:
+		if re.search("metadata", filename):
+			continue
 		interaction_type = os.path.basename(filename).split('.')[0]
 		if interaction_type in ["vdw", "hbbb", "wb"]:
 			continue
@@ -21,7 +23,7 @@ def compile_interaction_files(outputs_filename, interaction_files):
 			line = line.split(',')
 			if len(line) == 0:
 				continue
-			interaction = '-'.join(line[0:2] + [interaction_type])
+			interaction = '-'.join(line[0:1] + [interaction_type])
 			# print interaction_type
 			interaction_frequencies = line[1:]
 			interaction_database.add(interaction)

@@ -142,6 +142,11 @@ python dynamic_contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --ou
 
 DESCRIPTION="Computes non-covalent contact networks in MD simulations."
 
+def clean_path(path):
+	if path[-1] != '/':
+		path += '/'
+	return path
+
 def open_dir(dirname):
 	try:
 		os.makedirs(dirname)
@@ -269,6 +274,17 @@ def main():
 	compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_values, cores, stride, solv, sele, ligand)
 	toc = datetime.datetime.now()
 	print("Computation Time: " + str((toc-tic).total_seconds()))
+
+	inputs_filename = "%sinputs.txt" % clean_path(OUTPUT_DIR)
+	with open(inputs_filename, 'w+') as wopen:
+		wopen.write("topology=%s\n" % TOP)
+		wopen.write("trajectory=%s\n" % TRAJ)
+		wopen.write("output_directory=%s\n" % OUTPUT_DIR)
+		wopen.write("cores=%s\n" % cores)
+		wopen.write("ligand=%s\n" % ligand)
+		wopen.write("solv=%s\n" % solv)
+		wopen.write("sele=%s\n" % sele)
+		wopen.write("stride=%s\n" % stride)
 
 if __name__ == "__main__":
 	main()

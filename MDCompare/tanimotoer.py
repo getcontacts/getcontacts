@@ -20,9 +20,9 @@ def produce_tanimoto(filename):
 	#Make a dict from a residue-pair to the set of frames that the residue-pair interaction appears in
 	interaction_to_frames = {}
 	for edge in d["edges"]:
-		interaction = "%s_%s" % (edge["name1"], edge["name2"])
 		frames_set = set(edge["frames"])
-		if len(frames_set) < 1500/2:
+		interaction = "%s-%s-%.2f" % (edge["name1"], edge["name2"], len(frames_set)/1500)
+		if len(frames_set) > 1500*0.5 or len(frames_set) < 1500*0.2:
 			continue
 		interaction_to_frames[interaction] = frames_set
 
