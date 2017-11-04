@@ -109,6 +109,7 @@ def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_r
 		donor_label, acceptor_label = index_to_label[donor], index_to_label[acceptor]
 		hbonds.append([frame_idx, donor_label, acceptor_label, itype])
 
+
 	### Perform post processing on hbonds list to stratify into different subtypes
 	if(itype == "hb"):
 		hbond_subtypes = stratify_hbond_subtypes(hbonds, solvent_resn)

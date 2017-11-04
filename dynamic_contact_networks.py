@@ -183,7 +183,7 @@ def process_main_args(args):
 		exit(1)
 	elif(trajectory == None):
 		print("Missing trajectory file ...")
-		exit(1)
+		# exit(1)
 	elif(output_dir == None):
 		print("Missing output directory ...")
 		exit(1)

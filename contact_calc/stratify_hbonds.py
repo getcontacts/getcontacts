@@ -127,9 +127,9 @@ def stratify_hbond_subtypes(hbonds, solvent_resn):
 		water bridge and extended water bridge respectively.
 	"""
 	residue_hbonds, water_hbonds = residue_vs_water_hbonds(hbonds, solvent_resn)
-
 	hbss, hbsb, hbbb = stratify_residue_hbonds(residue_hbonds)
 	wb = stratify_water_bridge(water_hbonds, solvent_resn)
 	wb2 = stratify_extended_water_bridge(water_hbonds, solvent_resn)
 	hbonds = hbss + hbsb + hbbb + wb + wb2
+
 	return hbonds
