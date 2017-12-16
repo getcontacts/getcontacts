@@ -27,6 +27,7 @@ def get_file_type(file_name):
 	"""
 	Determine file type by extracting suffix of file_name
 	"""
+	if(file_name == None): return None
 	file_type = file_name.split(".")[-1].strip()
 	if(file_type == "nc"): file_type = 'netcdf'
 	return file_type
@@ -51,7 +52,10 @@ def load_traj(TOP, TRAJ, beg_frame, end_frame, stride):
 	top_file_type = get_file_type(TOP)
 	traj_file_type = get_file_type(TRAJ)
 	trajid = molecule.load(top_file_type, TOP)
-	molecule.read(trajid, traj_file_type, TRAJ, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
+	if(TRAJ != None):
+		molecule.read(trajid, traj_file_type, TRAJ, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
+	else:
+		molecule.read(trajid, top_file_type, TOP, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
 	return trajid
 
 def estimate_simulation_length(TOP, TRAJ):
