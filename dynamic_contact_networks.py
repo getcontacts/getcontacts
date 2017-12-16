@@ -274,7 +274,7 @@ def main():
 	toc = datetime.datetime.now()
 	print("Computation Time: " + str((toc-tic).total_seconds()))
 
-	inputs_filename = "%sinputs.txt" % clean_path(OUTPUT_DIR)
+	inputs_filename = "%smdcontact.log" % clean_path(OUTPUT_DIR)
 	with open(inputs_filename, 'w+') as wopen:
 		wopen.write("topology=%s\n" % TOP)
 		wopen.write("trajectory=%s\n" % TRAJ)
