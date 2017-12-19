@@ -29,6 +29,22 @@ from output_additional import *
 # Global Variables
 ##############################################################################
 TRAJ_FRAG_SIZE = 100
+full_name_dirs = {'hbbb':'hydrogen_bond_backbone_backbone',
+        'hbsb':'hydrogen_bond-sidechain_backbone',
+        'hbss':'hydrogen_bond-sidechain_sidechain',
+        'vdw':'van_der_Waals',
+        'sb':'salt_bridge',
+        'ts':'t_stacking',
+        'ps':'pi_stacking',
+        'pc':'pi_cation',
+        'wb':'water_mediated_hydrogen_bond',
+        'wb2':'extended_water_mediated_hydrogen_bond',
+        'lhb':'ligand_hydrogen_bond',
+        'hlb':'ligand_backbone_hydrogen_bond',
+        'hls':'ligand_sidechain_hydrogen_bond',
+        'lwb':'ligand_water_mediated_hydrogen_bond',
+        'lwb2':'ligand_extended_water_mediated_hydrogen_bond',
+        }
 
 ##############################################################################
 # Functions
@@ -192,7 +208,8 @@ def stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_
 		Map the fragment index to length of fragment 
 	"""
 	print("Stitching %s ..." % (itype))
-	stitched_filename = OUTPUT_DIR + "/" + itype + ".txt" 
+	# stitched_filenamR e = OUTPUT_DIR + "/" + itype + ".txt" 
+        stitched_filename = OUTPUT_DIR + full_name_dirs[contact_type] + '/' + 'raw_frame_output.txt'
 	fo = open(stitched_filename, 'w')
 
 	num_frames = 0
@@ -244,6 +261,11 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
 		Include ligand resname if computing contacts between ligand and binding pocket residues
 
 	"""
+
+        ### Append forward slash to output dirname
+        if OUTPUT_DIR[-1] != '/':
+            OUTPUT_DIR += '/'
+
 	### Set up file descriptors for writing output
 	if not os.path.exists(OUTPUT_DIR):
 		os.makedirs(OUTPUT_DIR)
@@ -256,6 +278,12 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
 			contact_types += ["hls", "hlb", "lwb", "lwb2"]
 		else:
 			contact_types += [itype.strip("-")]
+
+        ### Set up file descriptors for writing output
+        for contact_type in contact_types:
+            contact_path = OUTPUT_DIR + full_name_dirs[contact_type] + '/'
+	    if not os.path.exists(contact_path):
+	        os.makedirs(contact_path)
 
 
 	index_to_label = gen_index_to_atom_label(TOP, TRAJ)
