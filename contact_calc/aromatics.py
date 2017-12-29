@@ -12,7 +12,6 @@
 ##############################################################################
 
 from vmd import *
-import molecule 
 from contact_utils import *
 
 __all__ = ['compute_pi_stacking', 'compute_t_stacking']

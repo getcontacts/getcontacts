@@ -12,7 +12,7 @@
 ##############################################################################
 
 from vmd import *
-import molecule
+#import molecule
 import itertools
 from contact_utils import *
 

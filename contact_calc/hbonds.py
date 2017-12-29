@@ -12,7 +12,7 @@
 ##############################################################################
 
 from vmd import *
-import molecule 
+#import molecule 
 import time
 from stratify_hbonds import *
 from stratify_ligand_hbonds import *

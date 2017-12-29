@@ -13,7 +13,7 @@
 
 from vmd import *
 import os
-import molecule
+#import molecule
 import datetime
 import glob
 from multiprocessing import *
@@ -208,8 +208,8 @@ def stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_
 		Map the fragment index to length of fragment 
 	"""
 	print("Stitching %s ..." % (itype))
-	# stitched_filenamR e = OUTPUT_DIR + "/" + itype + ".txt" 
-        stitched_filename = OUTPUT_DIR + full_name_dirs[contact_type] + '/' + 'raw_frame_output.txt'
+	stitched_filename = OUTPUT_DIR + "/" + itype + ".txt" 
+	#stitched_filename = OUTPUT_DIR + full_name_dirs[contact_type] + '/' + 'raw_frame_output.txt'
 	fo = open(stitched_filename, 'w')
 
 	num_frames = 0
@@ -262,9 +262,9 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
 
 	"""
 
-        ### Append forward slash to output dirname
-        if OUTPUT_DIR[-1] != '/':
-            OUTPUT_DIR += '/'
+	### Append forward slash to output dirname
+	if OUTPUT_DIR[-1] != '/':
+		OUTPUT_DIR += '/'
 
 	### Set up file descriptors for writing output
 	if not os.path.exists(OUTPUT_DIR):
@@ -279,11 +279,11 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
 		else:
 			contact_types += [itype.strip("-")]
 
-        ### Set up file descriptors for writing output
-        for contact_type in contact_types:
-            contact_path = OUTPUT_DIR + full_name_dirs[contact_type] + '/'
-	    if not os.path.exists(contact_path):
-	        os.makedirs(contact_path)
+	### Set up file descriptors for writing output
+	for contact_type in contact_types:
+		contact_path = OUTPUT_DIR + full_name_dirs[contact_type] + '/'
+		if not os.path.exists(contact_path):
+			os.makedirs(contact_path)
 
 
 	index_to_label = gen_index_to_atom_label(TOP, TRAJ)
@@ -319,6 +319,75 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
 	for frag_idx, frag_length in output:
 		frag_idx_to_length[frag_idx] = frag_length
 		print(frag_idx, frag_length)
+
+	### Combine fragments to single large stitched files
+	for itype in contact_types:
+		frag_contact_files = glob.glob(OUTPUT_DIR + "/" + itype + "_frag*")
+		frag_contact_files.sort(key=natural_keys)
+		stitched_filename = stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length)
+		make_additional_files(itype, OUTPUT_DIR, stitched_filename, sim_length)
+
+
+
+def compute_static_contacts(STRUC, OUTPUT_DIR, ITYPES, geom_criterion_values, solvent_resn, sele_id, ligand):
+	""" 
+	Computes non-covalent contacts in a single structure and writes to output.
+
+	Parameters
+	----------
+	STRUC: Structure
+		In .pdb or .mae format
+	OUTPUT_DIR: string
+		Absolute path to output directory 
+	ITYPES: list
+		Denotes the list of non-covalent interaction types to compute contacts for 
+	geom_criterion_values: dict
+		Dictionary containing the cutoff values for all geometric criteria
+	solvent_resn: string, default = TIP3
+		Denotes the resname of solvent in simulation
+	sele_id: string, default = None
+		Compute contacts on subset of atom selection based on VMD query
+	chain_id: string, default = None
+		Specify chain of protein to perform computation on 
+	ligand: string, default = None
+		Include ligand resname if computing contacts between ligand and binding pocket residues
+
+	"""
+
+	### Append forward slash to output dirname
+	if OUTPUT_DIR[-1] != '/':
+		OUTPUT_DIR += '/'
+
+	### Set up file descriptors for writing output
+	if not os.path.exists(OUTPUT_DIR):
+		os.makedirs(OUTPUT_DIR)
+
+	contact_types = []
+	for itype in ITYPES:
+		if(itype == "-hb"):
+			contact_types += ["hbbb", "hbsb", "hbss", "wb", "wb2"]
+		elif(itype == "-lhb"):
+			contact_types += ["hls", "hlb", "lwb", "lwb2"]
+		else:
+			contact_types += [itype.strip("-")]
+
+	### Set up file descriptors for writing output
+	for contact_type in contact_types:
+		contact_path = OUTPUT_DIR + full_name_dirs[contact_type] + '/'
+		if not os.path.exists(contact_path):
+			os.makedirs(contact_path)
+
+
+	index_to_label = gen_index_to_atom_label(STRUC, None)
+	sim_length = estimate_simulation_length(STRUC, None)
+	print("sim_length", sim_length)
+	input_args = []
+
+	### Serial 
+	frag_idx, frag_length = compute_fragment_contacts(0, 0, 0, STRUC, STRUC, OUTPUT_DIR, contact_types, ITYPES, geom_criterion_values, 1, solvent_resn, sele_id, ligand, index_to_label)
+
+	frag_idx_to_length = {frag_idx: frag_length}
+	print(frag_idx, frag_length)
 
 	### Combine fragments to single large stitched files
 	for itype in contact_types:

@@ -12,16 +12,16 @@
 ##############################################################################
 
 from vmd import *
-import molecule
+#import molecule
 import numpy as np
 import math
 import re
 
 def atoi(text):
-    return int(text) if text.isdigit() else text
+	return int(text) if text.isdigit() else text
 
 def natural_keys(text):
-    return [ atoi(c) for c in re.split('(\d+)', text) ]
+	return [ atoi(c) for c in re.split('(\d+)', text) ]
 
 def get_file_type(file_name):
 	"""
@@ -108,11 +108,11 @@ def get_atom_selection_properties(selection_id):
 	indices: list of strings
 		VMD based index for each atom ["12304", "1231", ...]
 	"""
-	chains = map(str, evaltcl("$%s get chain" % (selection_id)).split(" "))
-	resnames = map(str, evaltcl("$%s get resname" % (selection_id)).split(" "))
-	resids = map(str, evaltcl("$%s get resid" % (selection_id)).split(" "))
-	names = map(str, evaltcl("$%s get name" % (selection_id)).split(" "))
-	indices = map(str, evaltcl("$%s get index" % (selection_id)).split(" "))
+	chains = list(map(str, evaltcl("$%s get chain" % (selection_id)).split(" ")))
+	resnames = list(map(str, evaltcl("$%s get resname" % (selection_id)).split(" ")))
+	resids = list(map(str, evaltcl("$%s get resid" % (selection_id)).split(" ")))
+	names = list(map(str, evaltcl("$%s get name" % (selection_id)).split(" ")))
+	indices = list(map(str, evaltcl("$%s get index" % (selection_id)).split(" ")))
 	if(chains == [''] or resnames == [''] or resids == [''] or names == [''] or indices == ['']):
 		return [], [], [], [], []
 	return chains, resnames, resids, names, indices
@@ -260,6 +260,7 @@ def calc_water_to_residues_map(water_hbonds, solvent_resn):
 		List of hbond interactions between two water molecules
 		[("W:TIP3:757:OH2:2312", "W:TIP3:8719:OH2:29279"), ...]
 	"""
+	frame_idx = 0
 	water_to_residues = {}
 	_solvent_bridges = []
 	for frame_idx, atom1_label, atom2_label, itype in water_hbonds:
@@ -485,8 +486,8 @@ def parse_contacts(contact_string):
 		atom2_list_str = contacts_list[1].strip("{}")
 		if(atom1_list_str == "" or atom2_list_str == ""): return []
 
-		atom1_list = map(int, atom1_list_str.split(" "))
-		atom2_list = map(int, atom2_list_str.split(" "))
+		atom1_list = list(map(int, atom1_list_str.split(" ")))
+		atom2_list = list(map(int, atom2_list_str.split(" ")))
 
 		for idx in range(len(atom1_list)):
 			atom1_index = atom1_list[idx]
