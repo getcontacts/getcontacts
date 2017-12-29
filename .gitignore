@@ -1,2 +1,8 @@
 .*
 !/.gitignore
+
+._*.py
+*.pyc
+__pycache__
+*.py.bak
+*.swp
