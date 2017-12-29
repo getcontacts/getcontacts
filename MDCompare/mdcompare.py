@@ -1,7 +1,7 @@
-'''
+"""
 The MDCompare utility enables users to compare the frequencies of interactions across multiple MDContactNetworks
-outputs. 
-'''
+outputs.
+"""
 
 from __future__ import division
 import sys

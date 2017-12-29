@@ -113,20 +113,20 @@ interaction type flags:
     -pc             pi-cation 
     -ps             pi-stacking
     -ts             t-stacking
-    -vdw                vanderwaals
+    -vdw            vanderwaals
     -hb             hydrogen bonds
-    -lhb                ligand hydrogen bonds
+    -lhb            ligand hydrogen bonds
 
 output interaction subtypes:
-    -hbbb               backbone-backbone hydrogen bonds
-    -hbsb               backbone-sidechain hydrogen bonds
-    -hbss               sidechain-sidechain hydrogen bonds
+    -hbbb           backbone-backbone hydrogen bonds
+    -hbsb           backbone-sidechain hydrogen bonds
+    -hbss           sidechain-sidechain hydrogen bonds
     -wb             water bridges
-    -wb2                extended water bridges 
-    -hls                ligand-sidechain residue hydrogen bonds 
-    -hlb                ligand-backbone residue hydrogen bonds 
-    -lwb                ligand water bridges
-    -lwb2               extended ligand water bridges 
+    -wb2            extended water bridges 
+    -hls            ligand-sidechain residue hydrogen bonds 
+    -hlb            ligand-backbone residue hydrogen bonds 
+    -lwb            ligand water bridges
+    -lwb2           extended ligand water bridges 
 
 
 examples:
@@ -140,12 +140,14 @@ Salt bridges and hydrogen bonds in the entire protein with modified distance cut
 python dynamic_contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype -sb -hb
 """
 
-DESCRIPTION="Computes non-covalent contact networks in MD simulations."
+DESCRIPTION = "Computes non-covalent contact networks in MD simulations."
+
 
 def clean_path(path):
     if path[-1] != '/':
         path += '/'
     return path
+
 
 def open_dir(dirname):
     try:
@@ -153,6 +155,7 @@ def open_dir(dirname):
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
+
 
 def validate_itypes(ITYPES):
     """
@@ -168,6 +171,7 @@ def validate_itypes(ITYPES):
         print("Need to specify an itype ...")
         exit(1)
 
+
 def process_main_args(args):
     topology = args.topology
     trajectory = args.trajectory
@@ -178,16 +182,17 @@ def process_main_args(args):
     sele = args.sele 
     stride = args.stride
     
-    if(topology == None):
+    if topology is None:
         print("Missing topology file ...")
         exit(1)
-    elif(trajectory == None):
+    elif trajectory is None:
         print("Missing trajectory file ...")
-    elif(output_dir == None):
+    elif output_dir is None:
         print("Missing output directory ...")
         exit(1)
 
     return topology, trajectory, output_dir, cores, ligand, solv, sele, stride
+
 
 def process_geometric_criterion_args(args):
     SALT_BRIDGE_CUTOFF_DISTANCE = args.sb_cutoff_dist
@@ -219,16 +224,15 @@ def process_geometric_criterion_args(args):
     return geom_criterion_values
 
 
-
 def main():
-    if("--help" in sys.argv or "-h" in sys.argv):
+    if "--help" in sys.argv or "-h" in sys.argv:
         print (HELP_STR)
         exit(1)
-    if("--itype" not in sys.argv):
+    if "--itype" not in sys.argv:
         print("Need to specifiy interaction types ...")
         exit(1)
 
-    ### Parse required and optional arguments
+    # Parse required and optional arguments
     parser = argparse.ArgumentParser(prog='PROG', add_help=False)
     parser.add_argument('--topology', type=str, default=None, help='path to topology file ')
     parser.add_argument('--trajectory', type=str, default=None, help='path to trajectory file')
@@ -239,7 +243,7 @@ def main():
     parser.add_argument('--stride', type=int, default=1, help='skip frames with specified frequency')
     parser.add_argument('--ligand', type=str, default=None, help='resname of ligand molecule')
 
-    ### Parse geometric criterion arguments
+    # Parse geometric criterion arguments
     parser.add_argument('--sb_cutoff_dist', type=float, default=4.0, help='cutoff for distance between anion and cation atoms [default = 4.0 angstroms]')
     parser.add_argument('--pc_cutoff_dist', type=float, default=6.0, help='cutoff for distance between cation and centroid of aromatic ring [default = 6.0 angstroms]')
     parser.add_argument('--pc_cutoff_ang', type=float, default=60, help='cutoff for angle between normal vector projecting from aromatic plane and vector from aromatic center to cation atom [default = 60 degrees]')
@@ -253,8 +257,6 @@ def main():
     parser.add_argument('--hbond_cutoff_ang', type=float, default=70, help='cutoff for angle between donor hydrogen acceptor [default = 70 degrees]')
     parser.add_argument('--vdw_epsilon', type=float, default=0.5, help='amount of padding for calculating vanderwaals contacts [default = 0.5 angstroms]')
 
-
-
     namespace = argparse.Namespace()
     args, unknown = parser.parse_known_args()
 
@@ -263,12 +265,12 @@ def main():
     open_dir(OUTPUT_DIR)
 
     ITYPES = sys.argv[sys.argv.index('--itype') + 1:]
-    if("-all" in ITYPES):
+    if "-all" in ITYPES:
         ITYPES = ["-sb", "-pc", "-ps", "-ts", "-vdw", "-hb", "-hlb"]
 
     validate_itypes(ITYPES)
 
-    ## Begin computation
+    # Begin computation
     tic = datetime.datetime.now()
     compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_values, cores, stride, solv, sele, ligand)
     toc = datetime.datetime.now()
