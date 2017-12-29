@@ -1,4 +1,3 @@
-from __future__ import division
 from collections import defaultdict
 import json
 
@@ -24,7 +23,7 @@ def create_frequencies_file(itype, output_dir, stitched_filename, sim_length, re
 	with open(output_dir + '/' + itype + "_frequencies.txt", 'w+') as fq:
 		fq.write('NumFrames:\t%d\n' % (sim_length))
 		for interaction in respair_to_frames:
-			interaction_frequency = len(respair_to_frames[interaction])/sim_length
+			interaction_frequency = float(len(respair_to_frames[interaction])) / sim_length
 			fq.write("%s\t%.4f\t%d\n" % (interaction, interaction_frequency, len(respair_to_frames[interaction])))
 
 	#assemble and write out .json
