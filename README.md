@@ -1,6 +1,28 @@
 # MDContact
 Library for computing dynamic non-covalent contact networks in proteins throughout MD Simulation.
 
+## Instructions for installing MD-contact-networks
+
+Install vmd-python: 
+```bash
+git clone https://github.com/Eigenstate/vmd-python
+python setup.py build 
+python setup.py install
+cd ..
+python -c "import vmd"
+```
+
+Install MDcontactnetworks: 
+```bash
+git clone https://github.com/akma327/MDContactNetworks
+```
+
+To test, generate json for a couple of examples and visualize, e.g.:
+```bash
+python dynamic_contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --output_dir OUTPUT_DIR --itype -sb -hb
+```
+Visualize by uploading jsons at https://gpcrviz.github.io/flareplot/index.html?p=create
+
 
 ## File format
 
