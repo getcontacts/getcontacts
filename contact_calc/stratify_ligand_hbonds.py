@@ -1,26 +1,23 @@
-##############################################################################
+############################################################################
 # MDContactNetworks: A Python Library for computing non-covalent contacts
 #                    throughout Molecular Dynamics Trajectories. 
 # Copyright 2016-2017 Stanford University and the Authors
 #
 # Authors: Anthony Kai Kwang Ma
 # Email: anthony.ma@yale.edu, anthonyma27@gmail.com, akma327@stanford.edu
-##############################################################################
+############################################################################
 
-##############################################################################
+############################################################################
 # Imports
-##############################################################################
+############################################################################
 
-from vmd import *
-#import molecule
-import itertools
-from contact_utils import *
+from .contact_utils import *
 
 __all__ = ["stratify_ligand_hbond_subtypes"]
 
-##############################################################################
+############################################################################
 # Functions
-##############################################################################
+############################################################################
 
 
 def ligand_residue_vs_water_hbonds(hbonds, solvent_resn, ligand):
@@ -31,7 +28,7 @@ def ligand_residue_vs_water_hbonds(hbonds, solvent_resn, ligand):
     ligand_residue_hbonds, water_hbonds = [], []
     for hbond in hbonds:
         frame_idx, atom1_label, atom2_label, itype = hbond
-        if(solvent_resn in atom1_label or solvent_resn in atom2_label):
+        if solvent_resn in atom1_label or solvent_resn in atom2_label:
             water_hbonds.append(hbond)
         else:
             ligand_residue_hbonds.append(hbond)
@@ -47,21 +44,21 @@ def stratify_ligand_residue_hbonds(ligand_residue_hbonds, ligand):
     backbone_atoms = ['N', 'O']
     hls, hlb = [], []
 
-    ### Iterate through each ligand residue hbond and bin into appropriate subtype
+    # Iterate through each ligand residue hbond and bin into appropriate subtype
     for frame_idx, atom1_label, atom2_label, itype in ligand_residue_hbonds:
-        if(ligand in atom1_label and ligand in atom2_label):
+        if ligand in atom1_label and ligand in atom2_label:
             continue
-        elif(ligand not in atom1_label and ligand not in atom2_label):
+        elif ligand not in atom1_label and ligand not in atom2_label:
             continue
-        elif(ligand in atom1_label and ligand not in atom2_label):
+        elif ligand in atom1_label and ligand not in atom2_label:
             lig_atom = atom1_label
             res_atom = atom2_label
-        elif(ligand not in atom1_label and ligand in atom2_label):
+        elif ligand not in atom1_label and ligand in atom2_label:
             lig_atom = atom2_label
             res_atom = atom1_label
 
         res_atom_name = res_atom.split(":")[3]
-        if(res_atom_name in backbone_atoms):
+        if res_atom_name in backbone_atoms:
             hlb.append([frame_idx, lig_atom, res_atom, "hlb"])
         else:
             hls.append([frame_idx, lig_atom, res_atom, "hls"])
@@ -72,7 +69,7 @@ def stratify_ligand_residue_hbonds(ligand_residue_hbonds, ligand):
 def stratify_ligand_vs_protein(atom_list, ligand):
     ligand_atoms, protein_atoms = [], []
     for atom in atom_list:
-        if(ligand in atom):
+        if ligand in atom:
             ligand_atoms.append(atom)
         else:
             protein_atoms.append(atom)
@@ -89,7 +86,7 @@ def stratify_ligand_water_bridge(water_hbonds, solvent_resn, ligand):
     for water in water_to_ligand_residues:
         ligand_atoms, protein_atoms = stratify_ligand_vs_protein(water_to_ligand_residues[water], ligand)
 
-        ### Form ligand -- water -- protein pairs
+        # Form ligand -- water -- protein pairs
         for lig_atom in ligand_atoms:
             for res_atom in protein_atoms:
                 ligand_water_bridges.add((frame_idx, lig_atom, water, res_atom, "lwb"))
@@ -106,7 +103,8 @@ def stratify_extended_ligand_water_bridge(water_hbonds, solvent_resn, ligand):
 
     extended_ligand_water_bridges = set()
     for water1, water2 in solvent_bridges:
-        if(water1 not in water_to_ligand_residues or water2 not in water_to_ligand_residues): continue
+        if water1 not in water_to_ligand_residues or water2 not in water_to_ligand_residues:
+            continue
         lig_res_atom1_list, lig_res_atom2_list = water_to_ligand_residues[water1], water_to_ligand_residues[water2]
         ligand_atoms1, protein_atoms1 = stratify_ligand_vs_protein(lig_res_atom1_list, ligand)
         ligand_atoms2, protein_atoms2 = stratify_ligand_vs_protein(lig_res_atom2_list, ligand)
@@ -121,8 +119,6 @@ def stratify_extended_ligand_water_bridge(water_hbonds, solvent_resn, ligand):
 
     lwb2 = sorted([list(entry) for entry in extended_ligand_water_bridges])
     return lwb2
-
-
 
 
 def stratify_ligand_hbond_subtypes(hbonds, solvent_resn, ligand):
@@ -154,4 +150,3 @@ def stratify_ligand_hbond_subtypes(hbonds, solvent_resn, ligand):
     hbonds = hls + hlb + lwb + lwb2
 
     return hbonds
-

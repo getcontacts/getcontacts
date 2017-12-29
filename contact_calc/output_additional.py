@@ -1,6 +1,10 @@
 from __future__ import division
 from collections import defaultdict
+
 import json
+import os
+import errno
+
 
 def open_dir(dirname):
     try:
@@ -9,26 +13,30 @@ def open_dir(dirname):
         if e.errno != errno.EEXIST:
             raise
 
+
 def get_residue_from_atom(atom_name):
     split_atom_name = atom_name.split(':')
     return "%s:%s" % (split_atom_name[1], split_atom_name[2])
 
+
 def create_dynamic_jsons(output_filename, interaction_to_frames, simulation_length):
-    #assemble and write out .json
+    # Assemble and write out .json
     edges = []
-    for interaction_pair in interaction_to_frames: #loop over all respairs
+    for interaction_pair in interaction_to_frames:  # loop over all respairs
         int1, int2 = interaction_pair.split(',')
         edges.append({"name1":int1, "name2":int2, "frames":list(interaction_to_frames[interaction_pair])})
     with open(output_filename, 'w+') as fq:
         fq.write(json.dumps({"edges":edges, "simulation_length":simulation_length}, indent=2))
 
+
 def create_frequencies_file(frequency_filename, simulation_length, respair_to_frames):
-    #write out .csv file
+    # Write out .csv file
     with open(frequency_filename, 'w+') as fq:
         fq.write('Res1,Res2,Freq,NumFrames,TotalFrames:%d\n' % simulation_length)
         for interaction in respair_to_frames:
             interaction_frequency = len(respair_to_frames[interaction])/simulation_length
             fq.write("%s,%.8f,%d,%d\n" % (interaction, interaction_frequency, len(respair_to_frames[interaction]), simulation_length))
+
 
 def get_atompair_set(itype, stitched_lines):
     atompair_to_frames = defaultdict(set)
@@ -40,6 +48,7 @@ def get_atompair_set(itype, stitched_lines):
         atompair_to_frames[atom_pair].add(frame)
     return atompair_to_frames
 
+
 def get_respair_set(itype, stitched_lines):
     respair_to_frames = defaultdict(set)
     for stitched_line in stitched_lines:
@@ -49,6 +58,7 @@ def get_respair_set(itype, stitched_lines):
         res_pair = ','.join(sorted([get_residue_from_atom(atom1), get_residue_from_atom(atom2)]))
         respair_to_frames[res_pair].add(frame)
     return respair_to_frames
+
 
 def make_additional_files(itype, output_dir, stitched_filename, simulation_length):
     with open(stitched_filename) as stitched_open:

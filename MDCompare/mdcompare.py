@@ -11,6 +11,7 @@ import re
 import json
 from utils.utils import *
 
+
 def get_write_lines(respair_to_simcond_to_data, simulation_conditions):
     write_lines = []
     for respair in respair_to_simcond_to_data:
@@ -27,6 +28,7 @@ def get_write_lines(respair_to_simcond_to_data, simulation_conditions):
         if should_write:
             write_lines.append(write_line)
     return write_lines
+
 
 def weight_multiple_IDs(simcond_data_list):
     inttype_to_respair_to_data = {}
@@ -54,10 +56,11 @@ def weight_multiple_IDs(simcond_data_list):
         inttype_to_respair_to_data[inttype] = respair_to_data
     return inttype_to_respair_to_data
 
-''' Given a residue in the format 'Ala:379', will convert the residue name to a generic name
-using the user-provided generic_dict
-'''
+
 def genericize_res(old_res, protein):
+    """ Given a residue in the format 'Ala:379', will convert the residue name to a generic name
+    using the user-provided generic_dict
+    """
     global protein_to_res_to_genericres
 
     aa, pos = old_res.split(':')
@@ -67,6 +70,7 @@ def genericize_res(old_res, protein):
         return None
     else:
         return protein_to_res_to_genericres[protein][new_res]
+
 
 def genericize(inttype_to_respair_to_data, protein):
     new_inttype_to_respair_to_data = {}
@@ -100,6 +104,7 @@ def build_protein_to_res_to_genericres(generic_dict):
                 protein_to_res_to_genericres[protein_name][specific_name] = generic_name
     return protein_to_res_to_genericres
 
+
 def extract_data(path):
     global first_update_to_interactions_to_study
     global interactions_to_study
@@ -128,6 +133,7 @@ def extract_data(path):
 
     return inttype_to_respair_to_data
 
+
 def extract_input_file(input_file):
     """ Uses the user-provided input file to generate three dicts: from simulation_condition to ID,
     from ID to path, and from simulation_condition to protein."""
@@ -152,6 +158,7 @@ def extract_input_file(input_file):
         else:
             simcond_to_protein[simcond] = protein
     return simcond_to_id, ID_to_path, simcond_to_protein
+
 
 def mdcompare(argv):
     # Define globals
@@ -241,6 +248,7 @@ def mdcompare(argv):
                 for write_line in write_lines:
                     write_line[0] += "-%s" % inttype
                     wopen.write("%s\n" % ','.join(write_line))
+
 
 if __name__ == '__main__':
     mdcompare(sys.argv)

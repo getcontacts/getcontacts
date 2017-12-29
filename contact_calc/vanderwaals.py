@@ -11,10 +11,7 @@
 # Imports
 ##############################################################################
 
-from vmd import *
-#import molecule 
-import itertools
-from contact_utils import *
+from .contact_utils import *
 
 __all__ = ["compute_vanderwaals"]
 
@@ -22,18 +19,19 @@ __all__ = ["compute_vanderwaals"]
 # Globals
 ##############################################################################
 
-ALPHA_CARBON_DIST_CUTOFF = 10.0 # Angstroms
-SOFT_VDW_CUTOFF = 5.0 # Angstroms
+ALPHA_CARBON_DIST_CUTOFF = 10.0  # Angstroms
+SOFT_VDW_CUTOFF = 5.0  # Angstroms
 ATOM_RADIUS = {'H': 1.20,
-                'C': 1.70,
-                'N': 1.55,
-                'O': 1.52,
-                'S': 1.80,
-                'P': 1.80}
+               'C': 1.70,
+               'N': 1.55,
+               'O': 1.52,
+               'S': 1.80,
+               'P': 1.80}
 
 ##############################################################################
 # Functions
 ##############################################################################
+
 
 def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW_EPSILON):
     """
@@ -59,10 +57,11 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW
         itype = "vdw"
     """
     vanderwaals = []
-    if(sele_id == None):
+    if sele_id is None:
         evaltcl("set full_protein [atomselect %s \" noh and protein \" frame %s]" % (traj_frag_molid, frame_idx))
     else:
-        evaltcl("set full_protein [atomselect %s \" noh and protein and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
+        evaltcl("set full_protein [atomselect %s \" noh and protein and (%s) \" frame %s]" %
+                (traj_frag_molid, sele_id, frame_idx))
 
     contacts = evaltcl("measure contacts %s $full_protein" % (SOFT_VDW_CUTOFF))
     contact_index_pairs = parse_contacts(contacts)
@@ -74,7 +73,7 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW
 
         distance = compute_distance(traj_frag_molid, frame_idx, atom1_label, atom2_label)
         vanderwaal_cutoff = ATOM_RADIUS[element1] + ATOM_RADIUS[element2] + VDW_EPSILON
-        if(distance < vanderwaal_cutoff):
+        if distance < vanderwaal_cutoff:
             vanderwaals.append([frame_idx, atom1_label, atom2_label, "vdw"])
 
     return vanderwaals

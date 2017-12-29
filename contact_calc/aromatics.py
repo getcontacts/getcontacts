@@ -1,24 +1,24 @@
-##############################################################################
+############################################################################
 # MDContactNetworks: A Python Library for computing non-covalent contacts
 #                    throughout Molecular Dynamics Trajectories. 
 # Copyright 2016-2017 Stanford University and the Authors
 #
 # Authors: Anthony Kai Kwang Ma
 # Email: anthony.ma@yale.edu, anthonyma27@gmail.com, akma327@stanford.edu
-##############################################################################
+############################################################################
 
-##############################################################################
+############################################################################
 # Imports
-##############################################################################
+############################################################################
 
 from vmd import *
-from contact_utils import *
+from .contact_utils import *
 
 __all__ = ['compute_pi_stacking', 'compute_t_stacking']
 
-##############################################################################
+############################################################################
 # Functions
-##############################################################################
+############################################################################
 
 
 def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label):
@@ -40,10 +40,10 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label):
         ie ["A:PHE:329:CE1:55228", "A:PHE:329:CE2:55234", "A:PHE:329:CG:55225"]
     """
 
-
     residue_to_atom_names = {"PHE": "CG CE1 CE2", "TRP": "CD2 CZ2 CZ3", "TYR": "CG CE1 CE2"}
     chain, resname, resid = aromatic_residue_label.split(":")
-    evaltcl("set aromatic_atoms [atomselect %s \" (chain %s) and (resname %s) and (resid %s) and (name %s)\" frame %s]" %(traj_frag_molid, chain, resname, resid, residue_to_atom_names[resname], frame_idx))
+    evaltcl("set aromatic_atoms [atomselect %s \" (chain %s) and (resname %s) and (resid %s) and (name %s)\" frame %s]"
+            % (traj_frag_molid, chain, resname, resid, residue_to_atom_names[resname], frame_idx))
     aromatic_atom_triplet = get_atom_selection_labels("aromatic_atoms")
     evaltcl('$aromatic_atoms delete')
     return aromatic_atom_triplet
@@ -83,7 +83,7 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, itype
 
     aromatics = []
 
-    if(sele_id == None):
+    if sele_id is None:
         aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" ((resname PHE) and (name CG CE1 CE2)) or ((resname TRP) and (name CD2 CZ2 CZ3)) or ((resname TYR) and (name CG CE1 CE2)) \" frame %s]" % (traj_frag_molid, frame_idx)
     else:
         aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" ((resname PHE) and (name CG CE1 CE2) and (%s)) or ((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or ((resname TYR) and (name CG CE1 CE2) and (%s)) \" frame %s]" % (traj_frag_molid, sele_id, sele_id, sele_id, frame_idx)
@@ -92,7 +92,7 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, itype
     contacts = evaltcl("measure contacts %s $aromatic_atoms" % (SOFT_DISTANCE_CUTOFF))
     evaltcl("$aromatic_atoms delete")
 
-    ### Calculate set of distinct aromatic candidate pairs that may have pi-stacking
+    # Calculate set of distinct aromatic candidate pairs that may have pi-stacking
     contact_index_pairs = parse_contacts(contacts)
     res_pairs = set()
     residue_to_atom_labels = {}
@@ -100,7 +100,7 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, itype
         aromatic1_label = index_to_label[aromatic1_index]
         aromatic2_label = index_to_label[aromatic2_index]
 
-        ### Check if the two atoms belong to same aromatic group
+        # Check if the two atoms belong to same aromatic group
         aromatic1_res = ":".join(aromatic1_label.split(":")[0:3])
         aromatic2_res = ":".join(aromatic2_label.split(":")[0:3])
         if(aromatic1_res == aromatic2_res): continue
@@ -115,12 +115,12 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, itype
         if(k1 not in res_pairs and k2 not in res_pairs):
             res_pairs.add((aromatic1_res, aromatic2_res))
 
-    ### Perform strict geometric criterion on candidate aromatic pairs
+    # Perform strict geometric criterion on candidate aromatic pairs
     for aromatic1_res, aromatic2_res in res_pairs:
         aromatic1_atom_labels = residue_to_atom_labels[aromatic1_res]
         aromatic2_atom_labels = residue_to_atom_labels[aromatic2_res]
 
-        ### Distance between two aromatic centers must be below DISTANCE_CUTOFF
+        # Distance between two aromatic centers must be below DISTANCE_CUTOFF
         arom1_atom1_coord = get_coord(traj_frag_molid, frame_idx, aromatic1_atom_labels[0])
         arom1_atom2_coord = get_coord(traj_frag_molid, frame_idx, aromatic1_atom_labels[1])
         arom1_atom3_coord = get_coord(traj_frag_molid, frame_idx, aromatic1_atom_labels[2])
@@ -134,7 +134,7 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, itype
         aromatic_centers_distance = calc_geom_distance(aromatic1_centroid, aromatic2_centroid)
         if(aromatic_centers_distance > DISTANCE_CUTOFF): continue
 
-        ### Angle between vectors normal to each aromatic plane must be below cutoff
+        # Angle between vectors normal to each aromatic plane must be below cutoff
         aromatic1_normal_vector = calc_geom_normal_vector(arom1_atom1_coord, arom1_atom2_coord, arom1_atom3_coord)
         aromatic2_normal_vector = calc_geom_normal_vector(arom2_atom1_coord, arom2_atom2_coord, arom2_atom3_coord)
         aromatic_plane_alignment_angle = calc_angle_between_vectors(aromatic1_normal_vector, aromatic2_normal_vector)
@@ -145,13 +145,13 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, itype
             aromatic_plane_perpendicular_angle = math.fabs(calc_angle_between_vectors(aromatic1_normal_vector, aromatic2_normal_vector) - 90)
             if(aromatic_plane_perpendicular_angle > ANGLE_CUTOFF): continue
 
-        ### Psi Angle cutoff
+        # Psi Angle cutoff
         psi_angle1 = calc_geom_psi_angle(aromatic1_centroid, aromatic2_centroid, aromatic1_normal_vector)
         psi_angle2 = calc_geom_psi_angle(aromatic2_centroid, aromatic1_centroid, aromatic2_normal_vector)
         psi_angle = min(psi_angle1, psi_angle2)
         if(psi_angle > PSI_ANGLE_CUTOFF): continue
 
-        ### Return aromatic interaction atom pairs
+        # Return aromatic interaction atom pairs
         for arom1_atom_label in aromatic1_atom_labels:
             for arom2_atom_label in aromatic2_atom_labels:
                 aromatics.append([frame_idx, arom1_atom_label, arom2_atom_label, itype])
@@ -189,7 +189,7 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, PI_
         itype = "ps"
     """
 
-    PI_STACK_SOFT_DISTANCE_CUTOFF = 10.0 # angstroms
+    PI_STACK_SOFT_DISTANCE_CUTOFF = 10.0  # angstroms
     pi_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, "ps", PI_STACK_SOFT_DISTANCE_CUTOFF, PI_STACK_CUTOFF_DISTANCE, PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
     return pi_stacking
 
@@ -225,7 +225,7 @@ def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, T_ST
         itype = "ts"
     """
 
-    T_STACK_SOFT_DISTANCE_CUTOFF = 6.0 # angstroms
+    T_STACK_SOFT_DISTANCE_CUTOFF = 6.0  # angstroms
     t_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, "ts", T_STACK_SOFT_DISTANCE_CUTOFF, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
     return t_stacking
 

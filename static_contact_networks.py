@@ -14,7 +14,7 @@ import errno
 import sys
 import datetime
 import argparse
-from compute_contacts import *
+from contact_calc import compute_contacts
 
 HELP_STR = """
  ===============================================
@@ -258,7 +258,7 @@ def main():
 
     # Begin computation
     tic = datetime.datetime.now()
-    compute_static_contacts(TOP, OUTPUT_DIR, ITYPES, geom_criterion_values, solv, sele, ligand)
+    compute_contacts.compute_static_contacts(TOP, OUTPUT_DIR, ITYPES, geom_criterion_values, solv, sele, ligand)
     toc = datetime.datetime.now()
     print("Computation Time: " + str((toc-tic).total_seconds()))
 

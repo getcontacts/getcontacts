@@ -11,15 +11,14 @@
 # Imports
 ##############################################################################
 
-from vmd import *
-#import molecule 
-from contact_utils import *
+from .contact_utils import *
 
 __all__ = ['prep_salt_bridge_computation', 'compute_salt_bridges']
 
 ##############################################################################
 # Functions
 ##############################################################################
+
 
 def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id):
     """
@@ -64,8 +63,7 @@ def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, SALT_BRIDGE_CUTOFF
     for anion_atom in anion_list:
         for cation_atom in cation_list:
             dist = compute_distance(traj_frag_molid, frame_idx, anion_atom, cation_atom)
-            if(dist < SALT_BRIDGE_CUTOFF_DISTANCE):
+            if dist < SALT_BRIDGE_CUTOFF_DISTANCE:
                 salt_bridges.append([frame_idx, anion_atom, cation_atom, "sb"])
 
     return salt_bridges
-

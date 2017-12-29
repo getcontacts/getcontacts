@@ -1,36 +1,41 @@
-##############################################################################
+############################################################################
 # MDContactNetworks: A Python Library for computing non-covalent contacts
 #                    throughout Molecular Dynamics Trajectories. 
 # Copyright 2016-2017 Stanford University and the Authors
 #
 # Authors: Anthony Kai Kwang Ma
 # Email: anthony.ma@yale.edu, anthonyma27@gmail.com, akma327@stanford.edu
-##############################################################################
+############################################################################
 
-##############################################################################
+############################################################################
 # Imports
-##############################################################################
+############################################################################
 
 from vmd import *
-#import molecule
 import numpy as np
 import math
 import re
 
+
 def atoi(text):
     return int(text) if text.isdigit() else text
 
+
 def natural_keys(text):
-    return [ atoi(c) for c in re.split('(\d+)', text) ]
+    return [atoi(c) for c in re.split('(\d+)', text)]
+
 
 def get_file_type(file_name):
     """
     Determine file type by extracting suffix of file_name
     """
-    if(file_name == None): return None
+    if file_name is None:
+        return None
     file_type = file_name.split(".")[-1].strip()
-    if(file_type == "nc"): file_type = 'netcdf'
+    if file_type == "nc":
+        file_type = 'netcdf'
     return file_type
+
 
 def load_traj(TOP, TRAJ, beg_frame, end_frame, stride):
     """
@@ -52,11 +57,12 @@ def load_traj(TOP, TRAJ, beg_frame, end_frame, stride):
     top_file_type = get_file_type(TOP)
     traj_file_type = get_file_type(TRAJ)
     trajid = molecule.load(top_file_type, TOP)
-    if(TRAJ != None):
+    if TRAJ is not None:
         molecule.read(trajid, traj_file_type, TRAJ, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
     else:
         molecule.read(trajid, top_file_type, TOP, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
     return trajid
+
 
 def estimate_simulation_length(TOP, TRAJ):
     """
@@ -71,7 +77,6 @@ def estimate_simulation_length(TOP, TRAJ):
     return num_frames
 
 
-
 def get_atom_selection_labels(selection_id):
     """
     Returns list of atom labels for each atom in selection_id
@@ -83,6 +88,7 @@ def get_atom_selection_labels(selection_id):
         atom_labels.append("%s:%s:%s:%s:%s" % (chain, resname, resid, name, index))
 
     return atom_labels
+
 
 def get_atom_selection_properties(selection_id):
     """
@@ -113,9 +119,10 @@ def get_atom_selection_properties(selection_id):
     resids = list(map(str, evaltcl("$%s get resid" % (selection_id)).split(" ")))
     names = list(map(str, evaltcl("$%s get name" % (selection_id)).split(" ")))
     indices = list(map(str, evaltcl("$%s get index" % (selection_id)).split(" ")))
-    if(chains == [''] or resnames == [''] or resids == [''] or names == [''] or indices == ['']):
+    if chains == [''] or resnames == [''] or resids == [''] or names == [''] or indices == ['']:
         return [], [], [], [], []
     return chains, resnames, resids, names, indices
+
 
 def gen_index_to_atom_label(TOP, TRAJ):
     """
@@ -134,14 +141,14 @@ def gen_index_to_atom_label(TOP, TRAJ):
         {11205: "A:ASP:114:CA:11205, ...}
 
     """
-    ### Select all atoms from first frame of trajectory
+    # Select all atoms from first frame of trajectory
     trajid = load_traj(TOP, TRAJ, 1, 2, 1)
     all_atom_sel = "set all_atoms [atomselect %s \" all \" frame %s]" % (trajid, 0)
     all_atoms = evaltcl(all_atom_sel)
     chains, resnames, resids, names, indices = get_atom_selection_properties("all_atoms")
     evaltcl('$all_atoms delete')
 
-    ### Generate mapping
+    # Generate mapping
     index_to_label = {}
     for idx, index in enumerate(indices):
         chain = chains[idx]
@@ -155,6 +162,7 @@ def gen_index_to_atom_label(TOP, TRAJ):
     molecule.delete(trajid)
     return index_to_label
 
+
 def get_anion_atoms(traj_frag_molid, frame_idx, sele_id):
     """
     Get list of anion atoms that can form salt bridges
@@ -167,7 +175,7 @@ def get_anion_atoms(traj_frag_molid, frame_idx, sele_id):
     """
     anion_list = []
 
-    if(sele_id == None):
+    if sele_id is None:
         evaltcl("set ASP [atomselect %s \" (resname ASP) and (name OD1 OD2) \" frame %s]" % (traj_frag_molid, frame_idx))
         evaltcl("set GLU [atomselect %s \" (resname GLU) and (name OE1 OE2) \" frame %s]" % (traj_frag_molid, frame_idx))
     else:
@@ -181,6 +189,7 @@ def get_anion_atoms(traj_frag_molid, frame_idx, sele_id):
     evaltcl('$GLU delete')
     return anion_list
 
+
 def get_cation_atoms(traj_frag_molid, frame_idx, sele_id):
     """
     Get list of cation atoms that can form salt bridges or pi cation contacts
@@ -192,7 +201,7 @@ def get_cation_atoms(traj_frag_molid, frame_idx, sele_id):
         can form salt bridges
     """
     cation_list = []
-    if(sele_id == None):
+    if sele_id is None:
         evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) \" frame %s]" % (traj_frag_molid, frame_idx))
         evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) \" frame %s]" % (traj_frag_molid, frame_idx))
         evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) \" frame %s]" % (traj_frag_molid, frame_idx))
@@ -211,6 +220,7 @@ def get_cation_atoms(traj_frag_molid, frame_idx, sele_id):
 
     return cation_list
 
+
 def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
     """
     Get list of aromatic atom triplets
@@ -222,7 +232,7 @@ def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
         [(A:PHE:72:CG:51049, A:PHE:72:CE1:51052, A:PHE:72:CE2:51058), ...]
     """
     aromatic_atom_list = []
-    if(chain_id == None):
+    if chain_id is None:
         evaltcl("set PHE [atomselect %s \" (resname PHE) and (name CG CE1 CE2) \" frame %s]" % (traj_frag_molid, frame_idx))
         evaltcl("set TRP [atomselect %s \" (resname TRP) and (name CD2 CZ2 CZ3) \" frame %s]" % (traj_frag_molid, frame_idx))
         evaltcl("set TYR [atomselect %s \" (resname TYR) and (name CG CE1 CE2) \" frame %s]" % (traj_frag_molid, frame_idx))
@@ -241,11 +251,12 @@ def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
 
     aromatic_atom_triplet_list = []
 
-    ### Generate triplets of the three equidistant atoms on an aromatic ring
+    # Generate triplets of the three equidistant atoms on an aromatic ring
     for i in range(0, len(aromatic_atom_list), 3):
         aromatic_atom_triplet_list.append(aromatic_atom_list[i:i+3])
 
     return aromatic_atom_triplet_list
+
 
 def calc_water_to_residues_map(water_hbonds, solvent_resn):
     """
@@ -264,30 +275,33 @@ def calc_water_to_residues_map(water_hbonds, solvent_resn):
     water_to_residues = {}
     _solvent_bridges = []
     for frame_idx, atom1_label, atom2_label, itype in water_hbonds:
-        if(solvent_resn in atom1_label and solvent_resn in atom2_label):
+        if solvent_resn in atom1_label and solvent_resn in atom2_label:
             _solvent_bridges.append((atom1_label, atom2_label))
             continue
-        elif(solvent_resn in atom1_label and solvent_resn not in atom2_label):
+        elif solvent_resn in atom1_label and solvent_resn not in atom2_label:
             water = atom1_label
             protein = atom2_label
-        elif(solvent_resn not in atom1_label and solvent_resn in atom2_label):
+        elif solvent_resn not in atom1_label and solvent_resn in atom2_label:
             water = atom2_label
             protein = atom1_label
+        else:
+            raise ValueError("Solvent residue name can't be resolved")
 
-        if(water not in water_to_residues):
+        if water not in water_to_residues:
             water_to_residues[water] = set()
         water_to_residues[water].add(protein)
 
-    ### Remove duplicate solvent bridges (w1--w2 and w2--w1 are the same)
+    # Remove duplicate solvent bridges (w1--w2 and w2--w1 are the same)
     solvent_bridges = set()
     for water1, water2 in _solvent_bridges:
         key1 = (water1, water2)
         key2 = (water2, water1)
-        if(key1 not in solvent_bridges and key2 not in solvent_bridges):
+        if key1 not in solvent_bridges and key2 not in solvent_bridges:
             solvent_bridges.add(key1)
     solvent_bridges = sorted(list(solvent_bridges))
 
     return frame_idx, water_to_residues, solvent_bridges
+
 
 def compute_distance(molid, frame_idx, atom1_label, atom2_label):
     """
@@ -313,6 +327,7 @@ def compute_distance(molid, frame_idx, atom1_label, atom2_label):
     distance = float(evaltcl("measure bond {%s %s} molid %s frame %s" % (atom_index1, atom_index2, molid, frame_idx)))
     return distance
 
+
 def compute_angle(molid, frame_idx, atom1, atom2, atom3):
     """
     Compute distance between two atoms in a specified frame of simulation
@@ -327,7 +342,7 @@ def compute_angle(molid, frame_idx, atom1, atom2, atom3):
         Atom label (ie "A:GLU:323:OE2:55124")
     atom2: string
         Atom label (ie "A:ARG:239:NH1:53746")
-    atom2: string
+    atom3: string
         Atom label (ie "A:GLU:118:OE1:51792")
 
     Returns
@@ -339,10 +354,11 @@ def compute_angle(molid, frame_idx, atom1, atom2, atom3):
     atom_index2 = atom2.split(":")[-1]
     atom_index3 = atom3.split(":")[-1]
 
-    angle = float(evaltcl("measure angle {%s %s %s} molid %s frame %s" % (atom_index1, atom_index2, atom_index3, molid, frame_idx)))
+    angle = float(evaltcl("measure angle {%s %s %s} molid %s frame %s" %
+                          (atom_index1, atom_index2, atom_index3, molid, frame_idx)))
     return angle
 
-### Atom property getter functions
+
 def get_chain(traj_frag_molid, frame_idx, index):
     """
     Parse atom label and return element
@@ -364,6 +380,7 @@ def get_chain(traj_frag_molid, frame_idx, index):
     chain = evaltcl("$sel get chain")
     evaltcl("$sel delete")
     return chain
+
 
 def get_resname(traj_frag_molid, frame_idx, index):
     """
@@ -387,6 +404,7 @@ def get_resname(traj_frag_molid, frame_idx, index):
     evaltcl("$sel delete")
     return resname
 
+
 def get_resid(traj_frag_molid, frame_idx, index):
     """
     Parse atom label and return element
@@ -408,6 +426,7 @@ def get_resid(traj_frag_molid, frame_idx, index):
     resid = evaltcl("$sel get resid")
     evaltcl("$sel delete")
     return resid
+
 
 def get_name(traj_frag_molid, frame_idx, index):
     """
@@ -431,6 +450,7 @@ def get_name(traj_frag_molid, frame_idx, index):
     evaltcl("$sel delete")
     return name
 
+
 def get_element(traj_frag_molid, frame_idx, index):
     """
     Parse atom label and return element
@@ -453,6 +473,7 @@ def get_element(traj_frag_molid, frame_idx, index):
     evaltcl("$sel delete")
     return element
 
+
 def get_atom_label(traj_frag_molid, frame_idx, index):
     chain = get_chain(traj_frag_molid, frame_idx, index)
     resname = get_resname(traj_frag_molid, frame_idx, index)
@@ -461,6 +482,7 @@ def get_atom_label(traj_frag_molid, frame_idx, index):
 
     atom_label = "%s:%s:%s:%s:%s" % (chain, resname, resid, name, index)
     return atom_label
+
 
 def parse_contacts(contact_string):
     """
@@ -476,15 +498,16 @@ def parse_contacts(contact_string):
     """
     contact_index_pairs = []
 
-    ### Handle case where only one pair of atoms form contacts
-    if("} {" not in contact_string):
+    # Handle case where only one pair of atoms form contacts
+    if "} {" not in contact_string:
         atom1_index, atom2_index = map(int, contact_string.split(" "))
         contact_index_pairs.append((atom1_index, atom2_index))
     else:
         contacts_list = contact_string.split("} {")
         atom1_list_str = contacts_list[0].strip("{}")
         atom2_list_str = contacts_list[1].strip("{}")
-        if(atom1_list_str == "" or atom2_list_str == ""): return []
+        if atom1_list_str == "" or atom2_list_str == "":
+            return []
 
         atom1_list = list(map(int, atom1_list_str.split(" ")))
         atom2_list = list(map(int, atom2_list_str.split(" ")))
@@ -496,7 +519,8 @@ def parse_contacts(contact_string):
 
     return contact_index_pairs
 
-### Geometry Tools
+
+# Geometry Tools
 def get_coord(traj_frag_molid, frame_idx, atom_label):
     """
     Get x, y, z coordinate of an atom specified by its label
@@ -523,12 +547,14 @@ def get_coord(traj_frag_molid, frame_idx, atom_label):
     coord = np.array([x, y, z])
     return coord
 
+
 def points_to_vector(point1, point2):
     """
     Return vector from point1 to point2
     """
     vector = point2 - point1
     return vector
+
 
 def calc_vector_length(vector):
     """
@@ -537,6 +563,7 @@ def calc_vector_length(vector):
     vector_length = math.sqrt(np.dot(vector, vector))
     return vector_length
 
+
 def calc_angle_between_vectors(vector1, vector2):
     """
     Returns
@@ -544,9 +571,11 @@ def calc_angle_between_vectors(vector1, vector2):
     angle_between_vectors: float
         Degrees between two vectors
     """
-    radians_between_vectors = math.acos(np.dot(vector1, vector2)/(calc_vector_length(vector1) * calc_vector_length(vector2)))
+    radians_between_vectors = math.acos(np.dot(vector1, vector2) /
+                                        (calc_vector_length(vector1) * calc_vector_length(vector2)))
     angle_between_vectors = math.degrees(radians_between_vectors)
     return angle_between_vectors
+
 
 def calc_geom_distance(point1, point2):
     """
@@ -559,6 +588,7 @@ def calc_geom_distance(point1, point2):
     distance = np.linalg.norm(point1 - point2)
     return distance
 
+
 def calc_geom_centroid(point1, point2, point3):
     """
     Compute centroid between three points
@@ -569,6 +599,7 @@ def calc_geom_centroid(point1, point2, point3):
     """
     centroid = (point1 + point2 + point3)/3
     return centroid
+
 
 def calc_geom_normal_vector(point1, point2, point3):
     """
@@ -583,6 +614,7 @@ def calc_geom_normal_vector(point1, point2, point3):
     v2 = point2 - point1
     normal_vector = np.cross(v1, v2)
     return normal_vector
+
 
 def calc_geom_psi_angle(center1, center2, normal_vector):
     """
@@ -604,4 +636,3 @@ def calc_geom_psi_angle(center1, center2, normal_vector):
     psi_angle = calc_angle_between_vectors(normal_vector, center_to_center_vector)
     psi_angle = min(math.fabs(psi_angle - 0), math.fabs(psi_angle - 180))
     return psi_angle
-

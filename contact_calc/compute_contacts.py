@@ -11,49 +11,48 @@
 # Imports
 ##############################################################################
 
-from vmd import *
-import os
-#import molecule
 import datetime
 import glob
 from multiprocessing import *
-from contact_utils import *
-from aromatics import *
-from hbonds import *
-from salt_bridges import *
-from pi_cation import *
-from vanderwaals import *
-from output_additional import *
+from vmd import *
+
+from .contact_utils import *
+from .aromatics import *
+from .hbonds import *
+from .salt_bridges import *
+from .pi_cation import *
+from .vanderwaals import *
+from .output_additional import *
 
 ##############################################################################
 # Global Variables
 ##############################################################################
 TRAJ_FRAG_SIZE = 100
-full_name_dirs = {'hbbb':'hydrogen_bonds/backbone_backbone_hydrogen_bonds',
-        'hbsb':'hydrogen_bonds/sidechain_backbone_hydrogen_bonds',
-        'hbss':'hydrogen_bonds/sidechain_sidechain_hydrogen_bonds',
-        'vdw':'van_der_Waals',
-        'sb':'salt_bridges',
-        'ts':'t_stacking',
-        'ps':'pi_stacking',
-        'pc':'pi_cation',
-        'wb':'hydrogen_bonds/water_mediated_hydrogen_bonds',
-        'wb2':'hydrogen_bonds/extended_water_mediated_hydrogen_bonds',
-        'lhb':'ligand_hydrogen_bonds/hydrogen_bonds',
-        'hlb':'ligand_hydrogen_bonds/backbone_hydrogen_bonds',
-        'hls':'ligand_hydrogen_bonds/sidechain_hydrogen_bonds',
-        'lwb':'ligand_hydrogen_bonds/water_mediated_hydrogen_bonds',
-        'lwb2':'ligand_hydrogen_bonds/extended_water_mediated_hydrogen_bonds',
-        }
+full_name_dirs = {'hbbb': 'hydrogen_bonds/backbone_backbone_hydrogen_bonds',
+                  'hbsb': 'hydrogen_bonds/sidechain_backbone_hydrogen_bonds',
+                  'hbss': 'hydrogen_bonds/sidechain_sidechain_hydrogen_bonds',
+                  'vdw': 'van_der_Waals',
+                  'sb': 'salt_bridges',
+                  'ts': 't_stacking',
+                  'ps': 'pi_stacking',
+                  'pc': 'pi_cation',
+                  'wb': 'hydrogen_bonds/water_mediated_hydrogen_bonds',
+                  'wb2': 'hydrogen_bonds/extended_water_mediated_hydrogen_bonds',
+                  'lhb': 'ligand_hydrogen_bonds/hydrogen_bonds',
+                  'hlb': 'ligand_hydrogen_bonds/backbone_hydrogen_bonds',
+                  'hls': 'ligand_hydrogen_bonds/sidechain_hydrogen_bonds',
+                  'lwb': 'ligand_hydrogen_bonds/water_mediated_hydrogen_bonds',
+                  'lwb2': 'ligand_hydrogen_bonds/extended_water_mediated_hydrogen_bonds',
+                  }
 
 ##############################################################################
 # Functions
 ##############################################################################
 
-### Note: Trying to write directly to output and doing postprocessing after
-### May save a lot of memory instead of having massive arrays, but there is 
-### also the IO time (which would happen anyways). Figure out best output
-### format and most efficient way to write to disk. 
+# Note: Trying to write directly to output and doing postprocessing after
+# May save a lot of memory instead of having massive arrays, but there is
+# also the IO time (which would happen anyways). Figure out best output
+# format and most efficient way to write to disk.
 
 def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele_id, ligand, index_to_label):
     """
@@ -90,7 +89,7 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     """
     tic = datetime.datetime.now()
 
-    ### Extract geometric criterion 
+    # Extract geometric criterion
     SALT_BRIDGE_CUTOFF_DISTANCE = geom_criterion_values['SALT_BRIDGE_CUTOFF_DISTANCE']
     PI_CATION_CUTOFF_DISTANCE = geom_criterion_values['PI_CATION_CUTOFF_DISTANCE']
     PI_CATION_CUTOFF_ANGLE = geom_criterion_values['PI_CATION_CUTOFF_ANGLE']
@@ -106,19 +105,19 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     
 
     frame_contacts = []
-    if("-sb" in ITYPES):
+    if "-sb" in ITYPES:
         frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, SALT_BRIDGE_CUTOFF_DISTANCE)
-    if("-pc" in ITYPES):
+    if "-pc" in ITYPES:
         frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, PI_CATION_CUTOFF_DISTANCE, PI_CATION_CUTOFF_ANGLE)
-    if("-ps" in ITYPES):
+    if "-ps" in ITYPES:
         frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, PI_STACK_CUTOFF_DISTANCE, PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
-    if("-ts" in ITYPES):
+    if "-ts" in ITYPES:
         frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
-    if("-vdw" in ITYPES):
+    if "-vdw" in ITYPES:
         frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW_EPSILON)
-    if("-hb" in ITYPES):
+    if "-hb" in ITYPES:
         frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, None, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
-    if("-lhb" in ITYPES):
+    if "-lhb" in ITYPES:
         frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, ligand, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
 
     toc = datetime.datetime.now()
@@ -162,21 +161,21 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_
     frag_idx: int 
 
     fragment_contacts: list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
-
     """
+
     traj_frag_molid = load_traj(TOP, TRAJ, beg_frame, end_frame, stride)
     fragment_contacts = []
 
-    ### Compute contacts for each frame
+    # Compute contacts for each frame
     num_frag_frames = molecule.numframes(traj_frag_molid)
     for frame_idx in range(1, num_frag_frames):
-        # if(frame_idx > 1): break
+        # if frame_idx > 1: break
         fragment_contacts += compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele_id, ligand, index_to_label)
 
-    ### Delete trajectory fragment to clear memory
+    # Delete trajectory fragment to clear memory
     molecule.delete(traj_frag_molid)
 
-    ### Write directly out to temporary output 
+    # Write directly out to temporary output
     print("Writing output to seperate files, one for each itype ...")
     
     fd_map = {itype: open(OUTPUT_DIR + "/" + itype.strip("-") + "_frag_" + str(frag_idx) + ".txt", 'w') for itype in contact_types}
@@ -189,8 +188,10 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_
         fd_map[itype].close()
     return (frag_idx, num_frag_frames - 1)
 
+
 def compute_fragment_contacts_helper(args):
     return compute_fragment_contacts(*args)
+
 
 def stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length):
     """
@@ -209,7 +210,7 @@ def stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_
     """
     print("Stitching %s ..." % (itype))
     stitched_filename = OUTPUT_DIR + "/" + itype + ".txt" 
-    #stitched_filename = OUTPUT_DIR + full_name_dirs[contact_type] + '/' + 'raw_frame_output.txt'
+    # stitched_filename = OUTPUT_DIR + full_name_dirs[contact_type] + '/' + 'raw_frame_output.txt'
     fo = open(stitched_filename, 'w')
 
     num_frames = 0
@@ -262,47 +263,46 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
 
     """
 
-    ### Append forward slash to output dirname
+    # Append forward slash to output dirname
     if OUTPUT_DIR[-1] != '/':
         OUTPUT_DIR += '/'
 
-    ### Set up file descriptors for writing output
+    # Set up file descriptors for writing output
     if not os.path.exists(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
 
     contact_types = []
     for itype in ITYPES:
-        if(itype == "-hb"):
+        if itype == "-hb":
             contact_types += ["hbbb", "hbsb", "hbss", "wb", "wb2"]
-        elif(itype == "-lhb"):
+        elif itype == "-lhb":
             contact_types += ["hls", "hlb", "lwb", "lwb2"]
         else:
             contact_types += [itype.strip("-")]
 
-    ### Set up file descriptors for writing output
+    # Set up file descriptors for writing output
     for contact_type in contact_types:
         contact_path = OUTPUT_DIR + full_name_dirs[contact_type] + '/'
         if not os.path.exists(contact_path):
             os.makedirs(contact_path)
-
 
     index_to_label = gen_index_to_atom_label(TOP, TRAJ)
     sim_length = estimate_simulation_length(TOP, TRAJ)
     print("sim_length", sim_length)
     input_args = []
 
-    ### Serial 
+    # Serial
     # output = []
     # for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
-    #     if(frag_idx > 0): break
+    #     if frag_idx > 0: break
     #     end_frame = beg_frame + TRAJ_FRAG_SIZE
     #     frag_idx, frag_length = compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label)
     #     output.append((frag_idx, frag_length))
 
-    ### Generate input arguments for each trajectory piece
+    # Generate input arguments for each trajectory piece
     print("MDContactNetworks processing TRAJ: %s with %s total frames with stride %s ..." % (TRAJ, str(sim_length), str(stride)))
     for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
-        # if(frag_idx > 0): break
+        # if frag_idx > 0: break
         end_frame = beg_frame + TRAJ_FRAG_SIZE
         print("Processing fragment %s beg_frame %s end_frame %s" % (frag_idx, beg_frame, end_frame))
         input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label))
@@ -312,21 +312,20 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
     pool.close()
     pool.join()
 
-    ### Sort output by trajectory fragments
+    # Sort output by trajectory fragments
     print("Map fragments to length")
     frag_idx_to_length = {}
-    output = sorted(output, key = lambda x: (x[0]))
+    output = sorted(output, key=lambda x: (x[0]))
     for frag_idx, frag_length in output:
         frag_idx_to_length[frag_idx] = frag_length
         print(frag_idx, frag_length)
 
-    ### Combine fragments to single large stitched files
+    # Combine fragments to single large stitched files
     for itype in contact_types:
         frag_contact_files = glob.glob(OUTPUT_DIR + "/" + itype + "_frag*")
         frag_contact_files.sort(key=natural_keys)
         stitched_filename = stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length)
         make_additional_files(itype, OUTPUT_DIR, stitched_filename, sim_length)
-
 
 
 def compute_static_contacts(STRUC, OUTPUT_DIR, ITYPES, geom_criterion_values, solvent_resn, sele_id, ligand):
@@ -354,24 +353,24 @@ def compute_static_contacts(STRUC, OUTPUT_DIR, ITYPES, geom_criterion_values, so
 
     """
 
-    ### Append forward slash to output dirname
+    # Append forward slash to output dirname
     if OUTPUT_DIR[-1] != '/':
         OUTPUT_DIR += '/'
 
-    ### Set up file descriptors for writing output
+    # Set up file descriptors for writing output
     if not os.path.exists(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
 
     contact_types = []
     for itype in ITYPES:
-        if(itype == "-hb"):
+        if itype == "-hb":
             contact_types += ["hbbb", "hbsb", "hbss", "wb", "wb2"]
-        elif(itype == "-lhb"):
+        elif itype == "-lhb":
             contact_types += ["hls", "hlb", "lwb", "lwb2"]
         else:
             contact_types += [itype.strip("-")]
 
-    ### Set up file descriptors for writing output
+    # Set up file descriptors for writing output
     for contact_type in contact_types:
         contact_path = OUTPUT_DIR + full_name_dirs[contact_type] + '/'
         if not os.path.exists(contact_path):
@@ -383,16 +382,15 @@ def compute_static_contacts(STRUC, OUTPUT_DIR, ITYPES, geom_criterion_values, so
     print("sim_length", sim_length)
     input_args = []
 
-    ### Serial 
+    # Serial
     frag_idx, frag_length = compute_fragment_contacts(0, 0, 0, STRUC, STRUC, OUTPUT_DIR, contact_types, ITYPES, geom_criterion_values, 1, solvent_resn, sele_id, ligand, index_to_label)
 
     frag_idx_to_length = {frag_idx: frag_length}
     print(frag_idx, frag_length)
 
-    ### Combine fragments to single large stitched files
+    # Combine fragments to single large stitched files
     for itype in contact_types:
         frag_contact_files = glob.glob(OUTPUT_DIR + "/" + itype + "_frag*")
         frag_contact_files.sort(key=natural_keys)
         stitched_filename = stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length)
         make_additional_files(itype, OUTPUT_DIR, stitched_filename, sim_length)
-

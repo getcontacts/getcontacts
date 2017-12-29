@@ -12,9 +12,8 @@
 ##############################################################################
 
 from vmd import *
-#import molecule
 import itertools
-from contact_utils import *
+from .contact_utils import *
 
 __all__ = ["stratify_hbond_subtypes"]
 
@@ -31,12 +30,13 @@ def residue_vs_water_hbonds(hbonds, solvent_resn):
     residue_hbonds, water_hbonds = [], []
     for hbond in hbonds:
         frame_idx, atom1_label, atom2_label, itype = hbond
-        if(solvent_resn in atom1_label or solvent_resn in atom2_label):
+        if solvent_resn in atom1_label or solvent_resn in atom2_label:
             water_hbonds.append(hbond)
         else:
             residue_hbonds.append(hbond)
 
     return residue_hbonds, water_hbonds
+
 
 def stratify_residue_hbonds(residue_hbonds):
     """
@@ -46,21 +46,22 @@ def stratify_residue_hbonds(residue_hbonds):
     backbone_atoms = ['N', 'O']
     hbss, hbsb, hbbb = [], [], []
 
-    ### Iterate through each residue hbond and bin into appropriate subtype
+    # Iterate through each residue hbond and bin into appropriate subtype
     for frame_idx, atom1_label, atom2_label, itype in residue_hbonds:
         atom1 = atom1_label.split(":")[3]
         atom2 = atom2_label.split(":")[3]
 
-        if(atom1 not in backbone_atoms and atom2 not in backbone_atoms):
+        if atom1 not in backbone_atoms and atom2 not in backbone_atoms:
             hbss.append([frame_idx, atom1_label, atom2_label, "hbss"])
 
-        if((atom1 not in backbone_atoms and atom2 in backbone_atoms) or (atom1 in backbone_atoms and atom2 not in backbone_atoms)):
+        if (atom1 not in backbone_atoms and atom2 in backbone_atoms) or (atom1 in backbone_atoms and atom2 not in backbone_atoms):
             hbsb.append([frame_idx, atom1_label, atom2_label, "hbsb"])
 
-        if(atom1 in backbone_atoms and atom2 in backbone_atoms):
+        if atom1 in backbone_atoms and atom2 in backbone_atoms:
             hbbb.append([frame_idx, atom1_label, atom2_label, "hbbb"])
 
     return hbss, hbsb, hbbb
+
 
 def stratify_water_bridge(water_hbonds, solvent_resn):
     """
@@ -69,12 +70,12 @@ def stratify_water_bridge(water_hbonds, solvent_resn):
     """
     frame_idx, water_to_residues, _ = calc_water_to_residues_map(water_hbonds, solvent_resn)
     water_bridges = set()
-    ### Infer direct water bridges
+    # Infer direct water bridges
     for water in water_to_residues:
         protein_atoms = sorted(list(water_to_residues[water]))
         for res_atom_pair in itertools.combinations(protein_atoms, 2):
             res_atom1, res_atom2 = res_atom_pair
-            if(res_atom1 != res_atom2):
+            if res_atom1 != res_atom2:
                 water_bridges.add((frame_idx, res_atom1, water, res_atom2, "wb"))
 
     wb = sorted([list(entry) for entry in water_bridges])
@@ -90,7 +91,7 @@ def stratify_extended_water_bridge(water_hbonds, solvent_resn):
     frame_idx, water_to_residues, solvent_bridges = calc_water_to_residues_map(water_hbonds, solvent_resn)
     extended_water_bridges = set()
     for water1, water2 in solvent_bridges:
-        if(water1 not in water_to_residues or water2 not in water_to_residues): continue
+        if water1 not in water_to_residues or water2 not in water_to_residues: continue
         res_atom1_list, res_atom2_list = water_to_residues[water1], water_to_residues[water2]
 
         for atom1 in res_atom1_list:
