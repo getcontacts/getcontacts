@@ -29,21 +29,21 @@ from output_additional import *
 # Global Variables
 ##############################################################################
 TRAJ_FRAG_SIZE = 100
-full_name_dirs = {'hbbb':'hydrogen_bond_backbone_backbone',
-        'hbsb':'hydrogen_bond-sidechain_backbone',
-        'hbss':'hydrogen_bond-sidechain_sidechain',
+full_name_dirs = {'hbbb':'hydrogen_bonds/backbone_backbone_hydrogen_bonds',
+        'hbsb':'hydrogen_bonds/sidechain_backbone_hydrogen_bonds',
+        'hbss':'hydrogen_bonds/sidechain_sidechain_hydrogen_bonds',
         'vdw':'van_der_Waals',
-        'sb':'salt_bridge',
+        'sb':'salt_bridges',
         'ts':'t_stacking',
         'ps':'pi_stacking',
         'pc':'pi_cation',
-        'wb':'water_mediated_hydrogen_bond',
-        'wb2':'extended_water_mediated_hydrogen_bond',
-        'lhb':'ligand_hydrogen_bond',
-        'hlb':'ligand_backbone_hydrogen_bond',
-        'hls':'ligand_sidechain_hydrogen_bond',
-        'lwb':'ligand_water_mediated_hydrogen_bond',
-        'lwb2':'ligand_extended_water_mediated_hydrogen_bond',
+        'wb':'hydrogen_bonds/water_mediated_hydrogen_bonds',
+        'wb2':'hydrogen_bonds/extended_water_mediated_hydrogen_bonds',
+        'lhb':'ligand_hydrogen_bonds/hydrogen_bonds',
+        'hlb':'ligand_hydrogen_bonds/backbone_hydrogen_bonds',
+        'hls':'ligand_hydrogen_bonds/sidechain_hydrogen_bonds',
+        'lwb':'ligand_hydrogen_bonds/water_mediated_hydrogen_bonds',
+        'lwb2':'ligand_hydrogen_bonds/extended_water_mediated_hydrogen_bonds',
         }
 
 ##############################################################################
@@ -262,7 +262,7 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
 
     """
 
-        ### Append forward slash to output dirname
+    ### Append forward slash to output dirname
     if OUTPUT_DIR[-1] != '/':
         OUTPUT_DIR += '/'
 
@@ -279,11 +279,11 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
         else:
             contact_types += [itype.strip("-")]
 
-        ### Set up file descriptors for writing output
+    ### Set up file descriptors for writing output
     for contact_type in contact_types:
         contact_path = OUTPUT_DIR + full_name_dirs[contact_type] + '/'
-    if not os.path.exists(contact_path):
-        os.makedirs(contact_path)
+        if not os.path.exists(contact_path):
+            os.makedirs(contact_path)
 
 
     index_to_label = gen_index_to_atom_label(TOP, TRAJ)
