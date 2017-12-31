@@ -1,6 +1,6 @@
 """
-The MDCompare utility enables users to compare the frequencies of interactions across multiple MDContactNetworks
-outputs.
+The MDCompare utility enables users to compare the frequencies of interactions
+across multiple MDContactNetworks output directories.
 """
 
 from __future__ import division
@@ -10,7 +10,6 @@ import argparse
 import re
 import json
 from utils.utils import *
-
 
 def get_write_lines(respair_to_simcond_to_data, simulation_conditions):
     write_lines = []
@@ -135,33 +134,36 @@ def extract_data(path):
 
 
 def extract_input_file(input_file):
-    """ Uses the user-provided input file to generate three dicts: from simulation_condition to ID,
-    from ID to path, and from simulation_condition to protein."""
+    """ Uses the user-provided input file to generate three python dicts: from 
+    simulation_condition to ID, from ID to path, and from simulation_condition 
+    to protein """
     simcond_to_id = {}
     ID_to_path = {}
     simcond_to_protein = {}
 
     with open(input_file, 'r') as ropen:
-        matrix_lines = [line.strip() for line in ropen.readlines() if len(line.strip()) > 0]
+        matrix_lines = [line.strip() for line in ropen.readlines() if 
+                len(line.strip()) > 0]
     for line in matrix_lines[1:]:
         ID, simcond, path, protein = line.split(',')
-#       ID = int(ID) Is this line necessary?
         if simcond in simcond_to_id:
-            assert(ID not in simcond_to_id[simcond], "Simulation condition %s is ")
+            assert(ID not in simcond_to_id[simcond], "Simulation condition %s 
+                    is associated with ID %s multiple times" % (simcond, ID))
             simcond_to_id[simcond].append(ID)
         else:
             simcond_to_id[simcond] = [ID]
         ID_to_path[ID] = clean_path(path)
 
         if simcond in simcond_to_protein:
-            assert(simcond_to_protein[simcond] == protein, "%s is associated with multiple proteins" % simcond)
+            assert(simcond_to_protein[simcond] == protein, "%s is associated 
+                    with multiple proteins" % simcond)
         else:
             simcond_to_protein[simcond] = protein
     return simcond_to_id, ID_to_path, simcond_to_protein
 
 
 def mdcompare(argv):
-    # Define globals
+    # Define global variables
     global protein_to_res_to_genericres
     global seq1
     global interactions_to_study
@@ -169,35 +171,46 @@ def mdcompare(argv):
     first_update_to_interactions_to_study = True
 
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description='MDCompare companion to MDContactNetworks')
-    parser.add_argument('-i', dest='input_file', required=True, nargs = 1, help="Correctly formatted .csv file of input")
-    parser.add_argument('-o', dest='output_directory', required=True, nargs = 1, help="Directory for MDCompare outputs")
-    parser.add_argument('-g', dest='generic_dict', nargs='?', help="A correctly formatted file for standardizing residue names between different proteins.")
+    parser = argparse.ArgumentParser(description = 'MDCompare companion to 
+            MDContactNetworks')
+    parser.add_argument('input_file', help =
+            "Correctly formatted .csv file of input")
+    parser.add_argument('output_directory', help = "Directory for MDCompare 
+            outputs")
+    parser.add_argument('-g', dest = 'generic_dict', nargs = '?', help = 
+            "A correctly formatted file for standardizing residue names between 
+            different proteins.")
     results = parser.parse_args()
     input_file = results.input_file[0]
     output_directory = clean_path(results.output_directory[0])
     generic_dict = results.generic_dict
 
     open_dir(output_directory)
-    simcond_to_id, ID_to_path, simcond_to_protein = extract_input_file(input_file)
+    simcond_to_id, ID_to_path, simcond_to_protein = extract_input_file(
+            input_file)
     should_genericize = generic_dict is not None
 
-    # If at least one protein appears in the input file, a genericization dictionary must be provided
+    # If at least one protein appears in the input file, a genericization
+    # dictionary must be provided
     if len(set(simcond_to_protein.values())) > 1 and not should_genericize:
-        assert("Generic dict must be provided because more than one protein appears in input file")
+        assert("Generic dict must be provided because more than one protein
+                appears in input file")
 
-    # Load additional utilities if genericization is required. This includes a generic database from
-    # protein->residue->generic_residue and a seq1 dictionary from 3-letter amino acid codes to 1-letter
-    # amino acid codes
+    # Load additional utilities if genericization is required. This includes a 
+    # generic database from protein->residue->generic_residue and a seq1 
+    # dictionary from 3-letter amino acid codes to 1-letter amino acid codes
     if should_genericize:
-        protein_to_res_to_genericres = build_protein_to_res_to_genericres(generic_dict)
+        protein_to_res_to_genericres = build_protein_to_res_to_genericres(
+                generic_dict)
         with open("./utils/seq1.json", 'r') as seq1_open:
             seq1 = json.load(seq1_open)     
 
-    proteins_not_appearing_in_protein_to_res_to_genericres = set(simcond_to_protein.values()) - set(protein_to_res_to_genericres.keys())
+    proteins_not_appearing_in_protein_to_res_to_genericres = set(simcond_to_protein.values()) - \
+            set(protein_to_res_to_genericres.keys())
     if len(proteins_not_appearing_in_protein_to_res_to_genericres) > 0:
-        assert("The following proteins do not appear in the provided genericization dictionary: %s" % /
-            ', '.join(list(proteins_not_appearing_in_protein_to_res_to_genericres)))
+        assert("The following proteins do not appear in the provided genericization \
+                dictionary: %s" % ', '.join(list(\
+                proteins_not_appearing_in_protein_to_res_to_genericres)))
 
     # Construct a nested dict from simulation_condition -> interaction type -> residue pair -> tuple of
     # (# of frames with this interaction, total frames)
@@ -226,7 +239,8 @@ def mdcompare(argv):
             for respair in simcond_to_inttype_to_respair_to_data[simcond][inttype]:
                 if respair not in respair_to_simcond_to_data:
                     respair_to_simcond_to_data[respair] = {}
-                respair_to_simcond_to_data[respair][simcond] = simcond_to_inttype_to_respair_to_data[simcond][inttype][respair]
+                respair_to_simcond_to_data[respair][simcond] = \
+                        simcond_to_inttype_to_respair_to_data[simcond][inttype][respair]
 
         inttype_to_respair_to_simcond_to_data[inttype] = respair_to_simcond_to_data
 
@@ -244,11 +258,11 @@ def mdcompare(argv):
             if inttype in ['hbbb', 'wb', 'wb2', 'vdw']:
                 continue
             else:
-                write_lines = get_write_lines(inttype_to_respair_to_simcond_to_data[inttype], simulation_conditions)
+                write_lines = get_write_lines(inttype_to_respair_to_simcond_to_data[inttype], \
+                        simulation_conditions)
                 for write_line in write_lines:
                     write_line[0] += "-%s" % inttype
                     wopen.write("%s\n" % ','.join(write_line))
-
 
 if __name__ == '__main__':
     mdcompare(sys.argv)
