@@ -37,27 +37,22 @@ def get_residue_from_atom(atom_name):
 def create_dynamic_jsons(output_filename, interaction_to_frames, simulation_length):
     # Assemble and write out .json
     edges = []
-    for interaction_pair in interaction_to_frames:  # loop over all residuepairs
-        int1, int2 = interaction_pair.split('\t')
+    for interaction_pair in interaction_to_frames:  # loop over all respairs
+        int1, int2 = interaction_pair.split(',')
         edges.append({"name1":int1, "name2":int2, "frames":list(interaction_to_frames[interaction_pair])})
     with open(output_filename, 'w+') as fq:
         fq.write(json.dumps({"edges":edges, "simulation_length":simulation_length}, indent=2))
 
 
-def create_frequencies_file(frequency_filename, residuepair_to_frames, simulation_length):
-    # Write out .txt file
+def create_frequencies_file(frequency_filename, simulation_length, respair_to_frames):
+    # Write out .csv file
     with open(frequency_filename, 'w+') as fq:
-        header = '\t'.join(['Res1','Res2','Freq','NumFrames','TotalFrames:%d' % simulation_length])
-        fq.write('%s\n' % header)
-        for interaction in residuepair_to_frames:
-            numFrames = len(residuepair_to_frames[interaction])
-            totalFrames = simulation_length
-            interaction_frequency = numFrames / totalFrames
-            interaction_line = '\t'.join([interaction,'%.8f'%interaction_frequency,'%d'%numFrames,'%d'%totalFrames])
-            fq.write('%s\n' % interaction_line)
+        fq.write('Res1,Res2,Freq,NumFrames,TotalFrames:%d\n' % simulation_length)
+        for interaction in respair_to_frames:
+            interaction_frequency = len(respair_to_frames[interaction])/simulation_length
+            fq.write("%s,%.8f,%d,%d\n" % (interaction, interaction_frequency, len(respair_to_frames[interaction]), simulation_length))
 
 
-'''
 def get_atompair_set(itype, stitched_lines):
     atompair_to_frames = defaultdict(set)
     for stitched_line in stitched_lines:
@@ -67,40 +62,31 @@ def get_atompair_set(itype, stitched_lines):
         atom_pair = ','.join(sorted([atom1, atom2]))
         atompair_to_frames[atom_pair].add(frame)
     return atompair_to_frames
-    '''
 
-def get_framesets(stitched_lines):
-    atompair_to_frames = defaultdict(set)
-    residuepair_to_frames = defaultdict(set)
+
+def get_respair_set(itype, stitched_lines):
+    respair_to_frames = defaultdict(set)
     for stitched_line in stitched_lines:
         frame = int(stitched_line[0])
         atom1 = stitched_line[1]
         atom2 = stitched_line[-2]
-        atompair = '\t'.join(sorted([atom1, atom2]))
-        atompair_to_frames[atompair].add(frame)
-
-        # Get residue from atom
-        res1 = get_residue_from_atom(atom1)
-        res2 = get_residue_from_atom(atom2)
-        residuepair = '\t'.join(sorted([res1, res2]))
-        residuepair_to_frames[residuepair].add(frame)
-
-    #return atompair_to_frames, residuepair_to_frames
-    return residuepair_to_frames
+        res_pair = ','.join(sorted([get_residue_from_atom(atom1), get_residue_from_atom(atom2)]))
+        respair_to_frames[res_pair].add(frame)
+    return respair_to_frames
 
 
 def make_additional_files(itype, output_dir, stitched_filename, simulation_length):
     with open(stitched_filename) as stitched_open:
         stitched_lines = [line.strip().split() for line in stitched_open.readlines()]
 
-    residuepair_to_frames = get_framesets(stitched_lines)
-    # atompair_to_frames = get_atompair_set(itype, stitched_lines)
+    respair_to_frames = get_respair_set(itype, stitched_lines)
+    atompair_to_frames = get_atompair_set(itype, stitched_lines)
 
-    frequency_filename = output_dir + '/' + full_name_dirs[itype] + '/' + itype + "_frequencies.txt"
-    byres_filename = output_dir + '/' + full_name_dirs[itype] +  '/' + itype + ".json"
-    #byatom_filename = output_dir + '/' + itype + "_by_atom.json"
+    frequency_filename = output_dir + '/' + itype + "_frequencies.csv"
+    byres_filename = output_dir + '/' + itype + "_byres.json"
+    byatom_filename = output_dir + '/' + itype + "_byatom.json"
 
-    create_frequencies_file(frequency_filename, residuepair_to_frames, simulation_length)
-    create_dynamic_jsons(byres_filename, residuepair_to_frames, simulation_length)
-    #create_dynamic_jsons(byatom_filename, atompair_to_frames, simulation_length)
+    create_frequencies_file(frequency_filename, simulation_length, respair_to_frames)
+    create_dynamic_jsons(byres_filename, respair_to_frames, simulation_length)
+    create_dynamic_jsons(byatom_filename, atompair_to_frames, simulation_length)
 

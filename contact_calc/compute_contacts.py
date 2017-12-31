@@ -13,6 +13,7 @@
 
 import datetime
 import glob
+import json
 from multiprocessing import *
 from vmd import *
 
@@ -209,8 +210,9 @@ def stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_
         Map the fragment index to length of fragment 
     """
     print("Stitching %s ..." % (itype))
-    stitched_filename = OUTPUT_DIR + "/" + itype + ".txt" 
+    # stitched_filename = OUTPUT_DIR + "/" + itype + ".txt" 
     # stitched_filename = OUTPUT_DIR + full_name_dirs[contact_type] + '/' + 'raw_frame_output.txt'
+    stitched_filename = OUTPUT_DIR + full_name_dirs[itype] + '/' + itype + '.txt'
     fo = open(stitched_filename, 'w')
 
     num_frames = 0
