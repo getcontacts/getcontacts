@@ -1,29 +1,35 @@
 #!/usr/bin/env python3
 
 """
-Takes a list of atomic contacts as input and generates a json representing a temporal flare
-which can be visualized using flareplots.
+Takes a list of atomic contacts as input and generates a json representing a
+temporal flare which can be visualized using flareplots.
 
-By default, the labels on the plot will reflect the residue identifier. Optionally, a
-"flare-label" file can be supplied which indicates how residue identifiers should be
-translated to flare-plot labels. The flare-label file is a tab-separated text-file where
-each line has one field that indicates a colon-separated residue identifier and one field
-that indicates the corresponding flareplot label. Dots in the flareplot labels can be used
-to group and organize labels. A valid flare-label file would look like this:
-    A:ARG:4 Root.1.1x30
-    A:LYS:5 Root.1.1x31
+By default, the labels on the plot will reflect the residue identifier.
+Optionally, a "flare-label" file can be supplied which indicates how residue
+identifiers should be translated to flare-plot labels. The flare-label file is
+a tab-separated text-file where each line has one field that indicates a colon-
+separated residue identifier and one field that indicates the corresponding
+flareplot label. Dots in the flareplot labels can be used to group and organize
+labels. A valid flare-label file would look like this:
+    A:ARG:4  Root.Helix1.1x30
+    A:LYS:5  Root.Helix1.1x31
     ...
-    A:PRO:45 Root.2.2x36
-    A:MET:46 Root.2.2x37
+    A:PRO:45 Root.Helix2.2x36
+    A:MET:46 Root.Helix2.2x37
     ...
-The flare-label file can also act as a filter, as interactions between residues that are not
-included in the file will be excluded from the plot. For convenience it's not necessary to
-include the second column if the label file is just used as a filter. A third column can
-be supplied indicating a color in hex-format (e.g. #FF0000).
+The flare-label file can also act as a filter, as interactions between residues
+that are not included in the file will be excluded from the plot. For
+convenience it's not necessary to include the second column if the label file
+is just used as a filter. A third column can be supplied indicating a color in
+CSS-format (e.g. '#FF0000' or 'red').
 """
 
 
 def main():
+    """
+    Main function called once at the end of this module. Configures and parses command line arguments, parses input
+    files and generates output files.
+    """
     # Parse command line arguments
     import argparse as ap
     parser = ap.ArgumentParser(description=__doc__)
@@ -77,8 +83,8 @@ def main():
 
 def parse_contacts(contact_file):
     """
-    Parses the contact file and returns it a list of atomic contacts. Atom strings are
-    converted to tuples by splitting on ":".
+    Parses the contact file and returns it a list of atomic contacts. Atom strings are converted to tuples by splitting
+    on ":".
 
     Parameters
     ----------
@@ -87,8 +93,9 @@ def parse_contacts(contact_file):
 
     Returns
     -------
-    list of tuples
-        e.g. [("0", "hbbb", ("A", "ARG", "4", "H"), ("A", "PHE", "22", "O")), (..) ]
+    list of tuples of (str, str, tuple, tuple [[, tuple], tuple])
+        Each entry contains a column of the contact_file, e.g.
+        `[("0", "hbbb", ("A", "ARG", "4", "H"), ("A", "PHE", "22", "O")), (..) ]`
     """
     def parse_atom(atom_str):
         atom_tokens = atom_str.split(":")
@@ -100,17 +107,17 @@ def parse_contacts(contact_file):
         if not line:
             continue  # Ignore empty lines
 
-        tokens = line.split("\t")
-        if not len(tokens) in range(4, 7):
+        columns = line.split("\t")
+        if not len(columns) in range(4, 7):
             raise AssertionError("Invalid interaction line: '"+line+"'")
 
-        tokens[2] = parse_atom(tokens[2])
-        tokens[3] = parse_atom(tokens[3])
-        if len(tokens) >= 5:
-            tokens[4] = parse_atom(tokens[4])
-        if len(tokens) == 6:
-            tokens[5] = parse_atom(tokens[5])
-        ret.append(tuple(tokens))
+        columns[2] = parse_atom(columns[2])
+        columns[3] = parse_atom(columns[3])
+        if len(columns) >= 5:
+            columns[4] = parse_atom(columns[4])
+        if len(columns) == 6:
+            columns[5] = parse_atom(columns[5])
+        ret.append(tuple(columns))
 
     contact_file.close()
 
@@ -118,6 +125,29 @@ def parse_contacts(contact_file):
 
 
 def parse_flarelabels(label_file):
+    """
+    Parses a flare-label file and generates a dictionary mapping residue identifiers (e.g. A:ARG:123) to a
+    user-specified label, trees that can be parsed by flareplots, and a color indicator for vertices.
+
+    Parameters
+    ----------
+    label_file : file
+        A flare-label file where each line contains 2-3 columns formatted as
+          - CHAIN:RESN:RESI (e.g. A:ARG:123)
+          - [[TOPLEVEL.]MIDLEVEL.]LABEL (e.g. Receptor.Helix2.2x44)
+          - COLOR (e.g. #FF0000 or white)
+
+    Returns
+    -------
+    dict of str : (dict of str : str)
+        Keys are all residue identifiers and values are dicts that hold both the LABEL by itself (key "label", the full
+        tree-path (key "treepath") and a CSS-compatible color string (key "color").
+
+    Raises
+    ------
+    AssertionError
+        if a residue identifier (CHAIN:RESN:RESI) is specified twice in the file, or if a LABEL appears twice.
+    """
     if label_file is None:
         return None
 
@@ -128,11 +158,11 @@ def parse_flarelabels(label_file):
         if not line:
             continue  # Ignore empty lines
 
-        tokens = line.split("\t")
-        residentifier = tokens[0]
-        flaretreepath = tokens[1] if len(tokens) > 1 else tokens[0]
+        columns = line.split("\t")
+        residentifier = columns[0]
+        flaretreepath = columns[1] if len(columns) > 1 else columns[0]
         flarelabel = flaretreepath.split(".")[-1]
-        flarecolor = tokens[2] if len(tokens) > 2 else "white"
+        flarecolor = columns[2] if len(columns) > 2 else "white"
         if residentifier in ret:
             raise AssertionError("Residue identifier '"+residentifier+"' appears twice in "+label_file.name)
         if flarelabel in flarelabels:
@@ -145,6 +175,45 @@ def parse_flarelabels(label_file):
 
 
 def create_graph(contacts, resi_labels):
+    """
+    Creates a graph from the contacts and residue labels formatted as a dict that can be trivially dumped to a json that
+    can be read by flareplot. An "edge" key mapping to a list of edge specifiers with "name1", "name2", and "frames"
+    attributes will always be generated and if `resi_labels` isn't `None` then the "trees" and "tracks" will be
+    generated as well.
+
+    Parameters
+    ----------
+    contacts : list of tuples of (str, str, tuple, tuple [[, tuple], tuple])
+        Each entry specifies a frame-number, an interaction type, and 2 to 4 atom-tuples depending on the interaction
+        type. Water mediated and water-water mediated interactions will have waters in the third and fourth tuples.
+
+    resi_labels : dict of (str : dict of (str : str))
+        Each key is a residue identifier and the associated value is a dictionary with the label, tree-path, and color
+        that are consistent with the format of flareplots.
+
+    Returns
+    -------
+    dict of str : list
+        The types of the list contents varies depending on the key, but the format corresponds to the specifications of
+        jsons used as input for flareplot. For example
+        >>> {
+        >>>   "edges": [
+        >>>     {"name1": "ARG1", "name2": "ALA3", "frames": [0,4,10]},
+        >>>     {"name1": "ALA3", "name2": "THR2", "frames": [1,2]}
+        >>>   ],
+        >>>   "trees": [
+        >>>     {"treeName": "DefaultTree", "treePaths": ["Group1.ARG1", "Group1.THR2", "Group2.ALA3", "Group2.CYS4"]}
+        >>>   ],
+        >>>   "tracks": [
+        >>>     {"trackName": "DefaultTrack", "trackProperties": [
+        >>>       {"nodeName": "ARG1", "size": 1.0, "color": "red"},
+        >>>       {"nodeName": "THR2", "size": 1.0, "color": "red"},
+        >>>       {"nodeName": "ALA3", "size": 1.0, "color": "blue"},
+        >>>       {"nodeName": "CYS4", "size": 1.0, "color": "blue"}
+        >>>     ]}
+        >>>   ]
+        >>> }
+    """
     ret = {
         "edges": []
     }
