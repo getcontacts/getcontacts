@@ -133,7 +133,7 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     return frame_contacts
 
 
-def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label):
+def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT, contact_types, ITYPES, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label):
     """ 
     Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
 
@@ -187,7 +187,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_
     # Write directly out to temporary output
     print("Writing output to seperate files, one for each itype ...")
     
-    fd_map = {itype: open(OUTPUT_DIR + "/" + itype + "_frag_" + str(frag_idx) + ".txt", 'w') for itype in contact_types}
+    fd_map = {itype: open(OUTPUT + "_" + itype + "_frag_" + str(frag_idx) + ".txt", 'w') for itype in contact_types}
     for contact in fragment_contacts:
         itype_key = contact[-1]
         output_string = str(frag_idx) + "\t" + "\t".join(map(str, contact)) + "\n"
@@ -243,7 +243,7 @@ def stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_
     return stitched_filename
 
 
-def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_values, cores, stride, solvent_resn, sele_id, ligand):
+def compute_dynamic_contacts(TOP, TRAJ, OUTPUT, ITYPES, geom_criterion_values, cores, stride, solvent_resn, sele_id, ligand):
     """ 
     Computes non-covalent contacts across the entire trajectory and writes to output.
 
@@ -253,8 +253,8 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
         In .pdb or .mae format
     TRAJ: Trajectory
         In .nc or .dcd format
-    OUTPUT_DIR: string
-        Absolute path to output directory 
+    OUTPUT: string
+        Absolute path to output file
     ITYPES: list
         Denotes the list of non-covalent interaction types to compute contacts for 
     geom_criterion_values: dict
@@ -274,14 +274,6 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
 
     """
 
-    # Append forward slash to output dirname
-    if OUTPUT_DIR[-1] != '/':
-        OUTPUT_DIR += '/'
-
-    # Set up file descriptors for writing output
-    if not os.path.exists(OUTPUT_DIR):
-        os.makedirs(OUTPUT_DIR)
-
     contact_types = []
     for itype in ITYPES:
         if itype == "hb":
@@ -290,12 +282,6 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
             contact_types += ["hls", "hlb", "lwb", "lwb2"]
         else:
             contact_types += [itype]
-
-    # Set up file descriptors for writing output
-    for contact_type in contact_types:
-        contact_path = OUTPUT_DIR + full_name_dirs[contact_type] + '/'
-        if not os.path.exists(contact_path):
-            os.makedirs(contact_path)
 
     index_to_label = gen_index_to_atom_label(TOP, TRAJ)
     sim_length = estimate_simulation_length(TOP, TRAJ)
@@ -316,7 +302,7 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
         # if frag_idx > 0: break
         end_frame = beg_frame + TRAJ_FRAG_SIZE
         print("Processing fragment %s beg_frame %s end_frame %s" % (frag_idx, beg_frame, end_frame))
-        input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label))
+        input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT, contact_types, ITYPES, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label))
 
     pool = Pool(processes=cores)
     output = pool.map(compute_fragment_contacts_helper, input_args)

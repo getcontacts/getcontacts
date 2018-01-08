@@ -14,11 +14,6 @@
 # limitations under the License.                                           #
 ############################################################################
 
-
-##############################################################################
-# Imports
-##############################################################################
-
 import os
 import errno
 import sys
@@ -166,16 +161,16 @@ def open_dir(dirname):
 
 def validate_itypes(ITYPES):
     """
-    Throws error if user specified interaction type is mispelled
+    Prints error and halts program if specified interaction type is invalid
     """
     valid_itypes = ["sb", "pc", "ps", "ts", "vdw", "hb", "lhb"]
 
     for itype in ITYPES:
-        if(itype not in valid_itypes):
+        if itype not in valid_itypes:
             print("%s not a valid interaction type ..." % (itype))
             exit(1)
-    if(ITYPES == []):
-        print("Need to specify an itype ...")
+    if not ITYPES:
+        print("Need to specify at least one interaction type ...")
         exit(1)
 
 
@@ -213,15 +208,12 @@ def main():
     if "--help" in sys.argv or "-h" in sys.argv:
         print (HELP_STR)
         exit(1)
-    if "--itype" not in sys.argv:
-        print("Need to specifiy interaction types ...")
-        exit(1)
 
     # Parse required and optional arguments
     parser = argparse.ArgumentParser(prog='PROG', add_help=False)
     parser.add_argument('--topology', type=str, required=True, help='path to topology file ')
     parser.add_argument('--trajectory', type=str, required=True, help='path to trajectory file')
-    parser.add_argument('--output_dir', type=str, required=True, help='path to output directory')
+    parser.add_argument('--output', type=str, required=True, help='path to output file')
     parser.add_argument('--cores', type=int, default=6, help='number of cpu cores to parallelize upon')
     parser.add_argument('--solv', type=str, default="TIP3", help='resname of solvent molecule')
     parser.add_argument('--sele', type=str, default=None, help='atom selection query in VMD')
@@ -248,53 +240,48 @@ def main():
             if not hasattr(ns, "itype"):
                 ns.itypes = set()
             ns.itypes.add(self.dest)
-    parser.add_argument('--salt-bridge',  '-sb',  dest='sb', action=ITypeAction, nargs=0, help="Compute salt bridge interactions")
-    parser.add_argument('--pi-cation',    '-pc',  dest='pc', action=ITypeAction, nargs=0, help="Compute pi-cation interactions")
-    parser.add_argument('--pi-stacking',  '-ps',  dest='ps', action=ITypeAction, nargs=0, help="Compute pi-stacking interactions")
-    parser.add_argument('--t-stacking',   '-ts',  dest='ts', action=ITypeAction, nargs=0, help="Compute t-stacking interactions")
-    parser.add_argument('--vanderwaals',  '-vdw', dest='vdw', action=ITypeAction, nargs=0, help="Compute van der Waals interactions (warning: there will be many)")
-    parser.add_argument('--hbond',        '-hb',  dest='hb', action=ITypeAction, nargs=0, help="Compute hydrogen bond interactions")
+    parser.add_argument('--salt-bridge', '-sb', dest='sb', action=ITypeAction, nargs=0, help="Compute salt bridge interactions")
+    parser.add_argument('--pi-cation', '-pc', dest='pc', action=ITypeAction, nargs=0, help="Compute pi-cation interactions")
+    parser.add_argument('--pi-stacking', '-ps', dest='ps', action=ITypeAction, nargs=0, help="Compute pi-stacking interactions")
+    parser.add_argument('--t-stacking', '-ts', dest='ts', action=ITypeAction, nargs=0, help="Compute t-stacking interactions")
+    parser.add_argument('--vanderwaals', '-vdw', dest='vdw', action=ITypeAction, nargs=0, help="Compute van der Waals interactions (warning: there will be many)")
+    parser.add_argument('--hbond', '-hb', dest='hb', action=ITypeAction, nargs=0, help="Compute hydrogen bond interactions")
     parser.add_argument('--ligand-hbond', '-lhb', dest='lhb', action=ITypeAction, nargs=0, help="Compute ligand hydrogen bond interactions")
-    parser.add_argument('--all-interactions', '-all', dest='all', action=ITypeAction, nargs=0, help="Compute all types of interactions")
+    parser.add_argument('--all-interactions', '-all', dest='all', action="store_true", help="Compute all types of interactions")
 
     # namespace = argparse.Namespace()
     args, unknown = parser.parse_known_args()
 
     TOP = args.topology
     TRAJ = args.trajectory
-    OUTPUT_DIR = args.output_dir
+    OUTPUT = args.output
     cores = args.cores
     ligand = args.ligand
     solv = args.solv
     sele = args.sele
     stride = args.stride
     ITYPES = args.itypes
-    # TOP, TRAJ, OUTPUT_DIR, cores, ligand, solv, sele, stride = process_main_args(args)
     geom_criterion_values = process_geometric_criterion_args(args)
-    open_dir(OUTPUT_DIR)
 
     # ITYPES = sys.argv[sys.argv.index('--itype') + 1:]
-    # if "all" in ITYPES:
-    #     ITYPES = ["sb", "pc", "ps", "ts", "vdw", "hb", "hlb"]
-
-    # validate_itypes(ITYPES)
+    if args.all:
+        ITYPES = ["sb", "pc", "ps", "ts", "vdw", "hb", "hlb"]
+    validate_itypes(ITYPES)
 
     # Begin computation
     tic = datetime.datetime.now()
-    compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_values, cores, stride, solv, sele, ligand)
+    compute_dynamic_contacts(TOP, TRAJ, OUTPUT, ITYPES, geom_criterion_values, cores, stride, solv, sele, ligand)
     toc = datetime.datetime.now()
     print("Computation Time: " + str((toc-tic).total_seconds()))
 
-    inputs_filename = "%sMDContact.log" % clean_path(OUTPUT_DIR)
-    with open(inputs_filename, 'w+') as wopen:
-        wopen.write("topology=%s\n" % TOP)
-        wopen.write("trajectory=%s\n" % TRAJ)
-        wopen.write("output_directory=%s\n" % OUTPUT_DIR)
-        wopen.write("cores=%s\n" % cores)
-        wopen.write("ligand=%s\n" % ligand)
-        wopen.write("solv=%s\n" % solv)
-        wopen.write("sele=%s\n" % sele)
-        wopen.write("stride=%s\n" % stride)
+    print("topology=%s\n" % TOP)
+    print("trajectory=%s\n" % TRAJ)
+    print("output=%s\n" % OUTPUT)
+    print("cores=%s\n" % cores)
+    print("ligand=%s\n" % ligand)
+    print("solv=%s\n" % solv)
+    print("sele=%s\n" % sele)
+    print("stride=%s\n" % stride)
 
 if __name__ == "__main__":
     main()
