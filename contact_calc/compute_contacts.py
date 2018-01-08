@@ -11,9 +11,8 @@
 
 import datetime
 import glob
-import json
 from multiprocessing import *
-from vmd import *
+from vmd import *  # Loads the static `molecule` object
 
 from .contact_utils import *
 from .aromatics import *
@@ -53,7 +52,9 @@ full_name_dirs = {'hbbb': 'hydrogen_bonds/backbone_backbone_hydrogen_bonds',
 # also the IO time (which would happen anyways). Figure out best output
 # format and most efficient way to write to disk.
 
-def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele_id, ligand, index_to_label):
+
+def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele_id,
+                           ligand, index_to_label):
     """
     Computes each of the specified non-covalent interaction type for a single frame
 
@@ -102,26 +103,26 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     HBOND_CUTOFF_ANGLE = geom_criterion_values['HBOND_CUTOFF_ANGLE']
     VDW_EPSILON = geom_criterion_values['VDW_EPSILON']
     
-
     frame_contacts = []
-    if "-sb" in ITYPES:
+    if "sb" in ITYPES:
         frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, SALT_BRIDGE_CUTOFF_DISTANCE)
-    if "-pc" in ITYPES:
+    if "pc" in ITYPES:
         frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, PI_CATION_CUTOFF_DISTANCE, PI_CATION_CUTOFF_ANGLE)
-    if "-ps" in ITYPES:
+    if "ps" in ITYPES:
         frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, PI_STACK_CUTOFF_DISTANCE, PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
-    if "-ts" in ITYPES:
+    if "ts" in ITYPES:
         frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
-    if "-vdw" in ITYPES:
+    if "vdw" in ITYPES:
         frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW_EPSILON)
-    if "-hb" in ITYPES:
+    if "hb" in ITYPES:
         frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, None, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
-    if "-lhb" in ITYPES:
+    if "lhb" in ITYPES:
         frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, ligand, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
 
     toc = datetime.datetime.now()
     print("Finished computing contacts for frag %s frame %s in %s s" % (frag_idx, frame_idx, (toc-tic).total_seconds()))
     return frame_contacts
+
 
 def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label):
     """ 
@@ -177,7 +178,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_
     # Write directly out to temporary output
     print("Writing output to seperate files, one for each itype ...")
     
-    fd_map = {itype: open(OUTPUT_DIR + "/" + itype.strip("-") + "_frag_" + str(frag_idx) + ".txt", 'w') for itype in contact_types}
+    fd_map = {itype: open(OUTPUT_DIR + "/" + itype + "_frag_" + str(frag_idx) + ".txt", 'w') for itype in contact_types}
     for contact in fragment_contacts:
         itype_key = contact[-1]
         output_string = str(frag_idx) + "\t" + "\t".join(map(str, contact)) + "\n"
@@ -185,7 +186,8 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_
 
     for itype in fd_map:
         fd_map[itype].close()
-    return (frag_idx, num_frag_frames - 1)
+
+    return frag_idx, num_frag_frames - 1
 
 
 def compute_fragment_contacts_helper(args):
@@ -273,12 +275,12 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT_DIR, ITYPES, geom_criterion_value
 
     contact_types = []
     for itype in ITYPES:
-        if itype == "-hb":
+        if itype == "hb":
             contact_types += ["hbbb", "hbsb", "hbss", "wb", "wb2"]
-        elif itype == "-lhb":
+        elif itype == "lhb":
             contact_types += ["hls", "hlb", "lwb", "lwb2"]
         else:
-            contact_types += [itype.strip("-")]
+            contact_types += [itype]
 
     # Set up file descriptors for writing output
     for contact_type in contact_types:
@@ -363,12 +365,12 @@ def compute_static_contacts(STRUC, OUTPUT_DIR, ITYPES, geom_criterion_values, so
 
     contact_types = []
     for itype in ITYPES:
-        if itype == "-hb":
+        if itype == "hb":
             contact_types += ["hbbb", "hbsb", "hbss", "wb", "wb2"]
-        elif itype == "-lhb":
+        elif itype == "lhb":
             contact_types += ["hls", "hlb", "lwb", "lwb2"]
         else:
-            contact_types += [itype.strip("-")]
+            contact_types += [itype]
 
     # Set up file descriptors for writing output
     for contact_type in contact_types:
@@ -380,7 +382,6 @@ def compute_static_contacts(STRUC, OUTPUT_DIR, ITYPES, geom_criterion_values, so
     index_to_label = gen_index_to_atom_label(STRUC, None)
     sim_length = estimate_simulation_length(STRUC, None)
     print("sim_length", sim_length)
-    input_args = []
 
     # Serial
     frag_idx, frag_length = compute_fragment_contacts(0, 0, 0, STRUC, STRUC, OUTPUT_DIR, contact_types, ITYPES, geom_criterion_values, 1, solvent_resn, sele_id, ligand, index_to_label)

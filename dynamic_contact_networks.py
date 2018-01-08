@@ -1,9 +1,18 @@
-##############################################################################
-# MDContactNetworks: A Python Library for computing non-covalent contacts
-#                    throughout Molecular Dynamics Trajectories. 
-#
-# Contact: Anthony Kai Kwang Ma, anthonyma27@gmail.com
-##############################################################################
+############################################################################
+# Copyright 2018 Anthony Ma & Stanford University                          #
+#                                                                          #
+# Licensed under the Apache License, Version 2.0 (the "License");          #
+# you may not use this file except in compliance with the License.         #
+# You may obtain a copy of the License at                                  #
+#                                                                          #
+#     http://www.apache.org/licenses/LICENSE-2.0                           #
+#                                                                          #
+# Unless required by applicable law or agreed to in writing, software      #
+# distributed under the License is distributed on an "AS IS" BASIS,        #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #
+# See the License for the specific language governing permissions and      #
+# limitations under the License.                                           #
+############################################################################
 
 
 ##############################################################################
@@ -18,13 +27,13 @@ import argparse
 from contact_calc.compute_contacts import *
 
 HELP_STR = """
- ===============================================
-|                MDContactNetworks              |
-|                                               |
-|                 Anthony Ma, 2017              |
-|               Stanford University             |
-|                  Version 1.0.0                |
- ===============================================
+ ==========================================================================
+| MDContactNetworks: A Python Library for computing non-covalent contacts  |
+|                    throughout Molecular Dynamics Trajectories.           |
+|                    Version 1.1.0                                         |
+|                                                                          |
+| Contact: Anthony Kai Kwang Ma, anthonyma27@gmail.com                     |
+ ==========================================================================
 
 Command was:
 python dynamic_contact_networks.py --help
@@ -52,13 +61,13 @@ usage: python dynamic_contact_networks.py [--help] [--topology TOPOLOGY]
 
 
 required arguments:
-    --topology TOPOLOGY     path to topology file 
-    --trajectory TRAJECTORY     path to trajectory file
+    --topology TOPOLOGY             path to topology file 
+    --trajectory TRAJECTORY         path to trajectory file
     --output_dir OUTPUT_DIRECTORY   path to output directory
-    --itype INTERACTION_TYPES   list of interaction type flags
+    --itype INTERACTION_TYPES       list of interaction type flags
 
 optional arguments:
-    --help              show this help message and exit
+    --help                  show this help message and exit
     --cores NUM_CORES       number of cpu cores to parallelize upon [default = 6]
     --solv SOLVENT          resname of solvent molecule [default = "TIP3"]
     --sele SELECTION        atom selection query in VMD [default = None]
@@ -107,35 +116,35 @@ geometric criteria options:
 
 
 interaction type flags:
-    -sb             salt bridges 
-    -pc             pi-cation 
-    -ps             pi-stacking
-    -ts             t-stacking
-    -vdw            vanderwaals
-    -hb             hydrogen bonds
-    -lhb            ligand hydrogen bonds
+    sb             salt bridges 
+    pc             pi-cation 
+    ps             pi-stacking
+    ts             t-stacking
+    vdw            vanderwaals
+    hb             hydrogen bonds
+    lhb            ligand hydrogen bonds
 
 output interaction subtypes:
-    -hbbb           backbone-backbone hydrogen bonds
-    -hbsb           backbone-sidechain hydrogen bonds
-    -hbss           sidechain-sidechain hydrogen bonds
-    -wb             water bridges
-    -wb2            extended water bridges 
-    -hls            ligand-sidechain residue hydrogen bonds 
-    -hlb            ligand-backbone residue hydrogen bonds 
-    -lwb            ligand water bridges
-    -lwb2           extended ligand water bridges 
+    hbbb           backbone-backbone hydrogen bonds
+    hbsb           backbone-sidechain hydrogen bonds
+    hbss           sidechain-sidechain hydrogen bonds
+    wb             water bridges
+    wb2            extended water bridges 
+    hls            ligand-sidechain residue hydrogen bonds 
+    hlb            ligand-backbone residue hydrogen bonds 
+    lwb            ligand water bridges
+    lwb2           extended ligand water bridges 
 
 
 examples:
 Salt bridges and hydrogen bonds for residues 100 to 160:
-python dynamic_contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --output_dir OUTPUT_DIR --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype -sb -hb -lhb
+python dynamic_contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --output_dir OUTPUT_DIR --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype sb hb lhb
 
 Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
-python dynamic_contact_networks.py --topology TOP.psf --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 --itype -pc -ps -vdw
+python dynamic_contact_networks.py --topology TOP.psf --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 --itype pc ps vdw
 
 Salt bridges and hydrogen bonds in the entire protein with modified distance cutoffs:
-python dynamic_contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype -sb -hb
+python dynamic_contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype sb hb
 """
 
 DESCRIPTION = "Computes non-covalent contact networks in MD simulations."
@@ -159,7 +168,7 @@ def validate_itypes(ITYPES):
     """
     Throws error if user specified interaction type is mispelled
     """
-    valid_itypes = ["-sb", "-pc", "-ps", "-ts", "-vdw", "-hb", "-lhb"]
+    valid_itypes = ["sb", "pc", "ps", "ts", "vdw", "hb", "lhb"]
 
     for itype in ITYPES:
         if(itype not in valid_itypes):
@@ -255,7 +264,7 @@ def main():
     parser.add_argument('--hbond_cutoff_ang', type=float, default=70, help='cutoff for angle between donor hydrogen acceptor [default = 70 degrees]')
     parser.add_argument('--vdw_epsilon', type=float, default=0.5, help='amount of padding for calculating vanderwaals contacts [default = 0.5 angstroms]')
 
-    namespace = argparse.Namespace()
+    # namespace = argparse.Namespace()
     args, unknown = parser.parse_known_args()
 
     TOP, TRAJ, OUTPUT_DIR, cores, ligand, solv, sele, stride = process_main_args(args)
@@ -263,8 +272,8 @@ def main():
     open_dir(OUTPUT_DIR)
 
     ITYPES = sys.argv[sys.argv.index('--itype') + 1:]
-    if "-all" in ITYPES:
-        ITYPES = ["-sb", "-pc", "-ps", "-ts", "-vdw", "-hb", "-hlb"]
+    if "all" in ITYPES:
+        ITYPES = ["sb", "pc", "ps", "ts", "vdw", "hb", "hlb"]
 
     validate_itypes(ITYPES)
 
