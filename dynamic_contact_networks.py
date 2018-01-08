@@ -179,28 +179,6 @@ def validate_itypes(ITYPES):
         exit(1)
 
 
-def process_main_args(args):
-    topology = args.topology
-    trajectory = args.trajectory
-    output_dir = args.output_dir 
-    cores = args.cores 
-    ligand = args.ligand 
-    solv = args.solv 
-    sele = args.sele 
-    stride = args.stride
-    
-    if topology is None:
-        print("Missing topology file ...")
-        exit(1)
-    elif trajectory is None:
-        print("Missing trajectory file ...")
-    elif output_dir is None:
-        print("Missing output directory ...")
-        exit(1)
-
-    return topology, trajectory, output_dir, cores, ligand, solv, sele, stride
-
-
 def process_geometric_criterion_args(args):
     SALT_BRIDGE_CUTOFF_DISTANCE = args.sb_cutoff_dist
     PI_CATION_CUTOFF_DISTANCE = args.pc_cutoff_dist
@@ -241,9 +219,9 @@ def main():
 
     # Parse required and optional arguments
     parser = argparse.ArgumentParser(prog='PROG', add_help=False)
-    parser.add_argument('--topology', type=str, default=None, help='path to topology file ')
-    parser.add_argument('--trajectory', type=str, default=None, help='path to trajectory file')
-    parser.add_argument('--output_dir', type=str, default=None, help='path to output directory')
+    parser.add_argument('--topology', type=str, required=True, help='path to topology file ')
+    parser.add_argument('--trajectory', type=str, required=True, help='path to trajectory file')
+    parser.add_argument('--output_dir', type=str, required=True, help='path to output directory')
     parser.add_argument('--cores', type=int, default=6, help='number of cpu cores to parallelize upon')
     parser.add_argument('--solv', type=str, default="TIP3", help='resname of solvent molecule')
     parser.add_argument('--sele', type=str, default=None, help='atom selection query in VMD')
@@ -264,18 +242,42 @@ def main():
     parser.add_argument('--hbond_cutoff_ang', type=float, default=70, help='cutoff for angle between donor hydrogen acceptor [default = 70 degrees]')
     parser.add_argument('--vdw_epsilon', type=float, default=0.5, help='amount of padding for calculating vanderwaals contacts [default = 0.5 angstroms]')
 
+    # Parse interaction types
+    class ITypeAction(argparse.Action):
+        def __call__(self, parser, ns, values, option):
+            if not hasattr(ns, "itype"):
+                ns.itypes = set()
+            ns.itypes.add(self.dest)
+    parser.add_argument('--salt-bridge',  '-sb',  dest='sb', action=ITypeAction, nargs=0, help="Compute salt bridge interactions")
+    parser.add_argument('--pi-cation',    '-pc',  dest='pc', action=ITypeAction, nargs=0, help="Compute pi-cation interactions")
+    parser.add_argument('--pi-stacking',  '-ps',  dest='ps', action=ITypeAction, nargs=0, help="Compute pi-stacking interactions")
+    parser.add_argument('--t-stacking',   '-ts',  dest='ts', action=ITypeAction, nargs=0, help="Compute t-stacking interactions")
+    parser.add_argument('--vanderwaals',  '-vdw', dest='vdw', action=ITypeAction, nargs=0, help="Compute van der Waals interactions (warning: there will be many)")
+    parser.add_argument('--hbond',        '-hb',  dest='hb', action=ITypeAction, nargs=0, help="Compute hydrogen bond interactions")
+    parser.add_argument('--ligand-hbond', '-lhb', dest='lhb', action=ITypeAction, nargs=0, help="Compute ligand hydrogen bond interactions")
+    parser.add_argument('--all-interactions', '-all', dest='all', action=ITypeAction, nargs=0, help="Compute all types of interactions")
+
     # namespace = argparse.Namespace()
     args, unknown = parser.parse_known_args()
 
-    TOP, TRAJ, OUTPUT_DIR, cores, ligand, solv, sele, stride = process_main_args(args)
+    TOP = args.topology
+    TRAJ = args.trajectory
+    OUTPUT_DIR = args.output_dir
+    cores = args.cores
+    ligand = args.ligand
+    solv = args.solv
+    sele = args.sele
+    stride = args.stride
+    ITYPES = args.itypes
+    # TOP, TRAJ, OUTPUT_DIR, cores, ligand, solv, sele, stride = process_main_args(args)
     geom_criterion_values = process_geometric_criterion_args(args)
     open_dir(OUTPUT_DIR)
 
-    ITYPES = sys.argv[sys.argv.index('--itype') + 1:]
-    if "all" in ITYPES:
-        ITYPES = ["sb", "pc", "ps", "ts", "vdw", "hb", "hlb"]
+    # ITYPES = sys.argv[sys.argv.index('--itype') + 1:]
+    # if "all" in ITYPES:
+    #     ITYPES = ["sb", "pc", "ps", "ts", "vdw", "hb", "hlb"]
 
-    validate_itypes(ITYPES)
+    # validate_itypes(ITYPES)
 
     # Begin computation
     tic = datetime.datetime.now()
