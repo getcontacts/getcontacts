@@ -133,7 +133,7 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     return frame_contacts
 
 
-def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT, contact_types, ITYPES, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label):
+def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label):
     """ 
     Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
 
@@ -145,11 +145,13 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT,
         Start frame of trajectory fragment
     end_frame: int
         End frame of trajectory fragment
-    TOP: Topology
-        In .pdb or .mae format
-    TRAJ: Trajectory
-        In .nc or .dcd format
-    ITYPES: list
+    top: str
+        Topology in .pdb or .mae format
+    traj: str
+        Trajectory in .nc or .dcd format
+    output: str
+        Path to file where results should be written
+    itypes: list
         Denotes the list of non-covalent interaction types to compute contacts for 
     geom_criterion_values: dict
         Dictionary containing the cutoff values for all geometric criteria
@@ -172,14 +174,14 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT,
     fragment_contacts: list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
     """
 
-    traj_frag_molid = load_traj(TOP, TRAJ, beg_frame, end_frame, stride)
+    traj_frag_molid = load_traj(top, traj, beg_frame, end_frame, stride)
     fragment_contacts = []
 
     # Compute contacts for each frame
     num_frag_frames = molecule.numframes(traj_frag_molid)
     for frame_idx in range(1, num_frag_frames):
         # if frame_idx > 1: break
-        fragment_contacts += compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele_id, ligand, index_to_label)
+        fragment_contacts += compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, itypes, geom_criterion_values, solvent_resn, sele_id, ligand, index_to_label)
 
     # Delete trajectory fragment to clear memory
     molecule.delete(traj_frag_molid)
@@ -245,19 +247,18 @@ def compute_fragment_contacts_helper(args):
 #     return stitched_filename
 
 
-def compute_dynamic_contacts(TOP, TRAJ, OUTPUT, ITYPES, geom_criterion_values, cores, stride, solvent_resn, sele_id, ligand):
-    """ 
-    Computes non-covalent contacts across the entire trajectory and writes to output.
+def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, stride, solvent_resn, sele_id, ligand):
+    """ Computes non-covalent contacts across the entire trajectory and writes them to `output`.
 
     Parameters
     ----------
-    TOP: Topology
+    top: Topology
         In .pdb or .mae format
-    TRAJ: Trajectory
+    traj: Trajectory
         In .nc or .dcd format
-    OUTPUT: string
+    output: string
         Absolute path to output file
-    ITYPES: list
+    itypes: list
         Denotes the list of non-covalent interaction types to compute contacts for 
     geom_criterion_values: dict
         Dictionary containing the cutoff values for all geometric criteria
@@ -269,15 +270,12 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT, ITYPES, geom_criterion_values, c
         Denotes the resname of solvent in simulation
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
-    chain_id: string, default = None
-        Specify chain of protein to perform computation on 
     ligand: string, default = None
         Include ligand resname if computing contacts between ligand and binding pocket residues
-
     """
 
     contact_types = []
-    for itype in ITYPES:
+    for itype in itypes:
         if itype == "hb":
             contact_types += ["hbbb", "hbsb", "hbss", "wb", "wb2"]
         elif itype == "lhb":
@@ -285,119 +283,40 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT, ITYPES, geom_criterion_values, c
         else:
             contact_types += [itype]
 
-    index_to_label = gen_index_to_atom_label(TOP, TRAJ)
-    sim_length = estimate_simulation_length(TOP, TRAJ)
+    index_to_label = gen_index_to_atom_label(top, traj)
+    sim_length = estimate_simulation_length(top, traj)
     print("sim_length", sim_length)
     input_args = []
 
-    # Serial
-    # output = []
-    # for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
-    #     if frag_idx > 0: break
-    #     end_frame = beg_frame + TRAJ_FRAG_SIZE
-    #     frag_idx, frag_length = compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT_DIR, contact_types, ITYPES, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label)
-    #     output.append((frag_idx, frag_length))
-
     # Generate input arguments for each trajectory piece
-    print("MDContactNetworks processing TRAJ: %s with %s total frames with stride %s ..." % (TRAJ, str(sim_length), str(stride)))
+    print("MDContactNetworks processing %s with %s total frames with stride %s ..." % (traj, str(sim_length), str(stride)))
     for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
         # if frag_idx > 0: break
         end_frame = beg_frame + TRAJ_FRAG_SIZE
         print("Processing fragment %s beg_frame %s end_frame %s" % (frag_idx, beg_frame, end_frame))
-        input_args.append((frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT, contact_types, ITYPES, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label))
+        input_args.append((frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values,
+                           stride, solvent_resn, sele_id, ligand, index_to_label))
 
+    # Parallel computation
     pool = Pool(processes=cores)
-    output = pool.map(compute_fragment_contacts_helper, input_args)
+    contacts = pool.map(compute_fragment_contacts_helper, input_args)
     pool.close()
     pool.join()
+    contacts = [x for y in contacts for x in y]  # Flatten
 
-    # Flatten output, sort, and write to output-file
-    output = [x for y in output for x in y]
-    output.sort(key=lambda i: i[0])
-    with open(OUTPUT, "w") as output_fd:
-        for interaction in output:
+    # Serial computation
+    # contacts = compute_fragment_contacts_helper(input_args[0])
+
+    # Sort and write to output-file
+    contacts.sort(key=lambda i: i[0])
+    with open(output, "w") as output_fd:
+        for interaction in contacts:
+            # Strip vmd ID from atom strings
+            for a in range(2, len(interaction)):
+                atom_str = interaction[a]
+                interaction[a] = atom_str[0:atom_str.rfind(":")]
+
+            # Write to file
             output_fd.write("\t".join(map(str, interaction)))
             output_fd.write("\n")
 
-    # Sort output by trajectory fragments
-    # print("Map fragments to length")
-    # frag_idx_to_length = {}
-    # output = sorted(output, key=lambda x: (x[0]))
-    # print(output)
-    # for frag_idx, frag_length in output:
-    #     frag_idx_to_length[frag_idx] = frag_length
-    #     print(frag_idx, frag_length)
-    #
-    # # Combine fragments to single large stitched files
-    # for itype in contact_types:
-    #     frag_contact_files = glob.glob(OUTPUT_DIR + "/" + itype + "_frag*")
-    #     frag_contact_files.sort(key=natural_keys)
-    #     stitched_filename = stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length)
-    #     make_additional_files(itype, OUTPUT_DIR, stitched_filename, sim_length)
-
-
-def compute_static_contacts(STRUC, OUTPUT_DIR, ITYPES, geom_criterion_values, solvent_resn, sele_id, ligand):
-    """ 
-    Computes non-covalent contacts in a single structure and writes to output.
-
-    Parameters
-    ----------
-    STRUC: Structure
-        In .pdb or .mae format
-    OUTPUT_DIR: string
-        Absolute path to output directory 
-    ITYPES: list
-        Denotes the list of non-covalent interaction types to compute contacts for 
-    geom_criterion_values: dict
-        Dictionary containing the cutoff values for all geometric criteria
-    solvent_resn: string, default = TIP3
-        Denotes the resname of solvent in simulation
-    sele_id: string, default = None
-        Compute contacts on subset of atom selection based on VMD query
-    chain_id: string, default = None
-        Specify chain of protein to perform computation on 
-    ligand: string, default = None
-        Include ligand resname if computing contacts between ligand and binding pocket residues
-
-    """
-
-    # Append forward slash to output dirname
-    if OUTPUT_DIR[-1] != '/':
-        OUTPUT_DIR += '/'
-
-    # Set up file descriptors for writing output
-    if not os.path.exists(OUTPUT_DIR):
-        os.makedirs(OUTPUT_DIR)
-
-    contact_types = []
-    for itype in ITYPES:
-        if itype == "hb":
-            contact_types += ["hbbb", "hbsb", "hbss", "wb", "wb2"]
-        elif itype == "lhb":
-            contact_types += ["hls", "hlb", "lwb", "lwb2"]
-        else:
-            contact_types += [itype]
-
-    # Set up file descriptors for writing output
-    for contact_type in contact_types:
-        contact_path = OUTPUT_DIR + full_name_dirs[contact_type] + '/'
-        if not os.path.exists(contact_path):
-            os.makedirs(contact_path)
-
-
-    index_to_label = gen_index_to_atom_label(STRUC, None)
-    sim_length = estimate_simulation_length(STRUC, None)
-    print("sim_length", sim_length)
-
-    # Serial
-    frag_idx, frag_length = compute_fragment_contacts(0, 0, 0, STRUC, STRUC, OUTPUT_DIR, contact_types, ITYPES, geom_criterion_values, 1, solvent_resn, sele_id, ligand, index_to_label)
-
-    frag_idx_to_length = {frag_idx: frag_length}
-    print(frag_idx, frag_length)
-
-    # Combine fragments to single large stitched files
-    for itype in contact_types:
-        frag_contact_files = glob.glob(OUTPUT_DIR + "/" + itype + "_frag*")
-        frag_contact_files.sort(key=natural_keys)
-        stitched_filename = stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length)
-        make_additional_files(itype, OUTPUT_DIR, stitched_filename, sim_length)

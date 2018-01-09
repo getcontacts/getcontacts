@@ -33,9 +33,9 @@ HELP_STR = """
  ==========================================================================
 
 Command was:
-python dynamic_contact_networks.py --help
+python3 contact_networks.py --help
 
-usage: python dynamic_contact_networks.py [--help] [--topology TOPOLOGY] 
+usage: python3 contact_networks.py [--help] [--topology TOPOLOGY] 
                       [--trajectory TRAJECTORY]
                       [--output OUTPUT_PATH] 
                       [--cores NUM_CORES]
@@ -135,13 +135,13 @@ output interaction subtypes:
 
 examples:
 Salt bridges and hydrogen bonds for residues 100 to 160:
-python dynamic_contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --output output.tsv --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype sb hb lhb
+python contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --output output.tsv --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype sb hb lhb
 
 Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
-python dynamic_contact_networks.py --topology TOP.psf --trajectory TRAJ.dcd --output output.tsv --cores 6 --itype pc ps vdw
+python contact_networks.py --topology TOP.psf --trajectory TRAJ.dcd --output output.tsv --cores 6 --itype pc ps vdw
 
 Salt bridges and hydrogen bonds in the entire protein with modified distance cutoffs:
-python dynamic_contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --output output.tsv --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype sb hb
+python contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --output output.tsv --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype sb hb
 """
 
 DESCRIPTION = "Computes non-covalent contact networks in MD simulations."
@@ -214,7 +214,7 @@ def main():
     # Parse required and optional arguments
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--topology', type=str, required=True, help='path to topology file ')
-    parser.add_argument('--trajectory', type=str, required=True, help='path to trajectory file')
+    parser.add_argument('--trajectory', type=str, required=False, default=None, help='path to trajectory file')
     parser.add_argument('--output', type=str, required=True, help='path to output file')
     parser.add_argument('--cores', type=int, default=6, help='number of cpu cores to parallelize upon')
     parser.add_argument('--solv', type=str, default="TIP3", help='resname of solvent molecule')
@@ -253,7 +253,6 @@ def main():
     parser.add_argument('--ligand-hbond', '-lhb', dest='lhb', action=ITypeAction, nargs=0, help="Compute ligand hydrogen bond interactions")
     parser.add_argument('--all-interactions', '-all', dest='all', action='store_true', help="Compute all types of interactions")
 
-    # namespace = argparse.Namespace()
     args, unknown = parser.parse_known_args()
 
     top = args.topology
@@ -266,7 +265,6 @@ def main():
     stride = args.stride
     geom_criterion_values = process_geometric_criterion_args(args)
 
-    # itypes = sys.argv[sys.argv.index('--itype') + 1:]
     if args.all:
         itypes = ["sb", "pc", "ps", "ts", "vdw", "hb", "lhb"]
     elif not hasattr(args, "itypes"):
@@ -278,7 +276,7 @@ def main():
 
     # Begin computation
     tic = datetime.datetime.now()
-    compute_dynamic_contacts(top, traj, output, itypes, geom_criterion_values, cores, stride, solv, sele, ligand)
+    compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, stride, solv, sele, ligand)
     toc = datetime.datetime.now()
     print("Computation Time: " + str((toc-tic).total_seconds()))
 
@@ -291,6 +289,6 @@ def main():
     print("sele=%s" % sele)
     print("stride=%s" % stride)
 
+
 if __name__ == "__main__":
     main()
-

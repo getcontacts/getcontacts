@@ -133,8 +133,7 @@ def get_atom_selection_properties(selection_id):
 
 def gen_index_to_atom_label(TOP, TRAJ):
     """
-    Read in first frame of simulation and generate mapping from
-    VMD index to atom labels
+    Read in first frame of simulation and generate mapping from VMD index to atom labels
 
     Parameters
     ----------
@@ -183,11 +182,15 @@ def get_anion_atoms(traj_frag_molid, frame_idx, sele_id):
     anion_list = []
 
     if sele_id is None:
-        evaltcl("set ASP [atomselect %s \" (resname ASP) and (name OD1 OD2) \" frame %s]" % (traj_frag_molid, frame_idx))
-        evaltcl("set GLU [atomselect %s \" (resname GLU) and (name OE1 OE2) \" frame %s]" % (traj_frag_molid, frame_idx))
+        evaltcl("set ASP [atomselect %s \" "
+                "(resname ASP) and (name OD1 OD2) \" frame %s]" % (traj_frag_molid, frame_idx))
+        evaltcl("set GLU [atomselect %s \" "
+                "(resname GLU) and (name OE1 OE2) \" frame %s]" % (traj_frag_molid, frame_idx))
     else:
-        evaltcl("set ASP [atomselect %s \" (resname ASP) and (name OD1 OD2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
-        evaltcl("set GLU [atomselect %s \" (resname GLU) and (name OE1 OE2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
+        evaltcl("set ASP [atomselect %s \" "
+                "(resname ASP) and (name OD1 OD2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
+        evaltcl("set GLU [atomselect %s \" "
+                "(resname GLU) and (name OE1 OE2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
 
     anion_list += get_atom_selection_labels("ASP")
     anion_list += get_atom_selection_labels("GLU")
@@ -329,8 +332,10 @@ def compute_distance(molid, frame_idx, atom1_label, atom2_label):
     -------
     distance: float
     """
-    atom_index1 = atom1_label.split(":")[-1]
-    atom_index2 = atom2_label.split(":")[-1]
+    # atom_index1 = atom1_label.split(":")[-1]
+    # atom_index2 = atom2_label.split(":")[-1]
+    atom_index1 = atom1_label[atom1_label.rfind(":")+1:]
+    atom_index2 = atom2_label[atom2_label.rfind(":")+1:]
     distance = float(evaltcl("measure bond {%s %s} molid %s frame %s" % (atom_index1, atom_index2, molid, frame_idx)))
     return distance
 
