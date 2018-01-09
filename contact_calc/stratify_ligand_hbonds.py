@@ -66,9 +66,9 @@ def stratify_ligand_residue_hbonds(ligand_residue_hbonds, ligand):
 
         res_atom_name = res_atom.split(":")[3]
         if res_atom_name in backbone_atoms:
-            hlb.append([frame_idx, lig_atom, res_atom, "hlb"])
+            hlb.append([frame_idx, "hlb", lig_atom, res_atom])
         else:
-            hls.append([frame_idx, lig_atom, res_atom, "hls"])
+            hls.append([frame_idx, "hls", lig_atom, res_atom])
 
     return hls, hlb
 
@@ -96,7 +96,7 @@ def stratify_ligand_water_bridge(water_hbonds, solvent_resn, ligand):
         # Form ligand -- water -- protein pairs
         for lig_atom in ligand_atoms:
             for res_atom in protein_atoms:
-                ligand_water_bridges.add((frame_idx, lig_atom, water, res_atom, "lwb"))
+                ligand_water_bridges.add((frame_idx, "lwb", lig_atom, res_atom, water))
 
     lwb = sorted([list(entry) for entry in ligand_water_bridges])
     return lwb
@@ -118,11 +118,11 @@ def stratify_extended_ligand_water_bridge(water_hbonds, solvent_resn, ligand):
 
         for lig_atom1 in ligand_atoms1:
             for res_atom2 in protein_atoms2:
-                extended_ligand_water_bridges.add((frame_idx, lig_atom1, water1, water2, res_atom2, "lwb2"))
+                extended_ligand_water_bridges.add((frame_idx, "lwb2", lig_atom1, res_atom2, water1, water2))
 
         for lig_atom2 in ligand_atoms2:
             for res_atom1 in protein_atoms1:
-                extended_ligand_water_bridges.add((frame_idx, lig_atom2, water2, water1, res_atom1, "lwb2"))
+                extended_ligand_water_bridges.add((frame_idx, "lwb2", lig_atom2, res_atom1, water2, water1))
 
     lwb2 = sorted([list(entry) for entry in extended_ligand_water_bridges])
     return lwb2

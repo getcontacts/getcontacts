@@ -59,13 +59,14 @@ def stratify_residue_hbonds(residue_hbonds):
         atom2 = atom2_label.split(":")[3]
 
         if atom1 not in backbone_atoms and atom2 not in backbone_atoms:
-            hbss.append([frame_idx, atom1_label, atom2_label, "hbss"])
+            hbss.append([frame_idx, "hbss", atom1_label, atom2_label])
 
-        if (atom1 not in backbone_atoms and atom2 in backbone_atoms) or (atom1 in backbone_atoms and atom2 not in backbone_atoms):
-            hbsb.append([frame_idx, atom1_label, atom2_label, "hbsb"])
+        if (atom1 not in backbone_atoms and atom2 in backbone_atoms) or \
+                (atom1 in backbone_atoms and atom2 not in backbone_atoms):
+            hbsb.append([frame_idx, "hbsb", atom1_label, atom2_label])
 
         if atom1 in backbone_atoms and atom2 in backbone_atoms:
-            hbbb.append([frame_idx, atom1_label, atom2_label, "hbbb"])
+            hbbb.append([frame_idx, "hbbb", atom1_label, atom2_label])
 
     return hbss, hbsb, hbbb
 
@@ -83,7 +84,7 @@ def stratify_water_bridge(water_hbonds, solvent_resn):
         for res_atom_pair in itertools.combinations(protein_atoms, 2):
             res_atom1, res_atom2 = res_atom_pair
             if res_atom1 != res_atom2:
-                water_bridges.add((frame_idx, res_atom1, water, res_atom2, "wb"))
+                water_bridges.add((frame_idx, "wb", res_atom1, res_atom2, water))
 
     wb = sorted([list(entry) for entry in water_bridges])
     return wb
@@ -98,12 +99,13 @@ def stratify_extended_water_bridge(water_hbonds, solvent_resn):
     frame_idx, water_to_residues, solvent_bridges = calc_water_to_residues_map(water_hbonds, solvent_resn)
     extended_water_bridges = set()
     for water1, water2 in solvent_bridges:
-        if water1 not in water_to_residues or water2 not in water_to_residues: continue
+        if water1 not in water_to_residues or water2 not in water_to_residues:
+            continue
         res_atom1_list, res_atom2_list = water_to_residues[water1], water_to_residues[water2]
 
         for atom1 in res_atom1_list:
             for atom2 in res_atom2_list:
-                extended_water_bridges.add((frame_idx, atom1, water1, water2, atom2, "wb2"))
+                extended_water_bridges.add((frame_idx, "wb2", atom1, atom2, water1, water2))
 
     extended_water_bridges = sorted(list(extended_water_bridges))
 

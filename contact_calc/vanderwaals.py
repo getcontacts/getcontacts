@@ -60,7 +60,7 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW
 
     Returns
     -------
-    vanderwaals: list of tuples, [(frame_idx, atom1_label, atom2_label, itype), ...]
+    vanderwaals: list of tuples, [(frame_idx, itype, atom1_label, atom2_label), ...]
         itype = "vdw"
     """
     vanderwaals = []
@@ -81,6 +81,6 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW
         distance = compute_distance(traj_frag_molid, frame_idx, atom1_label, atom2_label)
         vanderwaal_cutoff = ATOM_RADIUS[element1] + ATOM_RADIUS[element2] + VDW_EPSILON
         if distance < vanderwaal_cutoff:
-            vanderwaals.append([frame_idx, atom1_label, atom2_label, "vdw"])
+            vanderwaals.append([frame_idx, "vdw", atom1_label, atom2_label])
 
     return vanderwaals

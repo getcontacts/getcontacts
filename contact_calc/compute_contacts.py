@@ -185,62 +185,64 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, TOP, TRAJ, OUTPUT,
     molecule.delete(traj_frag_molid)
 
     # Write directly out to temporary output
-    print("Writing output to seperate files, one for each itype ...")
-    
-    fd_map = {itype: open(OUTPUT + "_" + itype + "_frag_" + str(frag_idx) + ".txt", 'w') for itype in contact_types}
-    for contact in fragment_contacts:
-        itype_key = contact[-1]
-        output_string = str(frag_idx) + "\t" + "\t".join(map(str, contact)) + "\n"
-        fd_map[itype_key].write(output_string)
+    # print("Writing output to seperate files, one for each itype ...")
+    #
+    # fd_map = {itype: open(OUTPUT + "_" + itype + "_frag_" + str(frag_idx) + ".txt", 'w') for itype in contact_types}
+    # for contact in fragment_contacts:
+    #     itype_key = contact[-1]
+    #     output_string = str(frag_idx) + "\t" + "\t".join(map(str, contact)) + "\n"
+    #     fd_map[itype_key].write(output_string)
+    #
+    # for itype in fd_map:
+    #     fd_map[itype].close()
+    #
+    # return frag_idx, num_frag_frames - 1
 
-    for itype in fd_map:
-        fd_map[itype].close()
-
-    return frag_idx, num_frag_frames - 1
+    return fragment_contacts
 
 
 def compute_fragment_contacts_helper(args):
     return compute_fragment_contacts(*args)
 
 
-def stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length):
-    """
-    Stitch together multiple fragments of non-covalent contacts into
-    single file and delete individual fragment files. 
-
-    Parameters
-    ----------
-    itype: Type of non-covalent contact
-    OUTPUT_DIR: string
-        Absolute path to output directory 
-    frag_contact_files: list of strings
-        List of paths to fragment contact files
-    frag_idx_to_length: dict from int to int 
-        Map the fragment index to length of fragment 
-    """
-    print("Stitching %s ..." % (itype))
-    # stitched_filename = OUTPUT_DIR + "/" + itype + ".txt" 
-    # stitched_filename = OUTPUT_DIR + full_name_dirs[contact_type] + '/' + 'raw_frame_output.txt'
-    stitched_filename = OUTPUT_DIR + full_name_dirs[itype] + '/' + itype + '.txt'
-    fo = open(stitched_filename, 'w')
-
-    num_frames = 0
-    for frag_contact_file in frag_contact_files:
-        frag_idx = int(frag_contact_file.split("/")[-1].strip(".txt").split("_")[2])
-        ffrag = open(frag_contact_file, 'r')        
-        for line in ffrag:
-            linfo = line.split("\t")
-            frame_idx = int(linfo[1])
-            new_frame_idx = num_frames + frame_idx - 1
-            output_string = str(new_frame_idx) + "\t" + "\t".join(linfo[2:])
-            fo.write(output_string)
-        num_frames += frag_idx_to_length[frag_idx]
-        ffrag.close()
-        os.remove(frag_contact_file)
-
-    fo.close()
-
-    return stitched_filename
+# def stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length):
+#     """
+#     Stitch together multiple fragments of non-covalent contacts into
+#     single file and delete individual fragment files.
+#
+#     Parameters
+#     ----------
+#     itype: Type of non-covalent contact
+#     OUTPUT_DIR: string
+#         Absolute path to output directory
+#     frag_contact_files: list of strings
+#         List of paths to fragment contact files
+#     frag_idx_to_length: dict from int to int
+#         Map the fragment index to length of fragment
+#     """
+#     print("Stitching %s ..." % (itype))
+#     # stitched_filename = OUTPUT_DIR + "/" + itype + ".txt"
+#     # stitched_filename = OUTPUT_DIR + full_name_dirs[contact_type] + '/' + 'raw_frame_output.txt'
+#     stitched_filename = OUTPUT_DIR + full_name_dirs[itype] + '/' + itype + '.txt'
+#     fo = open(stitched_filename, 'w')
+#
+#     num_frames = 0
+#     for frag_contact_file in frag_contact_files:
+#         frag_idx = int(frag_contact_file.split("/")[-1].strip(".txt").split("_")[2])
+#         ffrag = open(frag_contact_file, 'r')
+#         for line in ffrag:
+#             linfo = line.split("\t")
+#             frame_idx = int(linfo[1])
+#             new_frame_idx = num_frames + frame_idx - 1
+#             output_string = str(new_frame_idx) + "\t" + "\t".join(linfo[2:])
+#             fo.write(output_string)
+#         num_frames += frag_idx_to_length[frag_idx]
+#         ffrag.close()
+#         os.remove(frag_contact_file)
+#
+#     fo.close()
+#
+#     return stitched_filename
 
 
 def compute_dynamic_contacts(TOP, TRAJ, OUTPUT, ITYPES, geom_criterion_values, cores, stride, solvent_resn, sele_id, ligand):
@@ -309,20 +311,29 @@ def compute_dynamic_contacts(TOP, TRAJ, OUTPUT, ITYPES, geom_criterion_values, c
     pool.close()
     pool.join()
 
-    # Sort output by trajectory fragments
-    print("Map fragments to length")
-    frag_idx_to_length = {}
-    output = sorted(output, key=lambda x: (x[0]))
-    for frag_idx, frag_length in output:
-        frag_idx_to_length[frag_idx] = frag_length
-        print(frag_idx, frag_length)
+    # Flatten output, sort, and write to output-file
+    output = [x for y in output for x in y]
+    output.sort(key=lambda i: i[0])
+    with open(OUTPUT, "w") as output_fd:
+        for interaction in output:
+            output_fd.write("\t".join(map(str, interaction)))
+            output_fd.write("\n")
 
-    # Combine fragments to single large stitched files
-    for itype in contact_types:
-        frag_contact_files = glob.glob(OUTPUT_DIR + "/" + itype + "_frag*")
-        frag_contact_files.sort(key=natural_keys)
-        stitched_filename = stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length)
-        make_additional_files(itype, OUTPUT_DIR, stitched_filename, sim_length)
+    # Sort output by trajectory fragments
+    # print("Map fragments to length")
+    # frag_idx_to_length = {}
+    # output = sorted(output, key=lambda x: (x[0]))
+    # print(output)
+    # for frag_idx, frag_length in output:
+    #     frag_idx_to_length[frag_idx] = frag_length
+    #     print(frag_idx, frag_length)
+    #
+    # # Combine fragments to single large stitched files
+    # for itype in contact_types:
+    #     frag_contact_files = glob.glob(OUTPUT_DIR + "/" + itype + "_frag*")
+    #     frag_contact_files.sort(key=natural_keys)
+    #     stitched_filename = stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length)
+    #     make_additional_files(itype, OUTPUT_DIR, stitched_filename, sim_length)
 
 
 def compute_static_contacts(STRUC, OUTPUT_DIR, ITYPES, geom_criterion_values, solvent_resn, sele_id, ligand):

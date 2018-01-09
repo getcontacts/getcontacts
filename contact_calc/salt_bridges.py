@@ -62,7 +62,7 @@ def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, SALT_BRIDGE_CUTOFF
 
     Returns
     -------
-    salt_bridges: list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
+    salt_bridges: list of tuples, [(frame_index, itype, atom1_label, atom2_label), ...]
         itype = "sb"
     """
     anion_list, cation_list = prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id)
@@ -71,6 +71,6 @@ def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, SALT_BRIDGE_CUTOFF
         for cation_atom in cation_list:
             dist = compute_distance(traj_frag_molid, frame_idx, anion_atom, cation_atom)
             if dist < SALT_BRIDGE_CUTOFF_DISTANCE:
-                salt_bridges.append([frame_idx, anion_atom, cation_atom, "sb"])
+                salt_bridges.append([frame_idx, "sb", anion_atom, cation_atom])
 
     return salt_bridges

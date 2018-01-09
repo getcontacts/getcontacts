@@ -32,7 +32,8 @@ SOFT_DISTANCE_CUTOFF = 10.0  # Angstroms
 ##############################################################################
 
 
-def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, PI_CATION_CUTOFF_DISTANCE=6.0, PI_CATION_CUTOFF_ANGLE=60):
+def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id,
+                      PI_CATION_CUTOFF_DISTANCE=6.0, PI_CATION_CUTOFF_ANGLE=60):
     """
     Compute pi-cation interactions in a frame of simulation
 
@@ -57,21 +58,36 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, PI_CA
 
     Returns
     -------
-    pi_cations = list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
+    pi_cations = list of tuples, [(frame_index, itype, atom1_label, atom2_label), ...]
         itype = "pc"
     """
     pi_cations = []
 
     if sele_id is None:
-        cation_atom_sel = "set cation_atoms [atomselect %s \" ((resname LYS) and (name NZ)) or ((resname ARG) and (name NH1 NH2)) or ((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2)) \" frame %s]" % (traj_frag_molid, frame_idx)
-        aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" ((resname PHE) and (name CG CE1 CE2)) or ((resname TRP) and (name CD2 CZ2 CZ3)) or ((resname TYR) and (name CG CE1 CE2)) \" frame %s]" % (traj_frag_molid, frame_idx)
+        cation_atom_sel = "set cation_atoms [atomselect %s \" " \
+                          "((resname LYS) and (name NZ)) or " \
+                          "((resname ARG) and (name NH1 NH2)) or " \
+                          "((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2)) \" frame %s]" % \
+                          (traj_frag_molid, frame_idx)
+        aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" " \
+                            "((resname PHE) and (name CG CE1 CE2)) or " \
+                            "((resname TRP) and (name CD2 CZ2 CZ3)) or " \
+                            "((resname TYR) and (name CG CE1 CE2)) \" frame %s]" % (traj_frag_molid, frame_idx)
     else:
-        cation_atom_sel = "set cation_atoms [atomselect %s \" ((resname LYS) and (name NZ) and (%s)) or ((resname ARG) and (name NH1 NH2) and (%s)) or ((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s))\" frame %s]" % (traj_frag_molid, sele_id, sele_id, sele_id, frame_idx)
-        aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" ((resname PHE) and (name CG CE1 CE2) and (%s)) or ((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or ((resname TYR) and (name CG CE1 CE2) and (%s))\" frame %s]" % (traj_frag_molid, sele_id, sele_id, sele_id, frame_idx)
+        cation_atom_sel = "set cation_atoms [atomselect %s \" " \
+                          "((resname LYS) and (name NZ) and (%s)) or " \
+                          "((resname ARG) and (name NH1 NH2) and (%s)) or " \
+                          "((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s))\" frame %s]" % \
+                          (traj_frag_molid, sele_id, sele_id, sele_id, frame_idx)
+        aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" " \
+                            "((resname PHE) and (name CG CE1 CE2) and (%s)) or " \
+                            "((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or " \
+                            "((resname TYR) and (name CG CE1 CE2) and (%s))\" frame %s]" % \
+                            (traj_frag_molid, sele_id, sele_id, sele_id, frame_idx)
 
     evaltcl(cation_atom_sel)
     evaltcl(aromatic_atom_sel)
-    contacts = evaltcl("measure contacts %s $cation_atoms $aromatic_atoms" %(SOFT_DISTANCE_CUTOFF))
+    contacts = evaltcl("measure contacts %s $cation_atoms $aromatic_atoms" % SOFT_DISTANCE_CUTOFF)
     evaltcl("$cation_atoms delete")
     evaltcl("$aromatic_atoms delete")
 
@@ -117,8 +133,8 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, PI_CA
             continue
 
         # Append three of the aromatic atoms
-        pi_cations.append([frame_idx, cation_atom_label, arom_atom1_label, "pc"])
-        pi_cations.append([frame_idx, cation_atom_label, arom_atom2_label, "pc"])
-        pi_cations.append([frame_idx, cation_atom_label, arom_atom2_label, "pc"])
+        pi_cations.append([frame_idx, "pc", cation_atom_label, arom_atom1_label])
+        pi_cations.append([frame_idx, "pc", cation_atom_label, arom_atom2_label])
+        pi_cations.append([frame_idx, "pc", cation_atom_label, arom_atom2_label])
 
     return pi_cations

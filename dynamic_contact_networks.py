@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 ############################################################################
 # Copyright 2018 Anthony Ma & Stanford University                          #
 #                                                                          #
@@ -35,7 +37,7 @@ python dynamic_contact_networks.py --help
 
 usage: python dynamic_contact_networks.py [--help] [--topology TOPOLOGY] 
                       [--trajectory TRAJECTORY]
-                      [--output_dir OUTPUT_DIRECTORY] 
+                      [--output OUTPUT_PATH] 
                       [--cores NUM_CORES]
                       [--solv SOLVENT]
                       [--sele SELECTION]
@@ -58,7 +60,7 @@ usage: python dynamic_contact_networks.py [--help] [--topology TOPOLOGY]
 required arguments:
     --topology TOPOLOGY             path to topology file 
     --trajectory TRAJECTORY         path to trajectory file
-    --output_dir OUTPUT_DIRECTORY   path to output directory
+    --output OUTPUT_PATH            path to output file
     --itype INTERACTION_TYPES       list of interaction type flags
 
 optional arguments:
@@ -133,13 +135,13 @@ output interaction subtypes:
 
 examples:
 Salt bridges and hydrogen bonds for residues 100 to 160:
-python dynamic_contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --output_dir OUTPUT_DIR --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype sb hb lhb
+python dynamic_contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --output output.tsv --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype sb hb lhb
 
 Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
-python dynamic_contact_networks.py --topology TOP.psf --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 --itype pc ps vdw
+python dynamic_contact_networks.py --topology TOP.psf --trajectory TRAJ.dcd --output output.tsv --cores 6 --itype pc ps vdw
 
 Salt bridges and hydrogen bonds in the entire protein with modified distance cutoffs:
-python dynamic_contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype sb hb
+python dynamic_contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --output output.tsv --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype sb hb
 """
 
 DESCRIPTION = "Computes non-covalent contact networks in MD simulations."
@@ -210,7 +212,7 @@ def main():
         exit(1)
 
     # Parse required and optional arguments
-    parser = argparse.ArgumentParser(prog='PROG', add_help=False)
+    parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--topology', type=str, required=True, help='path to topology file ')
     parser.add_argument('--trajectory', type=str, required=True, help='path to trajectory file')
     parser.add_argument('--output', type=str, required=True, help='path to output file')
@@ -237,6 +239,8 @@ def main():
     # Parse interaction types
     class ITypeAction(argparse.Action):
         def __call__(self, parser, ns, values, option):
+            if self.dest == "all":
+                ns.itypes = set([])
             if not hasattr(ns, "itype"):
                 ns.itypes = set()
             ns.itypes.add(self.dest)
@@ -247,41 +251,45 @@ def main():
     parser.add_argument('--vanderwaals', '-vdw', dest='vdw', action=ITypeAction, nargs=0, help="Compute van der Waals interactions (warning: there will be many)")
     parser.add_argument('--hbond', '-hb', dest='hb', action=ITypeAction, nargs=0, help="Compute hydrogen bond interactions")
     parser.add_argument('--ligand-hbond', '-lhb', dest='lhb', action=ITypeAction, nargs=0, help="Compute ligand hydrogen bond interactions")
-    parser.add_argument('--all-interactions', '-all', dest='all', action="store_true", help="Compute all types of interactions")
+    parser.add_argument('--all-interactions', '-all', dest='all', action='store_true', help="Compute all types of interactions")
 
     # namespace = argparse.Namespace()
     args, unknown = parser.parse_known_args()
 
-    TOP = args.topology
-    TRAJ = args.trajectory
-    OUTPUT = args.output
+    top = args.topology
+    traj = args.trajectory
+    output = args.output
     cores = args.cores
     ligand = args.ligand
     solv = args.solv
     sele = args.sele
     stride = args.stride
-    ITYPES = args.itypes
     geom_criterion_values = process_geometric_criterion_args(args)
 
-    # ITYPES = sys.argv[sys.argv.index('--itype') + 1:]
+    # itypes = sys.argv[sys.argv.index('--itype') + 1:]
     if args.all:
-        ITYPES = ["sb", "pc", "ps", "ts", "vdw", "hb", "hlb"]
-    validate_itypes(ITYPES)
+        itypes = ["sb", "pc", "ps", "ts", "vdw", "hb", "lhb"]
+    elif not hasattr(args, "itypes"):
+        print("Error: at least one interaction type or '--all-interactions' is required")
+        exit(1)
+    else:
+        itypes = args.itypes
+    validate_itypes(itypes)
 
     # Begin computation
     tic = datetime.datetime.now()
-    compute_dynamic_contacts(TOP, TRAJ, OUTPUT, ITYPES, geom_criterion_values, cores, stride, solv, sele, ligand)
+    compute_dynamic_contacts(top, traj, output, itypes, geom_criterion_values, cores, stride, solv, sele, ligand)
     toc = datetime.datetime.now()
     print("Computation Time: " + str((toc-tic).total_seconds()))
 
-    print("topology=%s\n" % TOP)
-    print("trajectory=%s\n" % TRAJ)
-    print("output=%s\n" % OUTPUT)
-    print("cores=%s\n" % cores)
-    print("ligand=%s\n" % ligand)
-    print("solv=%s\n" % solv)
-    print("sele=%s\n" % sele)
-    print("stride=%s\n" % stride)
+    print("topology=%s" % top)
+    print("trajectory=%s" % traj)
+    print("output=%s" % output)
+    print("cores=%s" % cores)
+    print("ligand=%s" % ligand)
+    print("solv=%s" % solv)
+    print("sele=%s" % sele)
+    print("stride=%s" % stride)
 
 if __name__ == "__main__":
     main()
