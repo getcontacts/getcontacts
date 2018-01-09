@@ -13,6 +13,6 @@ python3 ../contact_networks.py --topology 5xnd_topology.pdb --trajectory 5xnd_tr
 The `contact_network.py` script can be used to generate contacts of a single-model PDB file as well, but often files downloaded from PDB directly need to have hydrogens added. This can be done in pymol after which the interactions can be computed
 ```bash
 pymol -c -d 'fetch 1crn, async=0; h_add; save 1crn_h.pdb'  # Prepare 1CRN
-python3 ../contact_networks.py --topology 1crn_h.pdb --all-interactions --output 1crn_h_all-contacts.tsv
+python3 ../contact_networks.py --topology 1crn_h.pdb --all-interactions --output 1crn_all-contacts.tsv
 ```
 
