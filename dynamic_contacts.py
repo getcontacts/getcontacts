@@ -33,9 +33,9 @@ HELP_STR = """
  ==========================================================================
 
 Command was:
-python3 contact_networks.py --help
+python3 dynamic_contacts.py --help
 
-usage: python3 contact_networks.py [--help] [--topology TOPOLOGY] 
+usage: python3 dynamic_contacts.py [--help] [--topology TOPOLOGY] 
                       [--trajectory TRAJECTORY]
                       [--output OUTPUT_PATH] 
                       [--cores NUM_CORES]
@@ -135,13 +135,13 @@ output interaction subtypes:
 
 examples:
 Salt bridges and hydrogen bonds for residues 100 to 160:
-python contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --output output.tsv --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype sb hb lhb
+python dynamic_contacts.py --topology TOP.pdb --trajectory TRAJ.nc --output output.tsv --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype sb hb lhb
 
 Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
-python contact_networks.py --topology TOP.psf --trajectory TRAJ.dcd --output output.tsv --cores 6 --itype pc ps vdw
+python dynamic_contacts.py --topology TOP.psf --trajectory TRAJ.dcd --output output.tsv --cores 6 --itype pc ps vdw
 
 Salt bridges and hydrogen bonds in the entire protein with modified distance cutoffs:
-python contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --output output.tsv --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype sb hb
+python dynamic_contacts.py --topology TOP.mae --trajectory TRAJ.dcd --output output.tsv --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype sb hb
 """
 
 DESCRIPTION = "Computes non-covalent contact networks in MD simulations."
@@ -161,52 +161,40 @@ def open_dir(dirname):
             raise
 
 
-def validate_itypes(ITYPES):
+def validate_itypes(itypes):
     """
     Prints error and halts program if specified interaction type is invalid
     """
     valid_itypes = ["sb", "pc", "ps", "ts", "vdw", "hb", "lhb"]
 
-    for itype in ITYPES:
+    for itype in itypes:
         if itype not in valid_itypes:
             print("%s not a valid interaction type ..." % (itype))
             exit(1)
-    if not ITYPES:
+    if not itypes:
         print("Need to specify at least one interaction type ...")
         exit(1)
 
 
 def process_geometric_criterion_args(args):
-    SALT_BRIDGE_CUTOFF_DISTANCE = args.sb_cutoff_dist
-    PI_CATION_CUTOFF_DISTANCE = args.pc_cutoff_dist
-    PI_CATION_CUTOFF_ANGLE = args.pc_cutoff_ang
-    PI_STACK_CUTOFF_DISTANCE = args.ps_cutoff_dist
-    PI_STACK_CUTOFF_ANGLE = args.ps_cutoff_ang
-    PI_STACK_PSI_ANGLE = args.ps_psi_ang
-    T_STACK_CUTOFF_DISTANCE = args.ts_cutoff_dist
-    T_STACK_CUTOFF_ANGLE = args.ts_cutoff_ang
-    T_STACK_PSI_ANGLE = args.ts_psi_ang
-    HBOND_CUTOFF_DISTANCE = args.hbond_cutoff_dist
-    HBOND_CUTOFF_ANGLE = args.hbond_cutoff_ang
-    VDW_EPSILON = args.vdw_epsilon
-
-    geom_criterion_values = {}
-    geom_criterion_values['SALT_BRIDGE_CUTOFF_DISTANCE'] = SALT_BRIDGE_CUTOFF_DISTANCE
-    geom_criterion_values['PI_CATION_CUTOFF_DISTANCE'] = PI_CATION_CUTOFF_DISTANCE
-    geom_criterion_values['PI_CATION_CUTOFF_ANGLE'] = PI_CATION_CUTOFF_ANGLE
-    geom_criterion_values['PI_STACK_CUTOFF_DISTANCE'] = PI_STACK_CUTOFF_DISTANCE
-    geom_criterion_values['PI_STACK_CUTOFF_ANGLE'] = PI_STACK_CUTOFF_ANGLE
-    geom_criterion_values['PI_STACK_PSI_ANGLE'] = PI_STACK_PSI_ANGLE
-    geom_criterion_values['T_STACK_CUTOFF_DISTANCE'] = T_STACK_CUTOFF_DISTANCE
-    geom_criterion_values['T_STACK_CUTOFF_ANGLE'] = T_STACK_CUTOFF_ANGLE
-    geom_criterion_values['T_STACK_PSI_ANGLE'] = T_STACK_PSI_ANGLE
-    geom_criterion_values['HBOND_CUTOFF_DISTANCE'] = HBOND_CUTOFF_DISTANCE
-    geom_criterion_values['HBOND_CUTOFF_ANGLE'] =  HBOND_CUTOFF_ANGLE
-    geom_criterion_values['VDW_EPSILON'] = VDW_EPSILON
+    geom_criterion_values = {
+        "SALT_BRIDGE_CUTOFF_DISTANCE": args.sb_cutoff_dist,
+        "PI_CATION_CUTOFF_DISTANCE": args.pc_cutoff_dist,
+        "PI_CATION_CUTOFF_ANGLE": args.pc_cutoff_ang,
+        "PI_STACK_CUTOFF_DISTANCE": args.ps_cutoff_dist,
+        "PI_STACK_CUTOFF_ANGLE": args.ps_cutoff_ang,
+        "PI_STACK_PSI_ANGLE": args.ps_psi_ang,
+        "T_STACK_CUTOFF_DISTANCE": args.ts_cutoff_dist,
+        "T_STACK_CUTOFF_ANGLE": args.ts_cutoff_ang,
+        "T_STACK_PSI_ANGLE": args.ts_psi_ang,
+        "HBOND_CUTOFF_DISTANCE": args.hbond_cutoff_dist,
+        "HBOND_CUTOFF_ANGLE": args.hbond_cutoff_ang,
+        "VDW_EPSILON": args.vdw_epsilon
+    }
     return geom_criterion_values
 
 
-def main():
+def main(traj_required=True):
     if "--help" in sys.argv or "-h" in sys.argv:
         print (HELP_STR)
         exit(1)
@@ -214,7 +202,7 @@ def main():
     # Parse required and optional arguments
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('--topology', type=str, required=True, help='path to topology file ')
-    parser.add_argument('--trajectory', type=str, required=False, default=None, help='path to trajectory file')
+    parser.add_argument('--trajectory', type=str, required=traj_required, default=None, help='path to trajectory file')
     parser.add_argument('--output', type=str, required=True, help='path to output file')
     parser.add_argument('--cores', type=int, default=6, help='number of cpu cores to parallelize upon')
     parser.add_argument('--solv', type=str, default="TIP3", help='resname of solvent molecule')
