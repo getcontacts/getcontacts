@@ -19,7 +19,6 @@
 ##############################################################################
 
 import datetime
-import glob
 from multiprocessing import *
 from vmd import *  # Loads the static `molecule` object
 
@@ -29,7 +28,6 @@ from .hbonds import *
 from .salt_bridges import *
 from .pi_cation import *
 from .vanderwaals import *
-from .output_additional import *
 
 ##############################################################################
 # Global Variables

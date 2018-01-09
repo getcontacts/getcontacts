@@ -16,10 +16,6 @@
 # limitations under the License.                                           #
 ############################################################################
 
-import os
-import errno
-import sys
-import datetime
 import argparse
 from contact_calc.compute_contacts import *
 
@@ -147,20 +143,6 @@ python dynamic_contacts.py --topology TOP.mae --trajectory TRAJ.dcd --output out
 DESCRIPTION = "Computes non-covalent contact networks in MD simulations."
 
 
-def clean_path(path):
-    if path[-1] != '/':
-        path += '/'
-    return path
-
-
-def open_dir(dirname):
-    try:
-        os.makedirs(dirname)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
-
-
 def validate_itypes(itypes):
     """
     Prints error and halts program if specified interaction type is invalid
@@ -196,7 +178,7 @@ def process_geometric_criterion_args(args):
 
 def main(traj_required=True):
     if "--help" in sys.argv or "-h" in sys.argv:
-        print (HELP_STR)
+        print(HELP_STR)
         exit(1)
 
     # Parse required and optional arguments
