@@ -1,6 +1,18 @@
 # MDContact
 Library for computing dynamic non-covalent contact networks in proteins throughout MD Simulation.
 
+## Dependencies
+
+vmd-python has the following dependencies:
+```bash
+* libnetcdf >= 4.3
+* numpy
+* python 2.7 or 3.6
+
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+brew install netcdf
+```
+
 ## Instructions for installing MD-contact-networks
 
 Install vmd-python: 
@@ -27,7 +39,6 @@ Visualize by uploading jsons at https://gpcrviz.github.io/flareplot/index.html?p
 ## File format
 
 MDContactNetworks is compatible with all topology and reimaged trajectory file formats readable in VMD.
-
 
 ## Running the Code
 
