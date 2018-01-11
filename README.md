@@ -1,4 +1,4 @@
-# MDContact
+# MDContactNetworks
 Library for computing dynamic non-covalent contact networks in proteins throughout MD Simulation.
 
 ## Dependencies
@@ -13,7 +13,7 @@ vmd-python has the following dependencies:
 brew install netcdf
 ```
 
-## Instructions for installing MD-contact-networks
+## Instructions for installing MDContactNetworks
 
 Install vmd-python: 
 ```bash
