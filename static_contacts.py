@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 from dynamic_contacts import main
 
