@@ -171,7 +171,6 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
 
     fragment_contacts: list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
     """
-
     traj_frag_molid = load_traj(top, traj, beg_frame, end_frame, stride)
     fragment_contacts = []
 
@@ -302,7 +301,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, st
     pool.join()
     contacts = [x for y in contacts for x in y]  # Flatten
 
-    # Serial computation
+    # Serial computation: Use this mode to debug since multiprocessing module doesn't trace back to bugs. 
     # contacts = compute_fragment_contacts_helper(input_args[0])
 
     # Sort and write to output-file
