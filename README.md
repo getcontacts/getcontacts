@@ -1,6 +1,6 @@
 # MDContactNetworks
 
-Application for efficiently computing non-covalent contact networks in molecular structures and MD simulations. Following example computes all hydrogen bond interactions in a trajectory:
+Application for efficiently computing non-covalent contact networks in molecular structures and MD simulations. Following example computes all hydrogen bonds in a trajectory:
 ```bash
 python3 dynamic_contacts.py --topology my_top.psf \
                             --trajectory my_traj.dcd \
@@ -38,12 +38,12 @@ The easiest way to install netcdf is using a package manager. On a Mac, use the 
 brew install netcdf
 ```
 
-On LINUX, the vmd-python library can be installed through the [anaconda platform](https://www.anaconda.com/download):
+To install vmd-python on LINUX, use the [anaconda platform](https://www.anaconda.com/download):
 ```bash
 conda install -c https://conda.anaconda.org/rbetz vmd-python
 ```
 
-On MAC (or LINUX systems without `conda`), you need to compile and install from source:
+To install vmd-python on MAC (or LINUX systems without `conda`), you'll need to compile and install from source:
 ```bash
 git clone https://github.com/Eigenstate/vmd-python
 cd vmd-python
@@ -55,32 +55,32 @@ python -c "import vmd"  # Should not throw error
 
 ## Installing MDContactNetworks
 
-To install MDContactNetworks locally, first set up the dependencies and then run:
+To install MDContactNetworks locally, first set up dependencies (see above) and then run:
 ```bash
 git clone https://github.com/akma327/MDContactNetworks
 
-# Add the folder to PATH
+# Add folder to PATH
 echo "export PATH=$PATH:`pwd`/MDContactNetworks" >> ~/.bashrc
 source ~/.bashrc
 ```
 
 To test the installation, run:
 ```bash
-cd example
+cd MDContactNetworks/example
 dynamic_contacts.py --topology 5xnd_topology.pdb \
                     --trajectory 5xnd_trajectory.dcd \
                     --hbonds \
                     --output 5xnd_hbonds.tsv
 ```
-and verify that no error was thrown and that the `5xnd_hbonds.tsv`-file contains 1892 lines of interactions.
+and verify that no error was thrown and that the `5xnd_hbonds.tsv` file contains around 1892 lines of interactions.
 
-## Input file format
+## Simulation and structure file format
 
-MDContactNetworks is compatible with all topology and reimaged trajectory file formats readable in VMD.
+MDContactNetworks is compatible with all topology and reimaged trajectory file formats readable by [VMD](https://www-s.ks.uiuc.edu/Research/vmd/).
 
 ## Running the Code
 
-TODO: This section should be updated
+TODO: This section needs to be updated
 
 ### 1. Computing non-covalent contacts in a protein throughout every frame of a MD Simulation fragment
    
