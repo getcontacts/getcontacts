@@ -85,14 +85,18 @@ def calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id,
                                       WATER_TO_LIGAND_DIST, ligand, sele_id, WATER_TO_LIGAND_DIST, ligand, ligand,
                                       frame_idx)
 
+    # donor_acceptor_indices should be of format "{106 91 85 99 120 130} {91 55 55 69 105 69} {107 92 86 100 121 131}"
     donor_acceptor_indices = evaltcl(measure_hbonds_command)
-
+    donors, acceptors = [], []
     # Parse atom indices
     donor_acceptor_lists = donor_acceptor_indices.split("}")
+    # Filter out improperly parsed coordinates 
+    if(len(donor_acceptor_lists) != 4): 
+      return donors, acceptors
     donor_list = donor_acceptor_lists[0].split("{")[1].split(" ")
     acceptor_list = donor_acceptor_lists[1].split("{")[1].split(" ")
 
-    donors, acceptors = [], []
+    
     for idx, d in enumerate(donor_list):
         a = acceptor_list[idx]
         if d == "" or a == "":

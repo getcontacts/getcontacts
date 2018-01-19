@@ -1,15 +1,41 @@
-# MDContact
+# MDContactNetworks
 Library for computing dynamic non-covalent contact networks in proteins throughout MD Simulation.
 
-## Instructions for installing MD-contact-networks
+## Dependencies
 
-Install vmd-python: 
+vmd-python installation has the following dependencies:
+```bash
+* libnetcdf >= 4.3
+* numpy
+* python 2.7 or 3.6
+* Homebrew (Mac-OS)
+* conda (Linux)
+```
+
+Installing homebrew (Mac-OS)
+```bash
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+brew install netcdf
+```
+
+Install anaconda (Linux)
+https://www.anaconda.com/download
+
+
+## Instructions for installing MDContactNetworks
+
+Install vmd-python (Mac-OS):
 ```bash
 git clone https://github.com/Eigenstate/vmd-python
 python setup.py build 
 python setup.py install
 cd ..
 python -c "import vmd"
+```
+
+Install vmd-python (Linux)
+```bash
+conda install -c https://conda.anaconda.org/rbetz vmd-python
 ```
 
 Install MDcontactnetworks: 
@@ -19,7 +45,7 @@ git clone https://github.com/akma327/MDContactNetworks
 
 To test, generate json for a couple of examples and visualize, e.g.:
 ```bash
-python dynamic_contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --output_dir OUTPUT_DIR --itype -sb -hb
+python dynamic_contacts.py --topology TOP.pdb --trajectory TRAJ.nc --output_dir OUTPUT_DIR --itype -sb -hb
 ```
 Visualize by uploading jsons at https://gpcrviz.github.io/flareplot/index.html?p=create
 
@@ -27,7 +53,6 @@ Visualize by uploading jsons at https://gpcrviz.github.io/flareplot/index.html?p
 ## File format
 
 MDContactNetworks is compatible with all topology and reimaged trajectory file formats readable in VMD.
-
 
 ## Running the Code
 
@@ -40,8 +65,8 @@ MDContactNetworks is compatible with all topology and reimaged trajectory file f
 	   	--topology TOPOLOGY - Path to topology
 	   	--trajectory TRAJECTORY - Path to simulation trajectory fragment
 	   	--output_dir OUTPUT_DIRECTORY - Path of output directory
-	   	--itypes INTERACTION_TYPES - User specifies what type of non-covalent 
-	   	interaction to compute using the following flags. 
+		
+		User specifies what type of non-covalent interaction to compute using the following flags. 
 
 		   -sb, Salt bridges
 		   -pc, Pi-cation 
@@ -126,11 +151,11 @@ MDContactNetworks is compatible with all topology and reimaged trajectory file f
    __Examples:__
 
 	Salt bridges and hydrogen bonds for residues 100 to 160:
-	python dynamic_contact_networks.py --topology TOP.pdb --trajectory TRAJ.nc --output_dir OUTPUT_DIR --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype -sb -hb -lhb
+	python dynamic_contacts.py --topology TOP.pdb --trajectory TRAJ.nc --output_dir OUTPUT_DIR --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 -sb -hb -lhb
 
 	Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
-	python dynamic_contact_networks.py --topology TOP.psf --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 --itype -pc -ps -vdw
+	python dynamic_contacts.py --topology TOP.psf --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 -pc -ps -vdw
 
 	Salt bridges and hydrogen bonds in the entire protein with modified distance cutoffs:
-	python dynamic_contact_networks.py --topology TOP.mae --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype -sb -hb
+	python dynamic_contacts.py --topology TOP.mae --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 -sb -hb
 
