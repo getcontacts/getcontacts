@@ -28,7 +28,8 @@ def main():
         if not line:  # Ignore empty lines
             continue
 
-        frame_resi_match = re.match(r'^(\d+)\t.*?\t([^:]+:[^:]+:\d+).*?\t([^:]+:[^:]+:\d+).*', line)
+        # Regex that matches a contact line and groups the frame number and the two first residues,
+        frame_resi_match = re.match(r'^(\d+)\t.*?\t([^:]+:[^:]+:\d+).*?\t([^:]+:[^:]+:\d+)', line)
         frame = int(frame_resi_match.group(1))
         res1 = frame_resi_match.group(2)
         res2 = frame_resi_match.group(3)
