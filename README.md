@@ -4,7 +4,7 @@ Application for efficiently computing non-covalent contact networks in molecular
 ```bash
 python3 dynamic_contacts.py --topology my_top.psf \
                             --trajectory my_traj.dcd \
-                            --hbonds \
+                            --hbond \
                             --output my_hbond_contacts.tsv
 ```
 The output, `my_hbond_contacts.tsv`, is a tab-separated file where each line records an interactions frame, type, and involved atoms:
@@ -69,7 +69,7 @@ To test the installation, run:
 cd MDContactNetworks/example
 dynamic_contacts.py --topology 5xnd_topology.pdb \
                     --trajectory 5xnd_trajectory.dcd \
-                    --hbonds \
+                    --hbond \
                     --output 5xnd_hbonds.tsv
 ```
 and verify that no error was thrown and that the `5xnd_hbonds.tsv` file contains around 1892 lines of interactions.
