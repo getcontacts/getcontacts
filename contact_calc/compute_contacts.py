@@ -183,6 +183,9 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
     # Delete trajectory fragment to clear memory
     molecule.delete(traj_frag_molid)
 
+    for fc in fragment_contacts:
+        fc[0] = beg_frame + fc[0] - 1
+
     # Write directly out to temporary output
     # print("Writing output to seperate files, one for each itype ...")
     #
@@ -289,7 +292,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, st
     print("MDContactNetworks processing %s with %s total frames with stride %s ..." % (traj, str(sim_length), str(stride)))
     for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
         # if frag_idx > 0: break
-        end_frame = beg_frame + TRAJ_FRAG_SIZE
+        end_frame = beg_frame + TRAJ_FRAG_SIZE - 1
         print("Processing fragment %s beg_frame %s end_frame %s" % (frag_idx, beg_frame, end_frame))
         input_args.append((frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values,
                            stride, solvent_resn, sele_id, ligand, index_to_label))
