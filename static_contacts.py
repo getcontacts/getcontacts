@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
 
-from dynamic_contacts import main
+import dynamic_contacts
 
 if __name__ == "__main__":
-    main(traj_required=False)
+    dynamic_contacts.main(traj_required=False)

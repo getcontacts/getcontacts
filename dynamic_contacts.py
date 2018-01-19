@@ -17,6 +17,7 @@
 ############################################################################
 
 import argparse
+import sys
 from contact_calc.compute_contacts import *
 
 HELP_STR = """
