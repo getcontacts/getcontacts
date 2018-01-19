@@ -40,7 +40,9 @@ def get_file_type(file_name):
         return None
     file_type = file_name.split(".")[-1].strip()
     if file_type == "nc":
-        file_type = 'netcdf'
+        file_type = "netcdf"
+    if file_type == "prmtop":
+        file_type = "parm7"
     return file_type
 
 
