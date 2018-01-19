@@ -1,60 +1,86 @@
 # MDContactNetworks
-Library for computing dynamic non-covalent contact networks in proteins throughout MD Simulation.
+
+Application for efficiently computing non-covalent contact networks in molecular structures and MD simulations. Following example computes all hydrogen bond interactions in a trajectory:
+```bash
+python3 dynamic_contacts.py --topology my_top.psf \
+                            --trajectory my_traj.dcd \
+                            --hbonds \
+                            --output my_hbond_contacts.tsv
+```
+The output, `my_hbond_contacts.tsv`, is a tab-separated file where each line records an interactions frame, type, and involved atoms:
+```
+0	hbss	A:GLN:53:NE2	A:GLN:69:OE1
+0	hbss	A:GLU:60:OE2	A:SER:56:OG
+0	hbss	A:GLU:60:OE2	A:GLU:63:OE1
+1	hbss	A:SER:56:OG	A:GLU:63:OE1
+1	hbss	A:GLU:60:OE2	A:SER:56:OG
+2	hbsb	A:LYS:28:N	A:HIS:27:ND1
+2	hbsb	A:ASP:52:OD2	A:PHE:48:O
+...
+```
+These contact-list files are useful as inputs to visualization and analysis tools that operate on interaction-networks:
+ * [Flareplot](https://gpcrviz.github.io/flareplot) - Framework for analyzing interaction networks based on circular diagrams
+ * [MDCompare](MDCompare) - Heatmap fingerprints revealing groups of similar interactions in multiple MD trajectories
+ * [Frequencies](Frequencies) - Compute residue contact frequencies in a simulation
+
+TODO: Replace the above with appealing figure
+
 
 ## Dependencies
 
-vmd-python installation has the following dependencies:
-```bash
-* libnetcdf >= 4.3
-* numpy
-* python 2.7 or 3.6
-* Homebrew (Mac-OS)
-* conda (Linux)
-```
+MDContactNetworks has the following dependencies
+* [vmd-python](https://github.com/Eigenstate/vmd-python) 
+  * netcdf >= 4.3
+* python 3.6
 
-Installing homebrew (Mac-OS)
+The easiest way to install netcdf is using a package manager. On a Mac, use the [homebrew package manager](https://brew.sh/) and run:
 ```bash
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 brew install netcdf
 ```
 
-Install anaconda (Linux)
-https://www.anaconda.com/download
-
-
-## Instructions for installing MDContactNetworks
-
-Install vmd-python (Mac-OS):
-```bash
-git clone https://github.com/Eigenstate/vmd-python
-python setup.py build 
-python setup.py install
-cd ..
-python -c "import vmd"
-```
-
-Install vmd-python (Linux)
+On LINUX, the vmd-python library can be installed through the [anaconda platform](https://www.anaconda.com/download):
 ```bash
 conda install -c https://conda.anaconda.org/rbetz vmd-python
 ```
 
-Install MDcontactnetworks: 
+On MAC (or LINUX systems without `conda`), you need to compile and install from source:
+```bash
+git clone https://github.com/Eigenstate/vmd-python
+cd vmd-python
+python setup.py build 
+python setup.py install
+cd ..
+python -c "import vmd"  # Should not throw error
+```
+
+## Installing MDContactNetworks
+
+To install MDContactNetworks locally, first set up the dependencies and then run:
 ```bash
 git clone https://github.com/akma327/MDContactNetworks
+
+# Add the folder to PATH
+echo "export PATH=$PATH:`pwd`/MDContactNetworks" >> ~/.bashrc
+source ~/.bashrc
 ```
 
-To test, generate json for a couple of examples and visualize, e.g.:
+To test the installation, run:
 ```bash
-python dynamic_contacts.py --topology TOP.pdb --trajectory TRAJ.nc --output_dir OUTPUT_DIR --itype -sb -hb
+cd example
+dynamic_contacts.py --topology 5xnd_topology.pdb \
+                    --trajectory 5xnd_trajectory.dcd \
+                    --hbonds \
+                    --output 5xnd_hbonds.tsv
 ```
-Visualize by uploading jsons at https://gpcrviz.github.io/flareplot/index.html?p=create
+and verify that no error was thrown and that the `5xnd_hbonds.tsv`-file contains 1892 lines of interactions.
 
-
-## File format
+## Input file format
 
 MDContactNetworks is compatible with all topology and reimaged trajectory file formats readable in VMD.
 
 ## Running the Code
+
+TODO: This section should be updated
 
 ### 1. Computing non-covalent contacts in a protein throughout every frame of a MD Simulation fragment
    
