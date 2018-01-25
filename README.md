@@ -90,17 +90,19 @@ TODO: This section needs to be updated
 
 	   	--topology TOPOLOGY - Path to topology
 	   	--trajectory TRAJECTORY - Path to simulation trajectory fragment
-	   	--output_dir OUTPUT_DIRECTORY - Path of output directory
+	   	--output OUTPUT - Path of output file
 		
 		User specifies what type of non-covalent interaction to compute using the following flags. 
 
-		   -sb, Salt bridges
-		   -pc, Pi-cation 
-		   -ps, Pi-stacking
-		   -ts, T-stacking
-		   -vdw, Van Der Waals
-		   -hb, Hydrogen Bonds
-		   -lhb, Ligand Hydrogen Bonds
+		   --all-interactions Compute all interaction types	
+		   -sb, --salt-bridge Salt bridges
+		   -pc, --pi-cation Pi-cation 
+		   -ps, --pi-stacking Pi-stacking
+		   -ts, --t-stacking T-stacking
+		   -vdw, --vanderwaals Van Der Waals
+		   -hb, --hbond Hydrogen Bonds
+		   -lhb, --ligand-hbond Ligand Hydrogen Bonds
+
 
 		   Hydrogen bonds are automatically stratified to following subtypes and 
 		   written as output.
@@ -177,11 +179,11 @@ TODO: This section needs to be updated
    __Examples:__
 
 	Salt bridges and hydrogen bonds for residues 100 to 160:
-	python dynamic_contacts.py --topology TOP.pdb --trajectory TRAJ.nc --output_dir OUTPUT_DIR --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 -sb -hb -lhb
+	python dynamic_contacts.py --topology TOP.pdb --trajectory TRAJ.nc --output OUTPUT --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 -sb -hb -lhb
 
 	Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
-	python dynamic_contacts.py --topology TOP.psf --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 -pc -ps -vdw
+	python dynamic_contacts.py --topology TOP.psf --trajectory TRAJ.dcd --output OUTPUT --cores 6 -pc -ps -vdw
 
 	Salt bridges and hydrogen bonds in the entire protein with modified distance cutoffs:
-	python dynamic_contacts.py --topology TOP.mae --trajectory TRAJ.dcd --output_dir OUTPUT_DIR --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 -sb -hb
+	python dynamic_contacts.py --topology TOP.mae --trajectory TRAJ.dcd --output OUTPUT --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 -sb -hb
 
