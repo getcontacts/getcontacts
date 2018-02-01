@@ -2,7 +2,7 @@
 
 Application for efficiently computing non-covalent contact networks in molecular structures and MD simulations. Following example computes all hydrogen bonds in a trajectory:
 ```bash
-python3 dynamic_contacts.py --topology my_top.psf \
+python dynamic_contacts.py --topology my_top.psf \
                             --trajectory my_traj.dcd \
                             --hbond \
                             --output my_hbond_contacts.tsv
