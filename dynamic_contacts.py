@@ -212,7 +212,7 @@ def main(traj_required=True):
         def __call__(self, parser, ns, values, option):
             if self.dest == "all":
                 ns.itypes = set([])
-            if not hasattr(ns, "itype"):
+            if not hasattr(ns, "itypes"):
                 ns.itypes = set()
             ns.itypes.add(self.dest)
     parser.add_argument('--salt-bridge', '-sb', dest='sb', action=ITypeAction, nargs=0, help="Compute salt bridge interactions")
