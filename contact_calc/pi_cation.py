@@ -134,7 +134,7 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id,
 
         
         # Append just the CG atom of the aromatic ring 
-        single_arom_atom_label = ":".join(arom_atom1_label.split(":")[0:3]) + ":CG:vmd_idx"
+        single_arom_atom_label = convert_to_single_atom_aromatic_string(arom_atom1_label)
         pi_cations.append([frame_idx, "pc", cation_atom_label, single_arom_atom_label])
 
         # Append three of the aromatic atoms

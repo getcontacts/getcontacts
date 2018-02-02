@@ -269,6 +269,17 @@ def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
 
     return aromatic_atom_triplet_list
 
+def convert_to_single_atom_aromatic_string(aromatic_atom_label):
+    """
+    Replaces any aromatic ring atom with CG label
+
+    Returns
+    -------
+    aromatic_CG_atom_label: The CG atom label for an aromatic ring (ie C:PHE:49:CG)
+    """
+
+    aromatic_CG_atom_label = ":".join(aromatic_atom_label.split(":")[0:3]) + ":CG:vmd_idx"
+    return aromatic_CG_atom_label
 
 def calc_water_to_residues_map(water_hbonds, solvent_resn):
     """
