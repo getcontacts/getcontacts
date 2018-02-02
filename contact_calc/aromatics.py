@@ -173,10 +173,15 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, itype
         if psi_angle > PSI_ANGLE_CUTOFF:
             continue
 
-        # Return aromatic interaction atom pairs
-        for arom1_atom_label in aromatic1_atom_labels:
-            for arom2_atom_label in aromatic2_atom_labels:
-                aromatics.append([frame_idx, itype, arom1_atom_label, arom2_atom_label])
+        # Returns a single interaction between the CG atom of each aromatic ring
+        arom1_CG_label = convert_to_single_atom_aromatic_string(aromatic1_atom_labels[0])
+        arom2_CG_label = convert_to_single_atom_aromatic_string(aromatic2_atom_labels[0])
+        aromatics.append([frame_idx, itype, arom1_CG_label, arom2_CG_label])
+
+        # Returns all 3x3 combinations of aromatic interaction pairs (DEPRECATED)
+        # for arom1_atom_label in aromatic1_atom_labels:
+        #     for arom2_atom_label in aromatic2_atom_labels:
+        #         aromatics.append([frame_idx, itype, arom1_atom_label, arom2_atom_label])
 
     return aromatics
 
