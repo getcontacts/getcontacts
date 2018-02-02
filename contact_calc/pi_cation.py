@@ -135,6 +135,6 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id,
         # Append three of the aromatic atoms
         pi_cations.append([frame_idx, "pc", cation_atom_label, arom_atom1_label])
         pi_cations.append([frame_idx, "pc", cation_atom_label, arom_atom2_label])
-        pi_cations.append([frame_idx, "pc", cation_atom_label, arom_atom2_label])
+        pi_cations.append([frame_idx, "pc", cation_atom_label, arom_atom3_label])
 
     return pi_cations
