@@ -1,23 +1,34 @@
 # MDContactNetworks
 
-Application for efficiently computing non-covalent contact networks in molecular structures and MD simulations. Following example computes all hydrogen bonds in a trajectory:
+Application for efficiently computing non-covalent contact networks in molecular structures and MD simulations. Following example computes all salt bridges, pi cation, aromatic, and hydrogen bond interactions in a trajectory:
 ```bash
 python dynamic_contacts.py --topology my_top.psf \
                             --trajectory my_traj.dcd \
-                            --hbond \
+                            -sb -pc -ps -ts -hb \
                             --output my_hbond_contacts.tsv
 ```
 The output, `my_hbond_contacts.tsv`, is a tab-separated file where each line records an interactions frame, type, and involved atoms:
 ```
+0	sb		C:GLU:21:OE2	C:ARG:86:NH2
+0	ps 		C:TYR:36:CG		C:TRP:108:CG
+0	ts		A:TYR:36:CG		A:TRP:108:CG
 0	hbss	A:GLN:53:NE2	A:GLN:69:OE1
-0	hbss	A:GLU:60:OE2	A:SER:56:OG
-0	hbss	A:GLU:60:OE2	A:GLU:63:OE1
-1	hbss	A:SER:56:OG	A:GLU:63:OE1
 1	hbss	A:GLU:60:OE2	A:SER:56:OG
-2	hbsb	A:LYS:28:N	A:HIS:27:ND1
+1	hbbb	C:LEU:87:N		C:LEU:83:O
+1	hbbb	C:ARG:88:N		C:LEU:87:N
+2	hbsb	A:LYS:28:N		A:HIS:27:ND1
 2	hbsb	A:ASP:52:OD2	A:PHE:48:O
+2	wb2		C:ASN:110:O		B:ARG:73:NH1	W:TIP3:1524:OH2		W:TIP3:506:OH2
+2	wb2		C:ASN:110:O		C:SER:111:OG	W:TIP3:1524:OH2		W:TIP3:2626:OH2
+3	wb		A:ASP:100:OD1	A:ILE:67:O		W:TIP3:6762:OH2
+3	wb		A:ASP:100:OD1	B:ASN:105:ND2	W:TIP3:9239:OH2
+4	sb		A:GLU:47:OE2	A:LYS:33:NZ
+4	pc		A:LYS:9:NZ		A:TYR:21:CG
+4	hbbb	A:ILE:12:N		A:THR:20:O
 ...
 ```
+Interactions that involve more than two atoms (ie water bridges and extended water bridges) have an extra columns to denote the identities of the water molecules. For simplicity, all interactions involving an aromatic ring will be denoted by the CG atom. 
+
 These contact-list files are useful as inputs to visualization and analysis tools that operate on interaction-networks:
  * [Flareplot](https://gpcrviz.github.io/flareplot) - Framework for analyzing interaction networks based on circular diagrams
  * [MDCompare](MDCompare) - Heatmap fingerprints revealing groups of similar interactions in multiple MD trajectories
