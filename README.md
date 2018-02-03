@@ -33,6 +33,7 @@ These contact-list files are useful as inputs to visualization and analysis tool
  * [Flareplot](https://gpcrviz.github.io/flareplot) - Framework for analyzing interaction networks based on circular diagrams
  * [MDCompare](MDCompare) - Heatmap fingerprints revealing groups of similar interactions in multiple MD trajectories
  * [Frequencies](Frequencies) - Compute residue contact frequencies in a simulation
+ * [TICC](https://github.com/davidhallac/TICC) - Changepoint detection algorithm to identifying significant events in the dynamic contact network
 
 TODO: Replace the above with appealing figure
 
