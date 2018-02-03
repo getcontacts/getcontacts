@@ -176,15 +176,16 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
 
     # Compute contacts for each frame
     num_frag_frames = molecule.numframes(traj_frag_molid)
-    for frame_idx in range(1, num_frag_frames):
+    for frame_idx in range(num_frag_frames):
         # if frame_idx > 1: break
         fragment_contacts += compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, itypes, geom_criterion_values, solvent_resn, sele_id, ligand, index_to_label)
 
     # Delete trajectory fragment to clear memory
     molecule.delete(traj_frag_molid)
 
+    # Update frame-number so it's not relative to beg_frame
     for fc in fragment_contacts:
-        fc[0] = beg_frame + fc[0] - 1
+        fc[0] = beg_frame + fc[0]
 
     # Write directly out to temporary output
     # print("Writing output to seperate files, one for each itype ...")
@@ -284,16 +285,16 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, st
             contact_types += [itype]
 
     index_to_label = gen_index_to_atom_label(top, traj)
-    sim_length = estimate_simulation_length(top, traj)
+    sim_length = simulation_length(top, traj)
     print("sim_length", sim_length)
     input_args = []
 
     # Generate input arguments for each trajectory piece
-    print("MDContactNetworks processing %s with %s total frames with stride %s ..." % (traj, str(sim_length), str(stride)))
+    print("MDContactNetworks processing %s with %s total frames and stride %s ..." % (traj, str(sim_length), str(stride)))
     for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
         # if frag_idx > 0: break
         end_frame = beg_frame + TRAJ_FRAG_SIZE - 1
-        print("Processing fragment %s beg_frame %s end_frame %s" % (frag_idx, beg_frame, end_frame))
+        print("Preparing fragment %s beg_frame %s end_frame %s" % (frag_idx, beg_frame, end_frame))
         input_args.append((frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values,
                            stride, solvent_resn, sele_id, ligand, index_to_label))
 
@@ -310,6 +311,8 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, st
     # Sort and write to output-file
     contacts.sort(key=lambda i: i[0])
     with open(output, "w") as output_fd:
+        output_fd.write("# total_frames:%d interaction_types:%s\n" % (sim_length, ",".join(itypes)))
+        output_fd.write("# Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]\n")
         for interaction in contacts:
             # Strip vmd ID from atom strings
             for a in range(2, len(interaction)):

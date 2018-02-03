@@ -61,11 +61,12 @@ def load_traj(TOP, TRAJ, beg_frame, end_frame, stride):
     Returns
     -------
     trajid: int
-    simulation molid object
+        simulation molid object
     """
     top_file_type = get_file_type(TOP)
     traj_file_type = get_file_type(TRAJ)
     trajid = molecule.load(top_file_type, TOP)
+    molecule.delframe(trajid)  # Ensure topology doesn't count as a frame
     if TRAJ is not None:
         molecule.read(trajid, traj_file_type, TRAJ, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
     else:
@@ -73,17 +74,19 @@ def load_traj(TOP, TRAJ, beg_frame, end_frame, stride):
     return trajid
 
 
-def estimate_simulation_length(TOP, TRAJ):
+def simulation_length(TOP, TRAJ):
     """
-    Estimates an upper bound for simulation length for the purpose
-    allocating chunks of frames for parallelization
+    Computes the simulation length efficiently
     """
 
     trajid = load_traj(TOP, TRAJ, 0, -1, 100)
+    num_frags = molecule.numframes(trajid)
 
-    num_subsampled_frames = int(evaltcl("molinfo %s get numframes" % (trajid)))
-    num_frames = (num_subsampled_frames - 1)*100
-    return num_frames
+    # There are between (num_frags-1)*100 and num_frags*100 frames.
+    # Read all frames of the last fragment to determine the exact amount
+    trajid = load_traj(TOP, TRAJ, (num_frags-1)*100, -1, 1)
+    last_frag_frames = molecule.numframes(trajid)
+    return (num_frags - 1) * 100 + last_frag_frames
 
 
 def get_atom_selection_labels(selection_id):
