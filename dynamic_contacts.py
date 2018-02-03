@@ -17,7 +17,6 @@
 ############################################################################
 
 import argparse
-import sys
 from contact_calc.compute_contacts import *
 
 HELP_STR = """
@@ -263,3 +262,7 @@ def main(traj_required=True):
 
 if __name__ == "__main__":
     main()
+
+    # Suppress stdout from vmd as program terminates
+    devnull = open('/dev/null', "w")
+    os.dup2(devnull.fileno(), 1)

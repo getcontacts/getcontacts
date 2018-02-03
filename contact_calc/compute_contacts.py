@@ -286,15 +286,14 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, st
 
     index_to_label = gen_index_to_atom_label(top, traj)
     sim_length = simulation_length(top, traj)
-    print("sim_length", sim_length)
     input_args = []
 
     # Generate input arguments for each trajectory piece
-    print("MDContactNetworks processing %s with %s total frames and stride %s ..." % (traj, str(sim_length), str(stride)))
+    print("Processing %s with %s total frames and stride %s" % (traj, str(sim_length), str(stride)))
     for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
         # if frag_idx > 0: break
         end_frame = beg_frame + TRAJ_FRAG_SIZE - 1
-        print("Preparing fragment %s beg_frame %s end_frame %s" % (frag_idx, beg_frame, end_frame))
+        print("Preparing fragment %s, beg_frame:%s end_frame:%s" % (frag_idx, beg_frame, end_frame))
         input_args.append((frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values,
                            stride, solvent_resn, sele_id, ligand, index_to_label))
 

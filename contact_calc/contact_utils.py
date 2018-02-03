@@ -22,6 +22,9 @@ from vmd import *
 import numpy as np
 import math
 import re
+import sys
+import os
+from contextlib import contextmanager
 
 
 def atoi(text):
@@ -46,6 +49,23 @@ def get_file_type(file_name):
     return file_type
 
 
+@contextmanager
+def suppress_stdout():
+    """
+    Temporarily suppresses stdout. Usage example:
+        with suppress_stdout():
+            print "You cannot see this"
+    From http://thesmithfam.org/blog/2012/10/25/temporarily-suppress-console-output-in-python/
+    """
+    with open('/dev/null', "w") as devnull:
+        old_stdout = os.dup(sys.stdout.fileno())
+        os.dup2(devnull.fileno(), 1)
+        try:
+            yield
+        finally:
+            os.dup2(old_stdout, 1)
+
+
 def load_traj(TOP, TRAJ, beg_frame, end_frame, stride):
     """
     Loads in topology and trajectory into VMD
@@ -63,14 +83,16 @@ def load_traj(TOP, TRAJ, beg_frame, end_frame, stride):
     trajid: int
         simulation molid object
     """
-    top_file_type = get_file_type(TOP)
-    traj_file_type = get_file_type(TRAJ)
-    trajid = molecule.load(top_file_type, TOP)
-    molecule.delframe(trajid)  # Ensure topology doesn't count as a frame
-    if TRAJ is not None:
-        molecule.read(trajid, traj_file_type, TRAJ, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
-    else:
-        molecule.read(trajid, top_file_type, TOP, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
+    with suppress_stdout():
+        top_file_type = get_file_type(TOP)
+        traj_file_type = get_file_type(TRAJ)
+        trajid = molecule.load(top_file_type, TOP)
+        molecule.delframe(trajid)  # Ensure topology doesn't count as a frame
+        if TRAJ is not None:
+            molecule.read(trajid, traj_file_type, TRAJ, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
+        else:
+            molecule.read(trajid, top_file_type, TOP, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
+
     return trajid
 
 
