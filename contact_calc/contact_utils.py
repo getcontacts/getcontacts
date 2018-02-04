@@ -52,10 +52,14 @@ def get_file_type(file_name):
 @contextmanager
 def suppress_stdout():
     """
-    Temporarily suppresses stdout. Usage example:
+    Temporarily suppresses stdout.
+
+    From: https://stackoverflow.com/questions/4178614/suppressing-output-of-module-calling-outside-library
+
+    Example
+    =======
         with suppress_stdout():
             print "You cannot see this"
-    From http://thesmithfam.org/blog/2012/10/25/temporarily-suppress-console-output-in-python/
     """
     with open('/dev/null', "w") as devnull:
         old_stdout = os.dup(sys.stdout.fileno())
