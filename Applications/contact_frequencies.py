@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-Read a contact-list and record frequencies of residue interactions
+Read a contact-list and record frequencies of residue interactions. If --output
+is defined write the results to a file, otherwise write to stdout.
 """
 
 import argparse as ap
 from collections import defaultdict
+import sys
 import re
 
 
@@ -17,13 +19,14 @@ def main():
 
     parser.add_argument('--output',
                         type=ap.FileType("w"),
-                        required=True,
+                        required=False,
                         help='Residue contact frequencies')
 
     args = parser.parse_args()
 
     interaction_frames = defaultdict(set)
     max_frame = 0
+    total_frames = 0
     for line in args.input.readlines():
         line = line.strip()
         if not line:  # Ignore empty lines
@@ -31,7 +34,7 @@ def main():
 
         # Parse header
         if line[0] == "#":
-            total_frame_match = re.match(r'total_frames:(\d+)', line)
+            total_frame_match = re.search(r'total_frames:(\d+)', line)
             if total_frame_match:
                 total_frames = int(total_frame_match.group(1))
             continue
@@ -55,11 +58,18 @@ def main():
 
     assert max_frame < total_frames
 
+    # Define output channel
+    if args.output:
+        output = args.output
+    else:
+        output = sys.stdout
+
     for (res1, res2), frames in interaction_frames.items():
         frequency = len(frames) / float(max_frame + 1)
-        args.output.write("\t".join((res1, res2, str(frequency))) + "\n")
+        output.write("\t".join((res1, res2, str(frequency))) + "\n")
 
-    args.output.close()
+    if args.output:
+        args.output.close()
 
 
 if __name__ == "__main__":
