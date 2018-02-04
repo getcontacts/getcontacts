@@ -32,8 +32,8 @@ Interactions that involve more than two atoms (ie water bridges and extended wat
 These contact-list files are useful as inputs to visualization and analysis tools that operate on interaction-networks:
  * [Flareplot](https://gpcrviz.github.io/flareplot) - Framework for analyzing interaction networks based on circular diagrams
  * [MDCompare](MDCompare) - Heatmap fingerprints revealing groups of similar interactions in multiple MD trajectories
- * [Frequencies](Frequencies) - Compute residue contact frequencies in a simulation
  * [TICC](https://github.com/davidhallac/TICC) - Changepoint detection algorithm to identifying significant events in the dynamic contact network
+ * [NetworkAnalysis](Applications) - Compute residue contact frequencies in a simulation, analyze contact network graphs, visualize in PyMol
 
 TODO: Replace the above with appealing figure
 
