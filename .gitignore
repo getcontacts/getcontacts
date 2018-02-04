@@ -6,3 +6,4 @@
 __pycache__
 *.py.bak
 *.swp
+example/5xnd_all-contacts.tsv

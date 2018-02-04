@@ -40,7 +40,7 @@ ATOM_RADIUS = {'H': 1.20,
 ##############################################################################
 
 
-def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW_EPSILON):
+def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW_EPSILON, VDW_RES_DIFF):
     """
     Compute all vanderwaals interactions in a frame of simulation
 
@@ -57,6 +57,8 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW
         Compute contacts on subset of atom selection based on VMD query
     VDW_EPSILON: float, default = 0.5 angstroms
         amount of padding for calculating vanderwaals contacts
+    VDW_RES_DIFF: int, default = 2
+        minimum residue distance for which to consider computing vdw interactions
 
     Returns
     -------
@@ -65,18 +67,29 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW
     """
     vanderwaals = []
     if sele_id is None:
-        evaltcl("set full_protein [atomselect %s \" noh and protein \" frame %s]" % (traj_frag_molid, frame_idx))
+        evaltcl("set full_protein [atomselect %s \" noh and protein \" frame %s]" %
+                (traj_frag_molid, frame_idx))
     else:
         evaltcl("set full_protein [atomselect %s \" noh and protein and (%s) \" frame %s]" %
                 (traj_frag_molid, sele_id, frame_idx))
 
-    contacts = evaltcl("measure contacts %s $full_protein" % (SOFT_VDW_CUTOFF))
+    contacts = evaltcl("measure contacts %s $full_protein" % SOFT_VDW_CUTOFF)
     contact_index_pairs = parse_contacts(contacts)
     evaltcl('$full_protein delete')
     for atom1_index, atom2_index in contact_index_pairs:
         atom1_label, atom2_label = index_to_label[atom1_index], index_to_label[atom2_index]
-        element1 = atom1_label.split(":")[3][0]
-        element2 = atom2_label.split(":")[3][0]
+        atom1_label_split = atom1_label.split(":")
+        atom2_label_split = atom2_label.split(":")
+
+        chain1 = atom1_label_split[0]
+        chain2 = atom2_label_split[0]
+        resi1 = int(atom1_label_split[2])
+        resi2 = int(atom2_label_split[2])
+        if chain1 == chain2 and abs(resi1-resi2) < VDW_RES_DIFF:
+            continue
+
+        element1 = atom1_label_split[3][0]
+        element2 = atom2_label_split[3][0]
 
         distance = compute_distance(traj_frag_molid, frame_idx, atom1_label, atom2_label)
         vanderwaal_cutoff = ATOM_RADIUS[element1] + ATOM_RADIUS[element2] + VDW_EPSILON

@@ -64,6 +64,7 @@ def main():
     else:
         output = sys.stdout
 
+    # Write contacts
     for (res1, res2), frames in interaction_frames.items():
         frequency = len(frames) / float(max_frame + 1)
         output.write("\t".join((res1, res2, str(frequency))) + "\n")

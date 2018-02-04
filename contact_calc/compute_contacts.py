@@ -109,7 +109,8 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     HBOND_CUTOFF_DISTANCE = geom_criterion_values['HBOND_CUTOFF_DISTANCE']
     HBOND_CUTOFF_ANGLE = geom_criterion_values['HBOND_CUTOFF_ANGLE']
     VDW_EPSILON = geom_criterion_values['VDW_EPSILON']
-    
+    VDW_RES_DIFF = geom_criterion_values['VDW_RES_DIFF']
+
     frame_contacts = []
     if "sb" in ITYPES:
         frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, SALT_BRIDGE_CUTOFF_DISTANCE)
@@ -120,7 +121,7 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     if "ts" in ITYPES:
         frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
     if "vdw" in ITYPES:
-        frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW_EPSILON)
+        frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW_EPSILON, VDW_RES_DIFF)
     if "hb" in ITYPES:
         frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, None, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
     if "lhb" in ITYPES:
@@ -178,7 +179,8 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
     num_frag_frames = molecule.numframes(traj_frag_molid)
     for frame_idx in range(num_frag_frames):
         # if frame_idx > 1: break
-        fragment_contacts += compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, itypes, geom_criterion_values, solvent_resn, sele_id, ligand, index_to_label)
+        fragment_contacts += compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, itypes, geom_criterion_values,
+                                                    solvent_resn, sele_id, ligand, index_to_label)
 
     # Delete trajectory fragment to clear memory
     molecule.delete(traj_frag_molid)

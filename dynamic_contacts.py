@@ -106,6 +106,9 @@ geometric criteria options:
     --vdw_epsilon VDW_EPSILON
                     amount of padding for calculating vanderwaals contacts 
                     [default = 0.5 angstroms]
+    --vdw_res_diff VDW_RES_DIFF
+                    minimum residue distance for which to consider computing 
+                    vdw interactions [default = 2]
 
 
 interaction type flags:
@@ -171,7 +174,8 @@ def process_geometric_criterion_args(args):
         "T_STACK_PSI_ANGLE": args.ts_psi_ang,
         "HBOND_CUTOFF_DISTANCE": args.hbond_cutoff_dist,
         "HBOND_CUTOFF_ANGLE": args.hbond_cutoff_ang,
-        "VDW_EPSILON": args.vdw_epsilon
+        "VDW_EPSILON": args.vdw_epsilon,
+        "VDW_RES_DIFF": args.vdw_res_diff
     }
     return geom_criterion_values
 
@@ -205,6 +209,7 @@ def main(traj_required=True):
     parser.add_argument('--hbond_cutoff_dist', type=float, default=3.5, help='cutoff for distance between donor and acceptor atoms [default = 3.5 angstroms]')
     parser.add_argument('--hbond_cutoff_ang', type=float, default=70, help='cutoff for angle between donor hydrogen acceptor [default = 70 degrees]')
     parser.add_argument('--vdw_epsilon', type=float, default=0.5, help='amount of padding for calculating vanderwaals contacts [default = 0.5 angstroms]')
+    parser.add_argument('--vdw_res_diff', type=int, default=2, help='minimum residue distance for which to consider computing vdw interactions')
 
     # Parse interaction types
     class ITypeAction(argparse.Action):
