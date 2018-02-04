@@ -18,14 +18,22 @@ def main():
     parser.add_argument('--output',
                         type=ap.FileType("w"),
                         required=True,
-                        help='List of residue frequencies')
+                        help='Residue contact frequencies')
 
     args = parser.parse_args()
 
     interaction_frames = defaultdict(set)
     max_frame = 0
     for line in args.input.readlines():
+        line = line.strip()
         if not line:  # Ignore empty lines
+            continue
+
+        # Parse header
+        if line[0] == "#":
+            total_frame_match = re.match(r'total_frames:(\d+)', line)
+            if total_frame_match:
+                total_frames = int(total_frame_match.group(1))
             continue
 
         # Regex that matches a contact line and groups the frame number and the two first residues,
@@ -40,6 +48,12 @@ def main():
         interaction_frames[(res1, res2)].add(frame)
         if frame > max_frame:
             max_frame = frame
+
+    if total_frames == 0:
+        print("total_frames must be larger than zero and defined in header")
+        exit(-1)
+
+    assert max_frame < total_frames
 
     for (res1, res2), frames in interaction_frames.items():
         frequency = len(frames) / float(max_frame + 1)
