@@ -70,14 +70,14 @@ def suppress_stdout():
             os.dup2(old_stdout, 1)
 
 
-def load_traj(TOP, TRAJ, beg_frame, end_frame, stride):
+def load_traj(top, traj, beg_frame, end_frame, stride):
     """
     Loads in topology and trajectory into VMD
 
     Parameters
     ----------
-    TOP: MD Topology
-    TRAJ: MD Trajectory
+    top: MD Topology
+    traj: MD Trajectory
     beg_frame: int
     end_frame: int
     stride: int
@@ -88,29 +88,29 @@ def load_traj(TOP, TRAJ, beg_frame, end_frame, stride):
         simulation molid object
     """
     with suppress_stdout():
-        top_file_type = get_file_type(TOP)
-        traj_file_type = get_file_type(TRAJ)
-        trajid = molecule.load(top_file_type, TOP)
+        top_file_type = get_file_type(top)
+        traj_file_type = get_file_type(traj)
+        trajid = molecule.load(top_file_type, top)
         molecule.delframe(trajid)  # Ensure topology doesn't count as a frame
-        if TRAJ is not None:
-            molecule.read(trajid, traj_file_type, TRAJ, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
+        if traj is not None:
+            molecule.read(trajid, traj_file_type, traj, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
         else:
-            molecule.read(trajid, top_file_type, TOP, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
+            molecule.read(trajid, top_file_type, top, beg=beg_frame, end=end_frame, skip=stride, waitfor=-1)
 
     return trajid
 
 
-def simulation_length(TOP, TRAJ):
+def simulation_length(top, traj):
     """
     Computes the simulation length efficiently
     """
 
-    trajid = load_traj(TOP, TRAJ, 0, -1, 100)
+    trajid = load_traj(top, traj, 0, -1, 100)
     num_frags = molecule.numframes(trajid)
 
     # There are between (num_frags-1)*100 and num_frags*100 frames.
     # Read all frames of the last fragment to determine the exact amount
-    trajid = load_traj(TOP, TRAJ, (num_frags-1)*100, -1, 1)
+    trajid = load_traj(top, traj, (num_frags-1)*100, -1, 1)
     last_frag_frames = molecule.numframes(trajid)
     return (num_frags - 1) * 100 + last_frag_frames
 
@@ -152,24 +152,24 @@ def get_atom_selection_properties(selection_id):
     indices: list of strings
         VMD based index for each atom ["12304", "1231", ...]
     """
-    chains = list(map(str, evaltcl("$%s get chain" % (selection_id)).split(" ")))
-    resnames = list(map(str, evaltcl("$%s get resname" % (selection_id)).split(" ")))
-    resids = list(map(str, evaltcl("$%s get resid" % (selection_id)).split(" ")))
-    names = list(map(str, evaltcl("$%s get name" % (selection_id)).split(" ")))
-    indices = list(map(str, evaltcl("$%s get index" % (selection_id)).split(" ")))
+    chains = list(map(str, evaltcl("$%s get chain" % selection_id).split(" ")))
+    resnames = list(map(str, evaltcl("$%s get resname" % selection_id).split(" ")))
+    resids = list(map(str, evaltcl("$%s get resid" % selection_id).split(" ")))
+    names = list(map(str, evaltcl("$%s get name" % selection_id).split(" ")))
+    indices = list(map(str, evaltcl("$%s get index" % selection_id).split(" ")))
     if chains == [''] or resnames == [''] or resids == [''] or names == [''] or indices == ['']:
         return [], [], [], [], []
     return chains, resnames, resids, names, indices
 
 
-def gen_index_to_atom_label(TOP, TRAJ):
+def gen_index_to_atom_label(top, traj):
     """
     Read in first frame of simulation and generate mapping from VMD index to atom labels
 
     Parameters
     ----------
-    TOP: MD Topology
-    TRAJ: MD Trajectory
+    top: MD Topology
+    traj: MD Trajectory
 
     Returns
     -------
@@ -179,9 +179,9 @@ def gen_index_to_atom_label(TOP, TRAJ):
 
     """
     # Select all atoms from first frame of trajectory
-    trajid = load_traj(TOP, TRAJ, 1, 2, 1)
+    trajid = load_traj(top, traj, 1, 2, 1)
     all_atom_sel = "set all_atoms [atomselect %s \" all \" frame %s]" % (trajid, 0)
-    all_atoms = evaltcl(all_atom_sel)
+    evaltcl(all_atom_sel)
     chains, resnames, resids, names, indices = get_atom_selection_properties("all_atoms")
     evaltcl('$all_atoms delete')
 
@@ -243,13 +243,19 @@ def get_cation_atoms(traj_frag_molid, frame_idx, sele_id):
     """
     cation_list = []
     if sele_id is None:
-        evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) \" frame %s]" % (traj_frag_molid, frame_idx))
-        evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) \" frame %s]" % (traj_frag_molid, frame_idx))
-        evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) \" frame %s]" % (traj_frag_molid, frame_idx))
+        evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) \" frame %s]" %
+                (traj_frag_molid, frame_idx))
+        evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) \" frame %s]" %
+                (traj_frag_molid, frame_idx))
+        evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) \" frame %s]" %
+                (traj_frag_molid, frame_idx))
     else:
-        evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
-        evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
-        evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
+        evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) and (%s) \" frame %s]" %
+                (traj_frag_molid, sele_id, frame_idx))
+        evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) and (%s) \" frame %s]" %
+                (traj_frag_molid, sele_id, frame_idx))
+        evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s) \" "
+                "frame %s]" % (traj_frag_molid, sele_id, frame_idx))
 
     cation_list += get_atom_selection_labels("LYS")
     cation_list += get_atom_selection_labels("ARG")
@@ -274,13 +280,19 @@ def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
     """
     aromatic_atom_list = []
     if chain_id is None:
-        evaltcl("set PHE [atomselect %s \" (resname PHE) and (name CG CE1 CE2) \" frame %s]" % (traj_frag_molid, frame_idx))
-        evaltcl("set TRP [atomselect %s \" (resname TRP) and (name CD2 CZ2 CZ3) \" frame %s]" % (traj_frag_molid, frame_idx))
-        evaltcl("set TYR [atomselect %s \" (resname TYR) and (name CG CE1 CE2) \" frame %s]" % (traj_frag_molid, frame_idx))
+        evaltcl("set PHE [atomselect %s \" (resname PHE) and (name CG CE1 CE2) \" frame %s]" %
+                (traj_frag_molid, frame_idx))
+        evaltcl("set TRP [atomselect %s \" (resname TRP) and (name CD2 CZ2 CZ3) \" frame %s]" %
+                (traj_frag_molid, frame_idx))
+        evaltcl("set TYR [atomselect %s \" (resname TYR) and (name CG CE1 CE2) \" frame %s]" %
+                (traj_frag_molid, frame_idx))
     else:
-        evaltcl("set PHE [atomselect %s \" (resname PHE) and (name CG CE1 CE2) and (chain %s)\" frame %s]" % (traj_frag_molid, frame_idx, chain_id))
-        evaltcl("set TRP [atomselect %s \" (resname TRP) and (name CD2 CZ2 CZ3) and (chain %s)\" frame %s]" % (traj_frag_molid, frame_idx, chain_id))
-        evaltcl("set TYR [atomselect %s \" (resname TYR) and (name CG CE1 CE2) and (chain %s)\" frame %s]" % (traj_frag_molid, frame_idx, chain_id))
+        evaltcl("set PHE [atomselect %s \" (resname PHE) and (name CG CE1 CE2) and (chain %s)\" frame %s]" %
+                (traj_frag_molid, frame_idx, chain_id))
+        evaltcl("set TRP [atomselect %s \" (resname TRP) and (name CD2 CZ2 CZ3) and (chain %s)\" frame %s]" %
+                (traj_frag_molid, frame_idx, chain_id))
+        evaltcl("set TYR [atomselect %s \" (resname TYR) and (name CG CE1 CE2) and (chain %s)\" frame %s]" %
+                (traj_frag_molid, frame_idx, chain_id))
 
     aromatic_atom_list += get_atom_selection_labels("PHE")
     aromatic_atom_list += get_atom_selection_labels("TRP")
@@ -298,6 +310,7 @@ def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
 
     return aromatic_atom_triplet_list
 
+
 def convert_to_single_atom_aromatic_string(aromatic_atom_label):
     """
     Replaces any aromatic ring atom with CG label
@@ -309,6 +322,7 @@ def convert_to_single_atom_aromatic_string(aromatic_atom_label):
 
     aromatic_CG_atom_label = ":".join(aromatic_atom_label.split(":")[0:3]) + ":CG:vmd_idx"
     return aromatic_CG_atom_label
+
 
 def calc_water_to_residues_map(water_hbonds, solvent_resn):
     """
