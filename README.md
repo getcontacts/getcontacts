@@ -7,8 +7,10 @@ python dynamic_contacts.py --topology my_top.psf \
                             -sb -pc -ps -ts -hb \
                             --output my_hbond_contacts.tsv
 ```
-The output, `my_hbond_contacts.tsv`, is a tab-separated file where each line records an interactions frame, type, and involved atoms:
+The output, `my_hbond_contacts.tsv`, is a tab-separated file where each line (except the first two) records an interactions frame, type, and involved atoms:
 ```
+# total_frames:20000 interaction_types:sb,pc,ps,ts,hb
+# Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]
 0	sb	C:GLU:21:OE2	C:ARG:86:NH2
 0	ps	C:TYR:36:CG	C:TRP:108:CG
 0	ts	A:TYR:36:CG	A:TRP:108:CG
@@ -27,7 +29,7 @@ The output, `my_hbond_contacts.tsv`, is a tab-separated file where each line rec
 4	hbbb	A:ILE:12:N	A:THR:20:O
 ...
 ```
-Interactions that involve more than two atoms (ie water bridges and extended water bridges) have an extra columns to denote the identities of the water molecules. For simplicity, all interactions involving an aromatic ring will be denoted by the CG atom. 
+Interactions that involve more than two atoms (i.e. water bridges and extended water bridges) have extra columns to denote the identities of the water molecules. For simplicity, all stacking and pi-cation interactions involving an aromatic ring will be denoted by the CG atom.
 
 These contact-list files are useful as inputs to visualization and analysis tools that operate on interaction-networks:
  * [Flareplot](https://gpcrviz.github.io/flareplot) - Framework for analyzing interaction networks based on circular diagrams
@@ -183,6 +185,9 @@ TODO: This section needs to be updated
 		--vdw_epsilon VDW_EPSILON
 						amount of padding for calculating vanderwaals contacts 
 						[default = 0.5 angstroms]
+        --vdw_res_diff VDW_RES_DIFF
+                        minimum residue distance for which to consider computing
+                        vdw interactions [default = 2]
 
    
    __Output:__ Tables storing non-covalent contacts. Tab delimited rows are formatted to include 
