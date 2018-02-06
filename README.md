@@ -5,39 +5,55 @@ Application for efficiently computing non-covalent contact networks in molecular
 python dynamic_contacts.py --topology my_top.psf \
                             --trajectory my_traj.dcd \
                             -sb -pc -ps -ts -hb \
-                            --output my_hbond_contacts.tsv
+                            --output my_contacts.tsv
 ```
-The output, `my_hbond_contacts.tsv`, is a tab-separated file where each line (except the first two) records an interactions frame, type, and involved atoms:
+The output, `my_contacts.tsv`, is a tab-separated file where each line (except the first two) records frame, type, and atoms involved in an interaction:
 ```
 # total_frames:20000 interaction_types:sb,pc,ps,ts,hb
 # Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]
-0	sb	C:GLU:21:OE2	C:ARG:86:NH2
-0	ps	C:TYR:36:CG	C:TRP:108:CG
-0	ts	A:TYR:36:CG	A:TRP:108:CG
-0	hbss	A:GLN:53:NE2	A:GLN:69:OE1
-1	hbss	A:GLU:60:OE2	A:SER:56:OG
-1	hbbb	C:LEU:87:N	C:LEU:83:O
-1	hbbb	C:ARG:88:N	C:LEU:87:N
-2	hbsb	A:LYS:28:N	A:HIS:27:ND1
-2	hbsb	A:ASP:52:OD2	A:PHE:48:O
-2	wb2	C:ASN:110:O	B:ARG:73:NH1	W:TIP3:1524:OH2	W:TIP3:506:OH2
-2	wb2	C:ASN:110:O	C:SER:111:OG	W:TIP3:1524:OH2	W:TIP3:2626:OH2
-3	wb	A:ASP:100:OD1	A:ILE:67:O	W:TIP3:6762:OH2
-3	wb	A:ASP:100:OD1	B:ASN:105:ND2	W:TIP3:9239:OH2
-4	sb	A:GLU:47:OE2	A:LYS:33:NZ
-4	pc	A:LYS:9:NZ	A:TYR:21:CG
-4	hbbb	A:ILE:12:N	A:THR:20:O
+0    sb    C:GLU:21:OE2    C:ARG:86:NH2
+0    ps    C:TYR:36:CG    C:TRP:108:CG
+0    ts    A:TYR:36:CG    A:TRP:108:CG
+0    hbss    A:GLN:53:NE2    A:GLN:69:OE1
+1    hbss    A:GLU:60:OE2    A:SER:56:OG
+1    hbbb    C:LEU:87:N    C:LEU:83:O
+1    hbbb    C:ARG:88:N    C:LEU:87:N
+2    hbsb    A:LYS:28:N    A:HIS:27:ND1
+2    hbsb    A:ASP:52:OD2    A:PHE:48:O
+2    wb2    C:ASN:110:O    B:ARG:73:NH1    W:TIP3:1524:OH2    W:TIP3:506:OH2
+2    wb2    C:ASN:110:O    C:SER:111:OG    W:TIP3:1524:OH2    W:TIP3:2626:OH2
+3    wb    A:ASP:100:OD1    A:ILE:67:O    W:TIP3:6762:OH2
+3    wb    A:ASP:100:OD1    B:ASN:105:ND2    W:TIP3:9239:OH2
+4    sb    A:GLU:47:OE2    A:LYS:33:NZ
+4    pc    A:LYS:9:NZ    A:TYR:21:CG
+4    hbbb    A:ILE:12:N    A:THR:20:O
 ...
 ```
-Interactions that involve more than two atoms (i.e. water bridges and extended water bridges) have extra columns to denote the identities of the water molecules. For simplicity, all stacking and pi-cation interactions involving an aromatic ring will be denoted by the CG atom.
+Interactions that involve more than two atoms (i.e. water bridges and extended water bridges) have extra columns to denote the identities of the water molecules. For simplicity, all stacking and pi-cation interactions involving an aromatic ring will be denoted by the CG atom. 
+
+Interaction types are denoted by the following abbreviations:
+* **sb** - salt bridges 
+* **pc** - pi-cation 
+* **ps** - pi-stacking
+* **ts** - T-stacking
+* **vdw** - van der Waals
+* Hydrogen bond subtypes
+  * **hbbb** - Backbone-backbone hydrogen bonds
+  * **hbsb** - Backbone-sidechain hydrogen bonds
+  * **hbss** - Sidechain-sidechain hydrogen bonds
+  * **wb** - Water-mediated hydrogen bond
+  * **wb2** - Extended water-mediated hydrogen bond
+* Ligand-hydrogen bond subtypes 
+  * **hlb** - Ligand-backbone hydrogen bonds
+  * **hls** - Ligand-sidechain hydrogen bonds
+  * **lwb** - Ligand water-mediated hydrogen bond
+  * **lwb2** - Ligand extended water-mediated hydrogen bond
 
 These contact-list files are useful as inputs to visualization and analysis tools that operate on interaction-networks:
  * [Flareplot](https://gpcrviz.github.io/flareplot) - Framework for analyzing interaction networks based on circular diagrams
  * [MDCompare](MDCompare) - Heatmap fingerprints revealing groups of similar interactions in multiple MD trajectories
  * [TICC](https://github.com/davidhallac/TICC) - Changepoint detection algorithm to identifying significant events in the dynamic contact network
  * [NetworkAnalysis](Applications) - Compute residue contact frequencies in a simulation, analyze contact network graphs, visualize in PyMol
-
-TODO: Replace the above with appealing figure
 
 
 ## Dependencies
@@ -67,7 +83,7 @@ cd ..
 python -c "import vmd"  # Should not throw error
 ```
 
-## Installing MDContactNetworks
+## Installation
 
 To install MDContactNetworks locally, first set up dependencies (see above) and then run:
 ```bash
@@ -94,113 +110,94 @@ MDContactNetworks is compatible with all topology and reimaged trajectory file f
 
 ## Running the Code
 
-TODO: This section needs to be updated
+### Command line arguments
 
-### 1. Computing non-covalent contacts in a protein throughout every frame of a MD Simulation fragment
-   
-   __Input:__ 
+Required Arguments:
 
-	Required Arguments:
+    --topology STRING 
+        Path to topology
+    --trajectory STRING
+        Path to simulation trajectory fragment
+    --output STRING
+        Path to output file
 
-	   	--topology TOPOLOGY - Path to topology
-	   	--trajectory TRAJECTORY - Path to simulation trajectory fragment
-	   	--output OUTPUT - Path of output file
-		
-		User specifies what type of non-covalent interaction to compute using the following flags. 
-
-		   --all-interactions Compute all interaction types	
-		   -sb, --salt-bridge Salt bridges
-		   -pc, --pi-cation Pi-cation 
-		   -ps, --pi-stacking Pi-stacking
-		   -ts, --t-stacking T-stacking
-		   -vdw, --vanderwaals Van Der Waals
-		   -hb, --hbond Hydrogen Bonds
-		   -lhb, --ligand-hbond Ligand Hydrogen Bonds
-
-
-		   Hydrogen bonds are automatically stratified to following subtypes and 
-		   written as output.
-
-		   -hbbb, Backbone-backbone hydrogen bonds
-		   -hbsb, Backbone-sidechain hydrogen bonds
-		   -hbss, Sidechain-sidechain hydrogen bonds
-		   -wb, Water-mediated hydrogen bond
-		   -wb2, Extended water-mediated hydrogen bond
-		   -hlb, Ligand-backbone hydrogen bonds
-		   -hls, Ligand-sidechain hydrogen bonds
-		   -lwb, Ligand water-mediated hydrogen bond
-		   -lwb2, Ligand extended water-mediated hydrogen bond
+    At least one of the following interaction type indicators:
+    -all, --all-interactions
+    -sb, --salt-bridge
+    -pc, --pi-cation
+    -ps, --pi-stacking
+    -ts, --t-stacking
+    -vdw, --vanderwaals
+    -hb, --hbond
+        All hydrogen bond subtypes
+    -lhb, --ligand-hbond
+        All ligand-hydrogen bond subtypes
 
 
-	Optional Arguments:
+Optional Arguments:
+    --cores INT 
+        Number of CPU cores for parallelization [default = 6]
+    --ligand STRING 
+        Resname of ligand molecule [default = None]
+    --sele STRING 
+        VMD selection query to compute contacts in specified region of protein 
+        [default = None]
+    --solv STRING 
+        Solvent identifier in simulation [default = "TIP3"]
 
-		--cores NUM_CORES Number of cpu cores for parallelization,
-		   default = 6
-
-		--ligand LIGAND Resname of ligand molecule, default = None
-
-		--sele SELECTION VMD selection query to compute contacts in specified 
-		  region of protein, default = None
-
-		--solv SOLVENT Solvent identifier in simulation, default = "TIP3"
-
-	Arguments for adjusting geometric criteria:
-		--sb_cutoff_dist SALT_BRIDGE_CUTOFF_DISTANCE
-						cutoff for distance between anion and cation 
-						atoms [default = 4.0 angstroms]
-		--pc_cutoff_dist PI_CATION_CUTOFF_DISTANCE
-						cutoff for distance between cation and centroid
-						of aromatic ring [default = 6.0 angstroms]
-		--pc_cutoff_ang PI_CATION_CUTOFF_ANGLE
-						cutoff for angle between normal vector projecting
-						from aromatic plane and vector from aromatic center
-						to cation atom [default = 60 degrees]
-		--ps_cutoff_dist PI_STACK_CUTOFF_DISTANCE
-						cutoff for distance between centroids of two aromatic
-						rings [default = 7.0 angstroms]
-		--ps_cutoff_ang PI_STACK_CUTOFF_ANGLE
-						cutoff for angle between the normal vectors projecting
-						from each aromatic plane [default = 30 degrees]
-		--ps_psi_ang PI_STACK_PSI_ANGLE
-						cutoff for angle between normal vector projecting from
-						aromatic plane 1 and vector between the two aromatic
-						centroids [default = 45 degrees]
-		--ts_cutoff_dist T_STACK_CUTOFF_DISTANCE
-						cutoff for distance between centroids of two aromatic
-						rings [default = 5.0 angstroms]
-		--ts_cutoff_ang T_STACK_CUTOFF_ANGLE
-						cutoff for angle between the normal vectors projecting
-						from each aromatic plane minus 90 degrees 
-						[default = 30 degrees]
-		--ts_psi_ang T_STACK_PSI_ANGLE
-						cutoff for angle between normal vector projecting from
-						aromatic plane 1 and vector between the two aromatic
-						centroids [default = 45 degrees]
-		--hbond_cutoff_dist HBOND_CUTOFF_DISTANCE
-						cutoff for distance between donor and acceptor atoms 
-						[default = 3.5 angstroms]
-		--hbond_cutoff_ang HBOND_CUTOFF_ANGLE
-						cutoff for angle between donor hydrogen acceptor 
-						[default = 70 degrees]
-		--vdw_epsilon VDW_EPSILON
-						amount of padding for calculating vanderwaals contacts 
-						[default = 0.5 angstroms]
-        --vdw_res_diff VDW_RES_DIFF
-                        minimum residue distance for which to consider computing
-                        vdw interactions [default = 2]
+Arguments for adjusting geometric criteria:
+    --sb_cutoff_dist FLOAT
+        Cutoff for distance between anion and cation atoms [default = 4.0 Angstroms]
+    --pc_cutoff_dist FLOAT
+        Cutoff for distance between cation and centroid of aromatic ring [default = 6.0 Angstroms]
+    --pc_cutoff_ang FLOAT
+        Cutoff for angle between normal vector projecting from aromatic plane and vector from aromatic center to cation atom [default = 60 degrees]
+    --ps_cutoff_dist FLOAT
+        Cutoff for distance between centroids of two aromatic rings [default = 7.0 Angstroms]
+    --ps_cutoff_ang FLOAT
+        Cutoff for angle between the normal vectors projecting from each aromatic plane [default = 30 degrees]
+    --ps_psi_ang FLOAT
+        Cutoff for angle between normal vector projecting from aromatic plane 1 and vector between the two aromatic centroids [default = 45 degrees]
+    --ts_cutoff_dist FLOAT
+        Cutoff for distance between centroids of two aromatic rings [default = 5.0 Angstroms]
+    --ts_cutoff_ang FLOAT
+        Cutoff for angle between the normal vectors projecting from each aromatic plane minus 90 degrees [default = 30 degrees]
+    --ts_psi_ang FLOAT
+        Cutoff for angle between normal vector projecting from aromatic plane 1 and vector between the two aromatic centroids [default = 45 degrees]
+    --hbond_cutoff_dist FLOAT
+        Cutoff for distance between donor and acceptor atoms [default = 3.5 Angstroms]
+    --hbond_cutoff_ang FLOAT
+        Cutoff for angle between donor hydrogen acceptor [default = 70 degrees]
+    --vdw_epsilon FLOAT
+        Amount of padding for calculating vanderwaals contacts [default = 0.5 Angstroms]
+    --vdw_res_diff INT
+        Minimum residue distance for which to consider computing vdw interactions [default = 2]
 
    
-   __Output:__ Tables storing non-covalent contacts. Tab delimited rows are formatted to include 
-   frame index, atom labels, and interaction types. 
+### Examples
 
-   __Examples:__
+Compute all pi-cation, pi-stacking, and van der Waals contacts throughout an entire simulation:
+    dynamic_contacts.py --topology TOP.psf \
+                        --trajectory TRAJ.dcd \
+                        --output output_pc_ps_vdw.tsv \
+                        -pc -ps -vdw
 
-	Salt bridges and hydrogen bonds for residues 100 to 160:
-	python dynamic_contacts.py --topology TOP.pdb --trajectory TRAJ.nc --output OUTPUT --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 -sb -hb -lhb
+Compute salt bridges and hydrogen bonds for residues 100 to 160, including those that involves a ligand:
+    dynamic_contacts.py --topology TOP.pdb \
+                        --trajectory TRAJ.nc \
+                        --output loop-ligand_sb_hb.tsv \
+                        --cores 12 \
+                        --solv IP3 \
+                        --sele "chain A and resid 100 to 160" \
+                        --ligand EJ4 \
+                        -sb -hb -lhb
 
-	Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
-	python dynamic_contacts.py --topology TOP.psf --trajectory TRAJ.dcd --output OUTPUT --cores 6 -pc -ps -vdw
+Locate salt bridges and hydrogen bonds using a modified distance cutoffs:
+    dynamic_contacts.py --topology TOP.mae \
+                        --trajectory TRAJ.dcd \
+                        --output output_sb_hb.tsv \
+                        --sb_cutoff_dist 5.0 \
+                        --hbond_cutoff_dist 4.5 \
+                        -sb -hb
 
-	Salt bridges and hydrogen bonds in the entire protein with modified distance cutoffs:
-	python dynamic_contacts.py --topology TOP.mae --trajectory TRAJ.dcd --output OUTPUT --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 -sb -hb
-
+For further examples, see e.g. [Flareplot input generation](https://github.com/GPCRviz/flareplot/tree/master/input).
