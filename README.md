@@ -2,10 +2,10 @@
 
 Application for efficiently computing non-covalent contact networks in molecular structures and MD simulations. Following example computes all salt bridges, pi cation, aromatic, and hydrogen bond interactions in a trajectory:
 ```bash
-python dynamic_contacts.py --topology my_top.psf \
-                            --trajectory my_traj.dcd \
-                            -sb -pc -ps -ts -hb \
-                            --output my_contacts.tsv
+dynamic_contacts.py --topology my_top.psf \
+                    --trajectory my_traj.dcd \
+                    -sb -pc -ps -ts -hb \
+                    --output my_contacts.tsv
 ```
 The output, `my_contacts.tsv`, is a tab-separated file where each line (except the first two) records frame, type, and atoms involved in an interaction:
 ```
@@ -49,12 +49,11 @@ Interaction types are denoted by the following abbreviations:
   * **lwb** - Ligand water-mediated hydrogen bond
   * **lwb2** - Ligand extended water-mediated hydrogen bond
 
-These contact-list files are useful as inputs to visualization and analysis tools that operate on interaction-networks:
+Generated contact-list files are useful as inputs to visualization and analysis tools that operate on interaction-networks:
  * [Flareplot](https://gpcrviz.github.io/flareplot) - Framework for analyzing interaction networks based on circular diagrams
  * [MDCompare](MDCompare) - Heatmap fingerprints revealing groups of similar interactions in multiple MD trajectories
  * [TICC](https://github.com/davidhallac/TICC) - Changepoint detection algorithm to identifying significant events in the dynamic contact network
  * [NetworkAnalysis](Applications) - Compute residue contact frequencies in a simulation, analyze contact network graphs, visualize in PyMol
-
 
 ## Dependencies
 
