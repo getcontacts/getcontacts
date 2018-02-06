@@ -135,6 +135,7 @@ Required Arguments:
 
 
 Optional Arguments:
+
     --cores INT 
         Number of CPU cores for parallelization [default = 6]
     --ligand STRING 
@@ -146,6 +147,7 @@ Optional Arguments:
         Solvent identifier in simulation [default = "TIP3"]
 
 Arguments for adjusting geometric criteria:
+
     --sb_cutoff_dist FLOAT
         Cutoff for distance between anion and cation atoms [default = 4.0 Angstroms]
     --pc_cutoff_dist FLOAT
@@ -177,12 +179,14 @@ Arguments for adjusting geometric criteria:
 ### Examples
 
 Compute all pi-cation, pi-stacking, and van der Waals contacts throughout an entire simulation:
+
     dynamic_contacts.py --topology TOP.psf \
                         --trajectory TRAJ.dcd \
                         --output output_pc_ps_vdw.tsv \
                         -pc -ps -vdw
 
 Compute salt bridges and hydrogen bonds for residues 100 to 160, including those that involves a ligand:
+
     dynamic_contacts.py --topology TOP.pdb \
                         --trajectory TRAJ.nc \
                         --output loop-ligand_sb_hb.tsv \
@@ -193,6 +197,7 @@ Compute salt bridges and hydrogen bonds for residues 100 to 160, including those
                         -sb -hb -lhb
 
 Locate salt bridges and hydrogen bonds using a modified distance cutoffs:
+
     dynamic_contacts.py --topology TOP.mae \
                         --trajectory TRAJ.dcd \
                         --output output_sb_hb.tsv \
