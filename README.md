@@ -153,19 +153,24 @@ Arguments for adjusting geometric criteria:
     --pc_cutoff_dist FLOAT
         Cutoff for distance between cation and centroid of aromatic ring [default = 6.0 Angstroms]
     --pc_cutoff_ang FLOAT
-        Cutoff for angle between normal vector projecting from aromatic plane and vector from aromatic center to cation atom [default = 60 degrees]
+        Cutoff for angle between normal vector projecting from aromatic plane and vector from 
+        aromatic center to cation atom [default = 60 degrees]
     --ps_cutoff_dist FLOAT
         Cutoff for distance between centroids of two aromatic rings [default = 7.0 Angstroms]
     --ps_cutoff_ang FLOAT
-        Cutoff for angle between the normal vectors projecting from each aromatic plane [default = 30 degrees]
+        Cutoff for angle between the normal vectors projecting from each aromatic plane 
+        [default = 30 degrees]
     --ps_psi_ang FLOAT
-        Cutoff for angle between normal vector projecting from aromatic plane 1 and vector between the two aromatic centroids [default = 45 degrees]
+        Cutoff for angle between normal vector projecting from aromatic plane 1 and vector between 
+        the two aromatic centroids [default = 45 degrees]
     --ts_cutoff_dist FLOAT
         Cutoff for distance between centroids of two aromatic rings [default = 5.0 Angstroms]
     --ts_cutoff_ang FLOAT
-        Cutoff for angle between the normal vectors projecting from each aromatic plane minus 90 degrees [default = 30 degrees]
+        Cutoff for angle between the normal vectors projecting from each aromatic plane minus 90 
+        degrees [default = 30 degrees]
     --ts_psi_ang FLOAT
-        Cutoff for angle between normal vector projecting from aromatic plane 1 and vector between the two aromatic centroids [default = 45 degrees]
+        Cutoff for angle between normal vector projecting from aromatic plane 1 and vector between 
+        the two aromatic centroids [default = 45 degrees]
     --hbond_cutoff_dist FLOAT
         Cutoff for distance between donor and acceptor atoms [default = 3.5 Angstroms]
     --hbond_cutoff_ang FLOAT
