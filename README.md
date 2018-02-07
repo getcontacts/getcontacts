@@ -89,7 +89,7 @@ To install MDContactNetworks locally, first set up dependencies (see above) and 
 git clone https://github.com/akma327/MDContactNetworks
 
 # Add folder to PATH
-echo "export PATH=$PATH:`pwd`/MDContactNetworks" >> ~/.bashrc
+echo "export PATH=\$PATH:`pwd`/MDContactNetworks" >> ~/.bashrc
 source ~/.bashrc
 ```
 
