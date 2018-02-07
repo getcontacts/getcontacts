@@ -50,7 +50,8 @@ def filter_duplicates(donors, acceptors):
     return new_donors, new_acceptors
 
 
-def calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id, ligand, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE):
+def calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id, ligand,
+                              HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE):
     """
     Compute donor and acceptor atom pairs for hydrogen bonds in terms of numeric VMD indices
     """
@@ -88,15 +89,16 @@ def calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id,
     # donor_acceptor_indices should be of format "{106 91 85 99 120 130} {91 55 55 69 105 69} {107 92 86 100 121 131}"
     donor_acceptor_indices = evaltcl(measure_hbonds_command)
     donors, acceptors = [], []
+
     # Parse atom indices
     donor_acceptor_lists = donor_acceptor_indices.split("}")
+
     # Filter out improperly parsed coordinates 
-    if(len(donor_acceptor_lists) != 4): 
-      return donors, acceptors
+    if len(donor_acceptor_lists) != 4:
+        return donors, acceptors
     donor_list = donor_acceptor_lists[0].split("{")[1].split(" ")
     acceptor_list = donor_acceptor_lists[1].split("{")[1].split(" ")
 
-    
     for idx, d in enumerate(donor_list):
         a = acceptor_list[idx]
         if d == "" or a == "":
@@ -136,7 +138,8 @@ def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_r
         itype = "lhb"
 
     hbonds = []
-    donors, acceptors = calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id, ligand, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
+    donors, acceptors = calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id, ligand,
+                                                  HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
     donors, acceptors = filter_duplicates(donors, acceptors)
 
     for idx, donor in enumerate(donors):
