@@ -1,38 +1,45 @@
-"""
-Draws a structure and it's atomic interactions in pymol.
+#!/bin/sh
+# Shebang-hack for launching pymol
+''':'
+exec pymol -q "$0" -- "$@"
+'''
 
-Requires at least a structure file and a contact-file as input. Additionally, a pymol selection can be provided as well.
-Note that "--" must be added for pymol to pass command line arguments correctly (see examples)
+__doc__ = """
+Draws a structure and it's atomic interactions in pymol. Requires at least a structure file 
+and a contact-file as input. Additionally, a pymol selection can be provided as well.
 
 Example usages:
-    pymol pymol_frequencies.py -- ../example/5xnd_topology.pdb ../example/5xnd_all-contacts.tsv
+    pymol_frequencies.py ../example/5xnd_topology.pdb ../example/5xnd_all-contacts.tsv
+    pymol_frequencies.py ../example/5xnd_topology.pdb ../example/5xnd_all-contacts.tsv "resi 22-30"
 
-    pymol pymol_frequencies.py -- ../example/5xnd_topology.pdb ../example/5xnd_all-contacts.tsv "resi 22-30"
+    # Alternatively pymol can also be called directly on this script using the "--" argument
+    pymol pymol_frequencies.py -- ../example/5xnd_topology.pdb ../example/5xnd_all-contacts.tsv
 """
 
 import pymol
 pymol.finish_launching()
 
-import sys
 import re
 from collections import defaultdict
+import sys
 
-print sys.argv
-
+# Check cmd-line arguments
 if len(sys.argv) not in [3,4]:
-    print "Usage: pymol "+sys.argv[0]+" -- <structurefile> <contactfile> [selection]"
+    sys.stderr.write("Usage: pymol "+sys.argv[0]+" -- <structurefile> <contactfile> [selection]\n")
+    print __doc__
     cmd.quit()
+    sys.exit(1)
 
 # Ensure that optional selection is set to "all" by default
 if len(sys.argv) == 3:
     sys.argv.append("all")
 
+# Read structure
 cmd.load(sys.argv[1])
 
-
+# Parse contact-file
 interaction_frames = defaultdict(set)
 total_frames = 0
-max_frame = 0
 with open(sys.argv[2]) as cfile:
     for line in cfile.readlines():
         line = line.strip()
@@ -55,15 +62,13 @@ with open(sys.argv[2]) as cfile:
         if atom2 < atom1:
             atom1, atom2 = atom2, atom1
 
-        if max_frame < frame:
-            max_frame = frame
         interaction_frames[(atom1, atom2)].add(frame)
 
-total_frames = max(total_frames, max_frame + 1)
 
 
 # Write contacts
-cgos = []
+selection = sys.argv[3]
+cgos = [[],[],[]]
 for (atom1, atom2), frames in interaction_frames.items():
     frequency = len(frames) / float(total_frames)
     a1chain, _, a1resi, a1name = atom1.split(":")
@@ -72,14 +77,33 @@ for (atom1, atom2), frames in interaction_frames.items():
     pmatom2 = "/".join(["","","",a2chain, a2resi, a2name])
     c1 = cmd.get_model(pmatom1).atom[0].coord
     c2 = cmd.get_model(pmatom2).atom[0].coord
-    if len(cmd.get_model(pmatom1 + " & "+sys.argv[3]).atom)==0 and len(cmd.get_model(pmatom2 + " & "+sys.argv[3]).atom)==0:
+  
+    # Check that either pmatom1 or pmatom2 are in the selection
+    if len(cmd.get_model(pmatom1 + " & "+selection).atom)==0 and \
+       len(cmd.get_model(pmatom2 + " & "+selection).atom)==0:
         continue
-    # c2 = cmd.get_model(pmatom2).atom[0].coord
-    rad = frequency * 0.18
-    col = [0.2+0.6*frequency, 0.2+0.4*frequency, 0.2+0.7*frequency]
 
-    cgos += [CYLINDER] + c1 + c2 + [rad] + col + col
+    rad = frequency * 0.10 + 0.05
+    if frequency > 0.75:
+        # 19.0 56.0 18.0	
+        col = [0.19,0.56, 0.18]
+        cgo_idx = 0
+    elif frequency > 0.25:
+        #Base color: 100.0 89.0 35.0	
+        col = [1.0, 0.89, 0.35]
+        cgo_idx = 1
+    else:
+        # Base color: 83.0 33.0 32.0
+        col = [0.83, 0.33, 0.32]
+        cgo_idx = 2
 
-cmd.load_cgo(cgos, "contacts")
+    cgos[cgo_idx] += [CYLINDER] + c1 + c2 + [rad] + col + col
+
+cmd.load_cgo(cgos[0], "high_freq")
+cmd.load_cgo(cgos[1], "medium_freq")
+cmd.load_cgo(cgos[2], "low_freq")
+cmd.color("gray30", "elem C")
+cmd.bg_color("white")
+cmd.orient()
 
 
