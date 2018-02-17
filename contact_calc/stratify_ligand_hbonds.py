@@ -43,7 +43,7 @@ def ligand_residue_vs_water_hbonds(hbonds, solvent_resn, ligand):
     return ligand_residue_hbonds, water_hbonds
 
 
-def stratify_ligand_residue_hbonds(ligand_residue_hbonds, ligand):
+def stratify_ligand_residue_hbonds(ligand_residue_hbonds, ligands):
     """
     Stratify ligand to residue hbonds into those involving sidechain
     or backbone atoms.
@@ -53,14 +53,17 @@ def stratify_ligand_residue_hbonds(ligand_residue_hbonds, ligand):
 
     # Iterate through each ligand residue hbond and bin into appropriate subtype
     for frame_idx, atom1_label, atom2_label, itype in ligand_residue_hbonds:
-        if ligand in atom1_label and ligand in atom2_label:
+        a1_is_ligand = any([l in atom1_label for l in ligands])
+        a2_is_ligand = any([l in atom2_label for l in ligands])
+
+        if a1_is_ligand and a2_is_ligand:
             continue
-        elif ligand not in atom1_label and ligand not in atom2_label:
+        elif not a1_is_ligand and not a2_is_ligand:
             continue
-        elif ligand in atom1_label and ligand not in atom2_label:
+        elif a1_is_ligand:
             lig_atom = atom1_label
             res_atom = atom2_label
-        elif ligand not in atom1_label and ligand in atom2_label:
+        elif a2_is_ligand:
             lig_atom = atom2_label
             res_atom = atom1_label
 
@@ -73,10 +76,11 @@ def stratify_ligand_residue_hbonds(ligand_residue_hbonds, ligand):
     return hls, hlb
 
 
-def stratify_ligand_vs_protein(atom_list, ligand):
+def stratify_ligand_vs_protein(atom_list, ligands):
     ligand_atoms, protein_atoms = [], []
     for atom in atom_list:
-        if ligand in atom:
+        atom_is_ligand = any([l in atom for l in ligands])
+        if atom_is_ligand:
             ligand_atoms.append(atom)
         else:
             protein_atoms.append(atom)
@@ -140,7 +144,7 @@ def stratify_ligand_hbond_subtypes(hbonds, solvent_resn, ligand):
 
     solvent_resn: string, default = TIP3
         Denotes the resname of solvent in simulation
-    ligand: string
+    ligand: list of string
         Denotes the resname of ligand molecule
 
     Returns

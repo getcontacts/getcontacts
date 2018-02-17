@@ -194,7 +194,7 @@ def main(traj_required=True):
     parser.add_argument('--solv', type=str, default="TIP3", help='resname of solvent molecule')
     parser.add_argument('--sele', type=str, default=None, help='atom selection query in VMD')
     parser.add_argument('--stride', type=int, default=1, help='skip frames with specified frequency')
-    parser.add_argument('--ligand', type=str, default=None, help='resname of ligand molecule')
+    parser.add_argument('--ligand', type=str, nargs="+", default=[], help='resname of ligand molecule')
 
     # Parse geometric criterion arguments
     parser.add_argument('--sb_cutoff_dist', type=float, default=4.0, help='cutoff for distance between anion and cation atoms [default = 4.0 angstroms]')
@@ -253,13 +253,13 @@ def main(traj_required=True):
     tic = datetime.datetime.now()
     compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, stride, solv, sele, ligand)
     toc = datetime.datetime.now()
-    print("Computation Time: " + str((toc-tic).total_seconds()))
+    print("Computation time: " + str((toc-tic).total_seconds()) + " seconds")
 
     print("topology=%s" % top)
     print("trajectory=%s" % traj)
     print("output=%s" % output)
     print("cores=%s" % cores)
-    print("ligand=%s" % ligand)
+    print("ligand=%s" % ",".join(ligand))
     print("solv=%s" % solv)
     print("sele=%s" % sele)
     print("stride=%s" % stride)

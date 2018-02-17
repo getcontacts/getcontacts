@@ -83,7 +83,7 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
         Compute contacts on subset of atom selection based on VMD query
     chain_id: string, default = None
         Specify chain of protein to perform computation on 
-    ligand: string, default = None
+    ligand: list of string, default = None
         Include ligand resname if computing contacts between ligand and binding pocket residues
     index_to_label: dict 
         Maps VMD atom index to label "chain:resname:resid:name:index"
@@ -94,7 +94,7 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     frame_contacts: list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
 
     """
-    tic = datetime.datetime.now()
+    # tic = datetime.datetime.now()
 
     # Extract geometric criterion
     SALT_BRIDGE_CUTOFF_DISTANCE = geom_criterion_values['SALT_BRIDGE_CUTOFF_DISTANCE']
@@ -127,8 +127,9 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     if "lhb" in ITYPES:
         frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, ligand, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
 
-    toc = datetime.datetime.now()
-    print("Finished computing contacts for frag %s frame %s in %s s" % (frag_idx, frame_idx, (toc-tic).total_seconds()))
+    # toc = datetime.datetime.now()
+    # print("Finished computing contacts for frame %d (frag %d) in %s s" %
+    #       (frag_idx*100+frame_idx, frag_idx, (toc-tic).total_seconds()))
     return frame_contacts
 
 
@@ -160,7 +161,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
         Denotes the resname of solvent in simulation
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
-    ligand: string, default = None
+    ligand: list of string, default = None
         Include ligand resname if computing contacts between ligand and binding pocket residues
     index_to_label: dict 
         Maps VMD atom index to label "chain:resname:resid:name:index"
@@ -172,6 +173,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
 
     fragment_contacts: list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
     """
+    tic = datetime.datetime.now()
     traj_frag_molid = load_traj(top, traj, beg_frame, end_frame, stride)
     fragment_contacts = []
 
@@ -188,6 +190,10 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
     # Update frame-number so it's not relative to beg_frame
     for fc in fragment_contacts:
         fc[0] = beg_frame + fc[0]
+
+    toc = datetime.datetime.now()
+    print("Finished computing contacts for fragment %d (frames %d to %d) in %s s" %
+          (frag_idx, frag_idx * 100, frag_idx * 100 + num_frag_frames - 1, (toc-tic).total_seconds()))
 
     # Write directly out to temporary output
     # print("Writing output to seperate files, one for each itype ...")
@@ -273,7 +279,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, st
         Denotes the resname of solvent in simulation
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
-    ligand: string, default = None
+    ligand: list of string, default = None
         Include ligand resname if computing contacts between ligand and binding pocket residues
     """
 
@@ -295,7 +301,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, st
     for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
         # if frag_idx > 0: break
         end_frame = beg_frame + TRAJ_FRAG_SIZE - 1
-        print("Preparing fragment %s, beg_frame:%s end_frame:%s" % (frag_idx, beg_frame, end_frame))
+        # print("Preparing fragment %s, beg_frame:%s end_frame:%s" % (frag_idx, beg_frame, end_frame))
         input_args.append((frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values,
                            stride, solvent_resn, sele_id, ligand, index_to_label))
 
