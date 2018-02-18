@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/bin/sh
+# Shebang-hack for launching pymol
 
 """
 PyMol visualization of weighted contact network and communication pathways. 
@@ -202,11 +203,12 @@ def visualize_protein_network(structure, edge_weights, sub_network=[], cutoff=0.
 
 
 # Example 
-top = "top.pdb"
-contact_freq = "wb_freq.tsv"
-sub_network = [('C:HSD:62', 'C:PRO:1'), ('A:TYR:95', 'B:PRO:1'), ('A:TYR:99', 'A:HSD:62'), ('C:TYR:99', 'C:TYR:95'),
-               ('B:TYR:99', 'A:HSD:62'), ('B:TYR:99', 'B:TYR:95'), ('A:TYR:99', 'A:TYR:95'), ('C:TYR:99', 'C:GLY:65'),
-               ('C:GLY:65', 'C:PRO:1'), ('B:TYR:99', 'B:SER:63'), ('C:TYR:99', 'A:ASN:97'), ('A:ASN:97', 'B:PRO:1'),
-               ('C:TYR:95', 'A:PRO:1'), ('B:SER:63', 'B:PRO:1'), ('A:TYR:99', 'C:HSD:62'), ('B:TYR:95', 'C:PRO:1'),
-               ('A:HSD:62', 'A:PRO:1')]
-visualize_protein_network(top, contact_freq, sub_network)
+top = "../example/5xnd_topology.pdb"
+contact_freq = "../example/5xnd_contact_freq.tsv"
+# sub_network = [('C:HSD:62', 'C:PRO:1'), ('A:TYR:95', 'B:PRO:1'), ('A:TYR:99', 'A:HSD:62'), ('C:TYR:99', 'C:TYR:95'),
+#                ('B:TYR:99', 'A:HSD:62'), ('B:TYR:99', 'B:TYR:95'), ('A:TYR:99', 'A:TYR:95'), ('C:TYR:99', 'C:GLY:65'),
+#                ('C:GLY:65', 'C:PRO:1'), ('B:TYR:99', 'B:SER:63'), ('C:TYR:99', 'A:ASN:97'), ('A:ASN:97', 'B:PRO:1'),
+#                ('C:TYR:95', 'A:PRO:1'), ('B:SER:63', 'B:PRO:1'), ('A:TYR:99', 'C:HSD:62'), ('B:TYR:95', 'C:PRO:1'),
+#                ('A:HSD:62', 'A:PRO:1')]
+visualize_protein_network(top, contact_freq)
+# visualize_protein_network(top, contact_freq, sub_network)
