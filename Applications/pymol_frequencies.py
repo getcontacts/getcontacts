@@ -85,13 +85,13 @@ for (atom1, atom2), frames in interaction_frames.items():
 
     rad = frequency * 0.10 + 0.05
     if frequency > 0.75:
-        col = [0.19, 0.56, 0.18]
+        col = [0.83, 0.33, 0.32]
         cgo_idx = 0
     elif frequency > 0.25:
         col = [1.0, 0.89, 0.35]
         cgo_idx = 1
     else:
-        col = [0.83, 0.33, 0.32]
+        col = [0.54, 0.53, 1.0]
         cgo_idx = 2
 
     cgos[cgo_idx] += [CYLINDER] + c1 + c2 + [rad] + col + col
@@ -99,8 +99,7 @@ for (atom1, atom2), frames in interaction_frames.items():
 cmd.load_cgo(cgos[0], "high_freq")
 cmd.load_cgo(cgos[1], "medium_freq")
 cmd.load_cgo(cgos[2], "low_freq")
-cmd.color("gray30", "elem C")
-cmd.bg_color("white")
+cmd.color("gray80", "elem C")
 cmd.orient()
 
 
