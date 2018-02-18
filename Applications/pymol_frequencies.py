@@ -31,6 +31,9 @@ if len(sys.argv) not in [3,4] or "pymol" not in sys.modules:
 if len(sys.argv) == 3:
     sys.argv.append("all")
 
+import pymol
+from pymol.cgo import *
+
 # Read structure
 cmd.load(sys.argv[1])
 
