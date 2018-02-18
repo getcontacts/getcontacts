@@ -1,5 +1,8 @@
 #!/bin/sh
 # Shebang-hack for launching pymol
+''':'
+exec pymol -q "$0" -- "$@"
+'''
 
 """
 PyMol visualization of weighted contact network and communication pathways. 
@@ -10,9 +13,6 @@ Inputs:
 - edge list for communication pathway or visualizing portions of full network 
 
 """
-
-from pymol import *
-
 
 def fix_amino_acid_names(key):
     key = key.replace("HSD", "HIS")
@@ -205,10 +205,5 @@ def visualize_protein_network(structure, edge_weights, sub_network=[], cutoff=0.
 # Example 
 top = "../example/5xnd_topology.pdb"
 contact_freq = "../example/5xnd_contact_freq.tsv"
-# sub_network = [('C:HSD:62', 'C:PRO:1'), ('A:TYR:95', 'B:PRO:1'), ('A:TYR:99', 'A:HSD:62'), ('C:TYR:99', 'C:TYR:95'),
-#                ('B:TYR:99', 'A:HSD:62'), ('B:TYR:99', 'B:TYR:95'), ('A:TYR:99', 'A:TYR:95'), ('C:TYR:99', 'C:GLY:65'),
-#                ('C:GLY:65', 'C:PRO:1'), ('B:TYR:99', 'B:SER:63'), ('C:TYR:99', 'A:ASN:97'), ('A:ASN:97', 'B:PRO:1'),
-#                ('C:TYR:95', 'A:PRO:1'), ('B:SER:63', 'B:PRO:1'), ('A:TYR:99', 'C:HSD:62'), ('B:TYR:95', 'C:PRO:1'),
-#                ('A:HSD:62', 'A:PRO:1')]
-visualize_protein_network(top, contact_freq)
-# visualize_protein_network(top, contact_freq, sub_network)
+sub_network = [('A:VAL:44', 'A:SER:40'), ('A:PHE:71', 'A:VAL:12'), ('A:ASP:26', 'A:SER:24'), ('A:VAL:12', 'A:ALA:10'), ('A:PHE:67', 'A:GLN:69'), ('A:LEU:64', 'A:GLU:61'), ('A:PHE:31', 'A:LYS:28'), ('A:ASN:70', 'A:MET:1'), ('A:ASP:54', 'A:LYS:55'), ('A:PHE:71', 'A:LEU:16'), ('A:PHE:67', 'A:GLU:63'), ('A:LYS:72', 'A:GLY:74'), ('A:PHE:86', 'A:LYS:88'), ('A:ILE:51', 'A:GLN:53'), ('A:LEU:64', 'A:GLU:62'), ('A:VAL:44', 'A:ASP:42'), ('A:GLY:23', 'A:ALA:21'), ('A:ILE:50', 'A:VAL:6'), ('A:ILE:107', 'A:ALA:104'), ('A:PHE:67', 'A:PHE:31'), ('A:PHE:86', 'A:LYS:84'), ('A:PHE:31', 'A:SER:37'), ('A:PHE:71', 'A:LEU:36'), ('A:PHE:67', 'A:LEU:78'), ('A:ASN:70', 'A:SER:0'), ('A:PHE:31', 'A:ALA:33'), ('A:LEU:87', 'A:GLY:96'), ('A:PHE:103', 'A:ILE:100'), ('A:LYS:28', 'A:GLY:109'), ('A:PHE:67', 'A:ILE:51'), ('A:PHE:86', 'A:ALA:89'), ('A:GLU:63', 'A:ASP:52'), ('A:ILE:59', 'A:LYS:97'), ('A:GLY:96', 'A:ASP:95'), ('A:ILE:51', 'A:PHE:103'), ('A:LEU:36', 'A:GLU:43'), ('A:ASN:70', 'A:ALA:2'), ('A:LEU:16', 'A:LYS:20'), ('A:ASN:70', 'A:PHE:3'), ('A:GLU:82', 'A:ALA:22'), ('A:PHE:25', 'A:GLY:23'), ('A:ALA:15', 'A:ASP:17'), ('A:PHE:86', 'A:THR:83'), ('A:PHE:86', 'A:GLY:90'), ('A:ILE:51', 'A:ALA:47'), ('A:LEU:78', 'A:ASP:80'), ('A:ASN:70', 'A:ILE:50'), ('A:GLN:69', 'A:ALA:75'), ('A:LEU:87', 'A:ASP:91'), ('A:PHE:67', 'A:LEU:64'), ('A:PHE:86', 'A:ILE:98'), ('A:VAL:12', 'A:LYS:8'), ('A:ALA:15', 'A:THR:13'), ('A:ILE:51', 'A:ALA:49'), ('A:LEU:16', 'A:ALA:14'), ('A:ASN:70', 'A:LEU:66'), ('A:PHE:67', 'A:ASN:70'), ('A:ASN:70', 'A:LYS:72'), ('A:ILE:51', 'A:ILE:59'), ('A:LEU:87', 'A:ALA:85'), ('A:GLU:102', 'A:ASP:93'), ('A:PHE:30', 'A:ALA:15'), ('A:LEU:78', 'A:CYS:19'), ('A:ILE:50', 'A:LYS:46'), ('A:PHE:31', 'A:ILE:107'), ('A:GLY:96', 'A:GLY:94'), ('A:LEU:64', 'A:LEU:87'), ('A:LYS:65', 'A:SER:79'), ('A:MET:106', 'A:LYS:108'), ('A:PHE:86', 'A:HIS:27'), ('A:PHE:71', 'A:CYS:34'), ('A:GLY:35', 'A:LYS:39'), ('A:LEU:78', 'A:ARG:76'), ('A:PHE:30', 'A:LYS:32'), ('A:VAL:12', 'A:ASP:9'), ('A:PHE:48', 'A:LYS:45'), ('A:GLU:63', 'A:PHE:58'), ('A:PHE:103', 'A:ASP:101'), ('A:PHE:48', 'A:GLY:57'), ('A:LEU:64', 'A:GLU:60'), ('A:GLY:90', 'A:SER:92'), ('A:PHE:31', 'A:LYS:29'), ('A:PHE:67', 'A:LYS:65'), ('A:PHE:30', 'A:ASP:26'), ('A:ALA:2', 'A:SER:5'), ('A:ILE:51', 'A:PHE:48'), ('A:GLU:63', 'A:ASP:54'), ('A:ASN:70', 'A:LEU:68'), ('A:ALA:75', 'A:ALA:73'), ('A:ALA:2', 'A:ALA:4'), ('A:PHE:3', 'A:LEU:7'), ('A:ALA:33', 'A:GLU:11'), ('A:PHE:31', 'A:GLY:35'), ('A:PHE:86', 'A:GLU:82'), ('A:GLY:90', 'A:GLU:102'), ('A:VAL:44', 'A:THR:41'), ('A:ALA:15', 'A:GLY:18'), ('A:ILE:107', 'A:ALA:105'), ('A:PHE:67', 'A:PHE:30'), ('A:LYS:84', 'A:ALA:81'), ('A:PHE:67', 'A:PHE:86'), ('A:PHE:67', 'A:PHE:71'), ('A:PHE:58', 'A:GLY:99'), ('A:GLU:63', 'A:SER:56'), ('A:PHE:86', 'A:MET:106'), ('A:PHE:67', 'A:PHE:25'), ('A:LYS:65', 'A:ALA:77'), ('A:ILE:107', 'A:VAL:44'), ('A:GLY:35', 'A:GLY:38')]
+visualize_protein_network(top, contact_freq, sub_network)

@@ -5,17 +5,16 @@ Suite of network analyses tools for identifying high centrality protein residues
 communication pathways. 
 
 Example:
-    from contact_network_analysis import *
-    contact_freq="/Users/anthony/Desktop/sherlock/MIF-waters/data/contacts/3DJH_wb/analytics/wb_freq.tsv"
 
-    G = create_graph(contact_freq)
-    betweenness_centrality_dist(G)
-    degree_centrality_dist(G, True)
+from contact_network_analysis import *
+contact_freq="../example/5xnd_contact_freq.tsv"
 
-    get_edge_weight(G, "A:TYR:99", "A:HSD:62")
-    communication_pathway(G, ["B:TYR:99"])
-    communication_pathway(G, ["A:TYR:99", "B:TYR:99", "C:TYR:99"])
-    sp_edges = communication_pathway(G, ["A:TYR:99", "B:TYR:99", "C:TYR:99"], ["A:PRO:1", "B:PRO:1", "C:PRO:1"])
+G = create_graph(contact_freq)
+betweenness_centrality_dist(G)
+degree_centrality_dist(G, True)
+
+communication_pathway(G, ["A:PHE:67"])
+sp_edges = communication_pathway(G, ["A:PHE:67"], ["A:CYS:19"])
 
 See contact_network_pymol_viz.py for visualization
 """
