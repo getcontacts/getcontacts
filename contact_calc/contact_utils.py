@@ -46,6 +46,8 @@ def get_file_type(file_name):
         file_type = "netcdf"
     if file_type == "prmtop":
         file_type = "parm7"
+    if file_type == "cms":
+        file_type = "mae"
     return file_type
 
 
