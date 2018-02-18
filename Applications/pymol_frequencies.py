@@ -16,18 +16,15 @@ Example usages:
     pymol pymol_frequencies.py -- ../example/5xnd_topology.pdb ../example/5xnd_all-contacts.tsv
 """
 
-import pymol
-pymol.finish_launching()
-
 import re
 from collections import defaultdict
 import sys
 
 # Check cmd-line arguments
-if len(sys.argv) not in [3,4]:
-    sys.stderr.write("Usage: pymol "+sys.argv[0]+" -- <structurefile> <contactfile> [selection]\n")
-    print __doc__
-    cmd.quit()
+if len(sys.argv) not in [3,4] or "pymol" not in sys.modules:
+    print("Usage: "+sys.argv[0]+" <structurefile> <contactfile> [selection]")
+    print("or:    pymol "+sys.argv[0]+" -- <structurefile> <contactfile> [selection]")
+    print(__doc__)
     sys.exit(1)
 
 # Ensure that optional selection is set to "all" by default
@@ -85,15 +82,12 @@ for (atom1, atom2), frames in interaction_frames.items():
 
     rad = frequency * 0.10 + 0.05
     if frequency > 0.75:
-        # 19.0 56.0 18.0	
-        col = [0.19,0.56, 0.18]
+        col = [0.19, 0.56, 0.18]
         cgo_idx = 0
     elif frequency > 0.25:
-        #Base color: 100.0 89.0 35.0	
         col = [1.0, 0.89, 0.35]
         cgo_idx = 1
     else:
-        # Base color: 83.0 33.0 32.0
         col = [0.83, 0.33, 0.32]
         cgo_idx = 2
 
