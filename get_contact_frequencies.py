@@ -187,60 +187,47 @@ def main():
                         type=argparse.FileType('r'),
                         required=True,
                         nargs='+',
+                        metavar='FILE.tsv',
                         help="Path to one or more MDContact outputs")
-    parser.add_argument('--labels',
+    parser.add_argument('--label_file',
                         type=argparse.FileType('r'),
                         required=False,
+                        metavar='FILE.tsv',
                         help="A label file for standardizing residue names between different proteins")
     parser.add_argument('--output_file',
                         type=argparse.FileType('w'),
                         required=True,
+                        metavar='FILE.tsv',
                         help="Path to gen_freqs output")
-
-    # Adapted from MDContactNetworks (https://github.com/akma327/MDContactNetworks)
-    class ITypeAction(argparse.Action):
-        def __call__(self, parser, ns, values, option):
-            if self.dest == "all":
-                ns.itypes = set([])
-            if not hasattr(ns, "itypes"):
-                ns.itypes = set()
-            ns.itypes.add(self.dest)
-    parser.add_argument('--salt-bridge', '-sb', dest='sb', action=ITypeAction, nargs=0,
-                        help="Compute salt bridge interactions")
-    parser.add_argument('--pi-cation', '-pc', dest='pc', action=ITypeAction, nargs=0,
-                        help="Compute pi-cation interactions")
-    parser.add_argument('--pi-stacking', '-ps', dest='ps', action=ITypeAction, nargs=0,
-                        help="Compute pi-stacking interactions")
-    parser.add_argument('--t-stacking', '-ts', dest='ts', action=ITypeAction, nargs=0,
-                        help="Compute t-stacking interactions")
-    parser.add_argument('--vanderwaals', '-vdw', dest='vdw', action=ITypeAction, nargs=0,
-                        help="Compute van der Waals interactions (warning: there will be many)")
-    parser.add_argument('--hbond-backbone-backbone', '-hbbb', dest='hbbb', action=ITypeAction, nargs=0,
-                        help="Compute hydrogen bond backbone backbone interactions")
-    parser.add_argument('--hbond-backbone-sidechain', '-hbsb', dest='hbsb', action=ITypeAction, nargs=0,
-                        help="Compute hydrogen bond backbone sidechain interactions")
-    parser.add_argument('--hbond-sidechain-sidechain', '-hbss', dest='hbss', action=ITypeAction, nargs=0,
-                        help="Compute hydrogen bond sidechain sidechain interactions")
-    parser.add_argument('--ligand-hbond', '-lhb', dest='lhb', action=ITypeAction, nargs=0,
-                        help="Compute ligand hydrogen bond interactions")
-    parser.add_argument('--all-interactions', '-all', dest='all', action='store_true',
-                        help="Compute all types of interactions")
+    parser.add_argument('--itypes',
+                        required=False,
+                        default="all",
+                        type=str,
+                        nargs="+",
+                        metavar="ITYPE",
+                        help='Include only these interaction types in frequency computation. Valid choices are: \n'
+                             '* all (default), \n'
+                             '* sb (salt-bridges), \n'
+                             '* pc (pi-cation), \n'
+                             '* ps (pi-stacking), \n'
+                             '* ts (t-stacking), \n'
+                             '* vdw (van der Waals), \n'
+                             '* hbbb, hbsb, hbss, (hydrogen bonds with specific backbone/side-chain profile)\n'
+                             '* wb, wb2 (water-bridges and water-water-bridges) \n'
+                             '* hls, hlb (ligand-sidechain and ligand-backbone hydrogen bonds), \n'
+                             '* lwb, lwb2 (ligand water-bridges and water-water-bridges)')
 
     # results, unknown = parser.parse_known_args()
     args = parser.parse_args()
 
-    # Get itypes from command line and exit if none are specified
-    if args.all:
-        itypes = ["sb", "pc", "ps", "ts", "vdw", "hbss", "lhb", 'hbsb', 'hbbb']
-    elif not hasattr(args, "itypes"):
-        parser.print_help(sys.stderr)
-        print("Error: at least one interaction type or '-all' is required")
-        sys.exit(2)
-    else:
-        itypes = args.itypes
+    # Update itypes if "all" is specified
+    if "all" in args.itypes:
+        args.itypes = ["sb", "pc", "ps", "ts", "vdw", "hb", "lhb", "hbbb", "hbsb",
+                       "hbss", "wb", "wb2", "hls", "hlb", "lwb", "lwb2"]
 
     output_file = args.output_file
     input_files = args.input_files
+    itypes = args.itypes
     labels = parse_labelfile(args.labels) if args.labels else None
 
     counts = [gen_counts(input_file, itypes, labels) for input_file in input_files]
