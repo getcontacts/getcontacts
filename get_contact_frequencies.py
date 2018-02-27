@@ -228,7 +228,7 @@ def main():
     output_file = args.output_file
     input_files = args.input_files
     itypes = args.itypes
-    labels = parse_labelfile(args.labels) if args.labels else None
+    labels = parse_labelfile(args.label_file) if args.label_file else None
 
     counts = [gen_counts(input_file, itypes, labels) for input_file in input_files]
     total_frames, frequencies = gen_frequencies(counts)
