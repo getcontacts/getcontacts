@@ -46,22 +46,29 @@ def plot_frequencies(freq_table, col_labels, out_file):
     import pandas as pd
     import matplotlib
     import os
+    import pylab as plt
     if "DISPLAY" not in os.environ:
         matplotlib.use('agg')
     import seaborn as sns; 
     sns.set(color_codes=True)
-    sns.set(font_scale=0.5)
+    # sns.set(font_scale=0.5)
     
     freq_matrix = np.array([freq_table[(r1, r2)] for (r1, r2) in freq_table])
     row_labels = [r1 + " - " + r2 for (r1, r2) in freq_table]
     pdframe = pd.DataFrame(freq_matrix, index=row_labels, columns=col_labels)
-    fingerprints = sns.clustermap(pdframe, figsize=(10,20), cmap='Blues')
+
+    fingerprints = sns.clustermap(pdframe,
+                                  figsize=(pdframe.shape[1], pdframe.shape[0]),
+                                  annot=True,
+                                  cmap='Blues')
+
+    plt.setp(fingerprints.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
+    plt.setp(fingerprints.ax_heatmap.xaxis.get_majorticklabels(), rotation=90)
 
     if out_file is not None:
         fingerprints.savefig(out_file)
         print("Wrote fingerprint heatmap to "+out_file)
     else:
-        import pylab as plt
         plt.show()
 
 
