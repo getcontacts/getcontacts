@@ -46,7 +46,6 @@ def plot_frequencies(freq_table, col_labels, out_file):
     import pandas as pd
     import matplotlib
     import os
-    import pylab as plt
     if "DISPLAY" not in os.environ:
         matplotlib.use('agg')
     import seaborn as sns; 
@@ -62,13 +61,11 @@ def plot_frequencies(freq_table, col_labels, out_file):
                                   annot=True,
                                   cmap='Blues')
 
-    plt.setp(fingerprints.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
-    plt.setp(fingerprints.ax_heatmap.xaxis.get_majorticklabels(), rotation=90)
-
     if out_file is not None:
         fingerprints.savefig(out_file)
         print("Wrote fingerprint heatmap to "+out_file)
     else:
+        import pylab as plt
         plt.show()
 
 
