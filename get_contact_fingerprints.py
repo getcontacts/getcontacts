@@ -50,12 +50,15 @@ def plot_frequencies(freq_table, col_labels, out_file, cluster_columns):
         matplotlib.use('agg')
     import seaborn as sns; 
     sns.set(color_codes=True)
-    sns.set(font_scale=0.5)
+    # sns.set(font_scale=0.5)
     
     freq_matrix = np.array([freq_table[(r1, r2)] for (r1, r2) in freq_table])
     row_labels = [r1 + " - " + r2 for (r1, r2) in freq_table]
     pdframe = pd.DataFrame(freq_matrix, index=row_labels, columns=col_labels, col_cluster=cluster_columns)
-    fingerprints = sns.clustermap(pdframe, figsize=(10,20), cmap='Blues')
+    fingerprints = sns.clustermap(pdframe,
+                                  figsize=(pdframe.shape[1], pdframe.shape[0]),
+                                  annot=True,
+                                  cmap='Blues')
 
     if out_file is not None:
         fingerprints.savefig(out_file)
