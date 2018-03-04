@@ -20,18 +20,18 @@ import argparse
 from contact_calc.compute_contacts import *
 
 HELP_STR = """
- ==========================================================================
-| MDContactNetworks: A Python Library for computing non-covalent contacts  |
-|                    throughout Molecular Dynamics Trajectories.           |
-|                    Version 1.1.0                                         |
-|                                                                          |
-| Contact: Anthony Kai Kwang Ma, anthonyma27@gmail.com                     |
- ==========================================================================
+ ============================================================================
+| get_dynamic_contacts: A Python Library for computing non-covalent contacts |
+|                      throughout Molecular Dynamics Trajectories.           |
+|                      Version 1.1.0                                         |
+|                                                                            |
+| Contact: Anthony Kai Kwang Ma, anthonyma27@gmail.com                       |
+ ============================================================================
 
 Command was:
-python3 dynamic_contacts.py --help
+python3 get_dynamic_contacts.py --help
 
-usage: python3 dynamic_contacts.py [--help] [--topology TOPOLOGY] 
+usage: python3 get_dynamic_contacts.py [--help] [--topology TOPOLOGY] 
                       [--trajectory TRAJECTORY]
                       [--output OUTPUT_PATH] 
                       [--cores NUM_CORES]
@@ -126,39 +126,33 @@ output interaction subtypes:
     hbss           sidechain-sidechain hydrogen bonds
     wb             water bridges
     wb2            extended water bridges 
-    hls            ligand-sidechain residue hydrogen bonds 
-    hlb            ligand-backbone residue hydrogen bonds 
     lwb            ligand water bridges
     lwb2           extended ligand water bridges 
+    hls            ligand-sidechain residue hydrogen bonds 
+    hlb            ligand-backbone residue hydrogen bonds 
 
 
-examples:
-Salt bridges and hydrogen bonds for residues 100 to 160:
-python dynamic_contacts.py --topology TOP.pdb --trajectory TRAJ.nc --output output.tsv --cores 12 --solv IP3 --sele "chain A and resid 100 to 160" --ligand EJ4 --itype sb hb lhb
+Examples
+========
+
+Compute salt bridges and hydrogen bonds for residues 100 to 160:
+    python get_dynamic_contacts.py --topology TOP.pdb \
+    --trajectory TRAJ.nc \
+    --output output.tsv \
+    --cores 12 \
+    --solv IP3 \
+    --sele "chain A and resid 100 to 160" \
+    --ligand EJ4 \
+    --itype sb hb lhb
 
 Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
-python dynamic_contacts.py --topology TOP.psf --trajectory TRAJ.dcd --output output.tsv --cores 6 --itype pc ps vdw
+python get_dynamic_contacts.py --topology TOP.psf --trajectory TRAJ.dcd --output output.tsv --cores 6 --itype pc ps vdw
 
 Salt bridges and hydrogen bonds in the entire protein with modified distance cutoffs:
-python dynamic_contacts.py --topology TOP.mae --trajectory TRAJ.dcd --output output.tsv --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype sb hb
+python get_dynamic_contacts.py --topology TOP.mae --trajectory TRAJ.dcd --output output.tsv --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype sb hb
 """
 
 DESCRIPTION = "Computes non-covalent contact networks in MD simulations."
-
-
-def validate_itypes(itypes):
-    """
-    Prints error and halts program if specified interaction type is invalid
-    """
-    valid_itypes = ["sb", "pc", "ps", "ts", "vdw", "hb", "lhb"]
-
-    for itype in itypes:
-        if itype not in valid_itypes:
-            print("%s not a valid interaction type ..." % (itype))
-            exit(1)
-    if not itypes:
-        print("Need to specify at least one interaction type ...")
-        exit(1)
 
 
 def process_geometric_criterion_args(args):
@@ -211,22 +205,21 @@ def main(traj_required=True):
     parser.add_argument('--vdw_epsilon', type=float, default=0.5, help='amount of padding for calculating vanderwaals contacts [default = 0.5 angstroms]')
     parser.add_argument('--vdw_res_diff', type=int, default=2, help='minimum residue distance for which to consider computing vdw interactions')
 
-    # Parse interaction types
-    class ITypeAction(argparse.Action):
-        def __call__(self, parser, ns, values, option):
-            if self.dest == "all":
-                ns.itypes = set([])
-            if not hasattr(ns, "itypes"):
-                ns.itypes = set()
-            ns.itypes.add(self.dest)
-    parser.add_argument('--salt-bridge', '-sb', dest='sb', action=ITypeAction, nargs=0, help="Compute salt bridge interactions")
-    parser.add_argument('--pi-cation', '-pc', dest='pc', action=ITypeAction, nargs=0, help="Compute pi-cation interactions")
-    parser.add_argument('--pi-stacking', '-ps', dest='ps', action=ITypeAction, nargs=0, help="Compute pi-stacking interactions")
-    parser.add_argument('--t-stacking', '-ts', dest='ts', action=ITypeAction, nargs=0, help="Compute t-stacking interactions")
-    parser.add_argument('--vanderwaals', '-vdw', dest='vdw', action=ITypeAction, nargs=0, help="Compute van der Waals interactions (warning: there will be many)")
-    parser.add_argument('--hbond', '-hb', dest='hb', action=ITypeAction, nargs=0, help="Compute hydrogen bond interactions")
-    parser.add_argument('--ligand-hbond', '-lhb', dest='lhb', action=ITypeAction, nargs=0, help="Compute ligand hydrogen bond interactions")
-    parser.add_argument('--all-interactions', '-all', dest='all', action='store_true', help="Compute all types of interactions")
+
+    parser.add_argument('--itypes',
+                        required=True,
+                        type=str,
+                        nargs="+",
+                        metavar="ITYPE",
+                        help='Compute only these interaction types. Valid choices are: \n'
+                             '* all (default), \n'
+                             '* sb (salt-bridges), \n'
+                             '* pc (pi-cation), \n'
+                             '* ps (pi-stacking), \n'
+                             '* ts (t-stacking), \n'
+                             '* vdw (van der Waals), \n'
+                             '* hb (hydrogen bonds)\n'
+                             '* lhb (ligand hydrogen bonds)')
 
     args, unknown = parser.parse_known_args()
 
@@ -240,14 +233,17 @@ def main(traj_required=True):
     stride = args.stride
     geom_criterion_values = process_geometric_criterion_args(args)
 
-    if args.all:
-        itypes = ["sb", "pc", "ps", "ts", "vdw", "hb", "lhb"]
-    elif not hasattr(args, "itypes"):
-        print("Error: at least one interaction type or '--all-interactions' is required")
-        exit(1)
+    # Check interaction types
+    all_itypes = ["sb", "pc", "ps", "ts", "vdw", "hb", "lhb"]
+    if "all" in args.itypes:
+        itypes = all_itypes
     else:
+        for itype in args.itypes:
+            if itype not in all_itypes:
+                print("Error: " + itype + " is not a valid interaction type")
+                exit(1)
+
         itypes = args.itypes
-    validate_itypes(itypes)
 
     # Begin computation
     tic = datetime.datetime.now()
