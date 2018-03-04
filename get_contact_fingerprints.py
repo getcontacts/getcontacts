@@ -103,13 +103,12 @@ def main():
                         type=float,
                         required=False,
                         default=0.6,
-                        help="Only interactions occurring at least this frequently will be plotted")
+                        help="Only interactions occurring at least this frequently will be plotted (default: 0.6)")
     parser.add_argument('--cluster_columns',
                         type=bool,
                         required=False,
                         default=False,
-                        help="Perform hierarchical clustering on the columns")
-
+                        help="Perform hierarchical clustering on the columns (default: False)")
 
     args = parser.parse_args()
 
