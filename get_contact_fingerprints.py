@@ -42,7 +42,7 @@ def write_frequencytable(freq_table, col_labels, out_file):
         out_file.write("\t".join([res1, res2] + freq_strings) + "\n")
 
 
-def plot_frequencies(freq_table, col_labels, out_file):
+def plot_frequencies(freq_table, col_labels, out_file, cluster_columns):
     import pandas as pd
     import matplotlib
     import os
@@ -54,7 +54,7 @@ def plot_frequencies(freq_table, col_labels, out_file):
     
     freq_matrix = np.array([freq_table[(r1, r2)] for (r1, r2) in freq_table])
     row_labels = [r1 + " - " + r2 for (r1, r2) in freq_table]
-    pdframe = pd.DataFrame(freq_matrix, index=row_labels, columns=col_labels)
+    pdframe = pd.DataFrame(freq_matrix, index=row_labels, columns=col_labels, col_cluster=cluster_columns)
     fingerprints = sns.clustermap(pdframe, figsize=(10,20), cmap='Blues')
 
     if out_file is not None:
@@ -101,6 +101,12 @@ def main():
                         required=False,
                         default=0.6,
                         help="Only interactions occurring at least this frequently will be plotted")
+    parser.add_argument('--cluster_columns',
+                        type=bool,
+                        required=False,
+                        default=False,
+                        help="Perform hierarchical clustering on the columns")
+
 
     args = parser.parse_args()
 
@@ -116,7 +122,7 @@ def main():
     if args.table_output is not None:
         write_frequencytable(freq_table, column_headers, args.table_output)
 
-    plot_frequencies(freq_table, column_headers, args.plot_output)
+    plot_frequencies(freq_table, column_headers, args.plot_output, args.cluster_columns)
 
 
 if __name__ == '__main__':
