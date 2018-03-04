@@ -43,8 +43,6 @@ is just used as a filter. A third column can be supplied indicating a color in
 CSS-format (e.g. '#FF0000' or 'red').
 """
 
-import sys
-
 
 def main():
     """
