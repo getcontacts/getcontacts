@@ -236,7 +236,7 @@ def main():
     output_file.write('#\ttotal_frames:%d\tinteraction_types:%s\n' % (total_frames, ','.join(itypes)))
     output_file.write('#\tColumns:\tresidue_1,\tresidue_2\tframe_count\tcontact_frequency\n')
     for (res1, res2), (count, frequency) in frequencies.items():
-        output_file.write('\t'.join([res1, res2, str(count), "%.3f" % frequency]) + "\n")
+        output_file.write('\t'.join([res1, res2, "%.3f" % frequency]) + "\n")
 
 
 if __name__ == '__main__':

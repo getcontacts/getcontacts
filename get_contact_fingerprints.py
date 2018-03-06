@@ -23,7 +23,7 @@ def parse_frequencyfiles(freq_files, freq_cutoff):
             tokens = line.split("\t")
             res1 = tokens[0]
             res2 = tokens[1]
-            freq = float(tokens[3])
+            freq = float(tokens[2])
 
             if not (res1, res2) in ret:
                 ret[(res1, res2)] = np.zeros(columns)
