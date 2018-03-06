@@ -72,7 +72,12 @@ def plot_frequencies(freq_table, col_labels, out_file, cluster_columns):
     fingerprints.cax.set_visible(False)
 
     if out_file is not None:
+        import matplotlib.pyplot as plt
+        plt.setp(fingerprints.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
+        plt.setp(fingerprints.ax_heatmap.xaxis.get_majorticklabels(), rotation=90)
+
         fingerprints.savefig(out_file)
+
         print("Wrote fingerprint heatmap to "+out_file)
     else:
         import pylab as plt
