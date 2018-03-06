@@ -9,7 +9,7 @@ across all inputs.
 The inputs are one or more MDContact output file paths as well as an
 output path. The user may also specify a subset of interaction types
 to compute frequencies for. The user may additionally provide a label
-file to convert residue labelings (typically for the use of aligning
+file to convert residue labellings (typically for the use of aligning
 sequences for performing frequency comparisons with other
 trajectories).
 
@@ -45,7 +45,7 @@ def gen_counts(input_lines, interaction_types, residuelabels=None):
         labels = {"A:ALA:1": "A1", "A:ARG:4": "R4", "A:CYS:5": "C5"}
 
         # Only consider hbbb and vdw, filter away THR, and map to single-letter labels
-        gen_freqs(inputs, ["hbbb", "vdw"], labels)
+        gen_counts(inputs, ["hbbb", "vdw"], labels)
         #  Returns: { ("A1", "R4"): 1, ("A1", "C5"): 1 }
 
     Parameters
@@ -188,7 +188,7 @@ def main():
                         required=True,
                         nargs='+',
                         metavar='FILE.tsv',
-                        help="Path to one or more MDContact outputs")
+                        help="Path to one or more contact-file outputs")
     parser.add_argument('--label_file',
                         type=argparse.FileType('r'),
                         required=False,
@@ -198,7 +198,7 @@ def main():
                         type=argparse.FileType('w'),
                         required=True,
                         metavar='FILE.tsv',
-                        help="Path to gen_freqs output")
+                        help="Path to output file")
     parser.add_argument('--itypes',
                         required=False,
                         default="all",
@@ -213,9 +213,9 @@ def main():
                              '* ts (t-stacking), \n'
                              '* vdw (van der Waals), \n'
                              '* hbbb, hbsb, hbss, (hydrogen bonds with specific backbone/side-chain profile)\n'
-                             '* wb, wb2 (water-bridges and water-water-bridges) \n'
+                             '* wb, wb2 (water-bridges and extended water-bridges) \n'
                              '* hls, hlb (ligand-sidechain and ligand-backbone hydrogen bonds), \n'
-                             '* lwb, lwb2 (ligand water-bridges and water-water-bridges)')
+                             '* lwb, lwb2 (ligand water-bridges and extended water-bridges)')
 
     # results, unknown = parser.parse_known_args()
     args = parser.parse_args()
