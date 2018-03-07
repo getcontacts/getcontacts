@@ -83,6 +83,9 @@ def gen_counts(input_lines, interaction_types, residuelabels=None):
             continue
 
         frame = int(tokens[0])
+        if frame + 1 > total_frames:
+            total_frames = frame + 1
+
         res1 = atomid_to_resid(tokens[2])
         res2 = atomid_to_resid(tokens[3])
 
