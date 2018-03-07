@@ -9,6 +9,7 @@ from __future__ import division
 import sys
 import argparse
 import numpy as np
+from contact_calc.flare import compose_frequencytable, write_json
 
 
 def parse_frequencyfiles(freq_files, freq_cutoff):
@@ -35,11 +36,12 @@ def parse_frequencyfiles(freq_files, freq_cutoff):
     return ret
 
 
-def write_frequencytable(freq_table, col_labels, out_file):
-    out_file.write("\t".join([] + col_labels) + "\n")
-    for (res1, res2) in freq_table:
-        freq_strings = [str(freq) for freq in freq_table[(res1, res2)]]
-        out_file.write("\t".join([res1, res2] + freq_strings) + "\n")
+def write_frequencytable(freq_table, col_labels, fname):
+    with open(fname, "w") as out_file:
+        out_file.write(",".join(["", ""] + col_labels) + "\n")
+        for (res1, res2) in freq_table:
+            freq_strings = [str(freq) for freq in freq_table[(res1, res2)]]
+            out_file.write(",".join([res1, res2] + freq_strings) + "\n")
 
 
 def plot_frequencies(freq_table, col_labels, out_file, cluster_columns):
@@ -71,17 +73,11 @@ def plot_frequencies(freq_table, col_labels, out_file, cluster_columns):
     # Remove color bar
     fingerprints.cax.set_visible(False)
 
-    if out_file is not None:
-        import matplotlib.pyplot as plt
-        plt.setp(fingerprints.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
-        plt.setp(fingerprints.ax_heatmap.xaxis.get_majorticklabels(), rotation=90)
+    import matplotlib.pyplot as plt
+    plt.setp(fingerprints.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
+    plt.setp(fingerprints.ax_heatmap.xaxis.get_majorticklabels(), rotation=90)
 
-        fingerprints.savefig(out_file)
-
-        print("Wrote fingerprint heatmap to "+out_file)
-    else:
-        import pylab as plt
-        plt.show()
+    fingerprints.savefig(out_file)
 
 
 def main():
@@ -100,13 +96,23 @@ def main():
                         required=True,
                         nargs='+',
                         help="Paths to one or more residue frequency files")
+    parser.add_argument('--frequency_cutoff',
+                        type=float,
+                        required=False,
+                        default=0.6,
+                        help="Only interactions occurring at least this frequently will be plotted (default: 0.6)")
     parser.add_argument('--column_headers',
                         type=str,
                         required=False,
                         nargs='+',
                         help="Header column labels. If nothing is specified, the input_frequencies filenames are used")
+    parser.add_argument('--cluster_columns',
+                        type=bool,
+                        required=False,
+                        default=False,
+                        help="Perform hierarchical clustering on the columns (default: False)")
     parser.add_argument('--table_output',
-                        type=argparse.FileType('w'),
+                        type=str,
                         required=False,
                         default=None,
                         help="If specified, the tab-separated frequency table will be written to this file")
@@ -115,16 +121,11 @@ def main():
                         required=False,
                         default=None,
                         help="If specified, the heatmap will be written to this file (supports svg and png formats)")
-    parser.add_argument('--frequency_cutoff',
-                        type=float,
+    parser.add_argument('--flare_output',
+                        type=str,
                         required=False,
-                        default=0.6,
-                        help="Only interactions occurring at least this frequently will be plotted (default: 0.6)")
-    parser.add_argument('--cluster_columns',
-                        type=bool,
-                        required=False,
-                        default=False,
-                        help="Perform hierarchical clustering on the columns (default: False)")
+                        default=None,
+                        help="If specified, a compare-flare will be written to this json-file")
 
     args = parser.parse_args()
 
@@ -137,10 +138,24 @@ def main():
         sys.stderr.write("\nError: --column_header arguments must match length of --input_frequencies\n")
         sys.exit(2)
 
+    # Check output format and call corresponding function(s)
+    if args.table_output is None and args.flare_output is None and args.plot_output is None:
+        parser.print_help(sys.stderr)
+        sys.stderr.write("\nError: Either --table_output, --flare_output, or --plot_output must be specified\n")
+        sys.exit(2)
+
     if args.table_output is not None:
         write_frequencytable(freq_table, column_headers, args.table_output)
+        print("Wrote frequency table to "+args.table_output)
 
-    plot_frequencies(freq_table, column_headers, args.plot_output, args.cluster_columns)
+    if args.flare_output is not None:
+        compare_flare = compose_frequencytable(freq_table, column_headers, args.frequency_cutoff)
+        write_json(compare_flare, args.flare_output)
+        print("Wrote multi flare to "+args.flare_output)
+
+    if args.plot_output is not None:
+        plot_frequencies(freq_table, column_headers, args.plot_output, args.cluster_columns)
+        print("Wrote fingerprint heatmap to "+args.plot_output)
 
 
 if __name__ == '__main__':

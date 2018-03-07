@@ -27,10 +27,23 @@ import json
 import re
 import sys
 
-__all__ = ['parse_contacts', 'parse_residuelabels', 'create_flare', 'compose_flares', 'write_json']
+__all__ = ['parse_contacts', 'parse_residuelabels', 'create_flare', 'compose_flares', 'write_json',
+           'compose_frequencytable']
 
 
 def write_json(flare, fname):
+    """
+    Serialize the flare object as json with two space indentation and write to fname. The output is expected to have a
+    number of integer-lists (frames) that will be compressed into single lines.
+
+    Parameters
+    ----------
+    flare: dict of (str, list)
+        Flare object to write
+
+    fname: str
+        Filename to write
+    """
     pretty_json = json.dumps(flare, indent=2)
     # Put list-of-numbers on a single line
     pretty_json = re.sub(r"(?<=\d,)\n *|(?<=\[)\n *(?=\d)|(?<=\d)\n *(?=\])", "", pretty_json, flags=re.MULTILINE)
@@ -261,6 +274,49 @@ def parse_contacts(contact_file, itypes):
         ret.append(tuple(columns))
 
     contact_file.close()
+
+    return ret
+
+
+def compose_frequencytable(freq_table, column_headers, freq_cutoff):
+    """
+    asdf
+    Parameters
+    ----------
+    freq_table: dict of tuple: array
+        Each key is a tuple of residue ids and the value is a numpy array indicating frequencies for each column
+        Example:
+            {
+                ('A:ARG:293', 'A:GLN:297'): array([ 1.,  1.]),
+                ('A:ASN:280', 'A:TRP:246'): array([ 1.,  1.]),
+                ('A:ADN:400', 'A:ASN:181'): array([ 1.,  0.]),
+                ('A:ARG:293', 'A:ASN:280'): array([ 0.,  1.]),
+                ('A:ASN:181', 'A:TRP:246'): array([ 0.,  1.]),
+                ('A:ADN:400', 'A:ARG:293'): array([ 0.,  1.]),
+                ('A:GLN:297', 'A:GLN:297'): array([ 0.,  1.])
+            }
+
+    column_headers: list of str
+        Name of each condition / column
+
+    freq_cutoff: float
+        Frequency values above this will be considered an edge
+
+    fname: str
+        The json file where results are written to
+    """
+    ret = {
+        "edges": [],
+        "frameDict": {str(i): col_head for i, col_head in enumerate(column_headers)}
+    }
+
+    for (res1, res2), freq_arr in freq_table.items():
+        edge = {"name1": res1, "name2": res2, "frames": []}
+        for i in range(freq_arr.shape[0]):
+            if freq_arr[i] >= freq_cutoff:
+                edge["frames"].append(i)
+
+        ret["edges"].append(edge)
 
     return ret
 
