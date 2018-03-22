@@ -256,7 +256,7 @@ def compute_fragment_contacts_helper(args):
 #     return stitched_filename
 
 
-def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, stride, solvent_resn, sele_id, ligand):
+def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, stride, skip, solvent_resn, sele_id, ligand):
     """ Computes non-covalent contacts across the entire trajectory and writes them to `output`.
 
     Parameters
@@ -275,6 +275,8 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, st
         Number of CPU cores to parallelize over
     stride: int, default = 1
         Frequency to skip frames in trajectory
+    skip: int, default = 0
+        Number of frames to skip at the beginning of the trajectory (to allow equilibriation)
     solvent_resn: string, default = TIP3
         Denotes the resname of solvent in simulation
     sele_id: string, default = None
@@ -297,8 +299,9 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, st
     input_args = []
 
     # Generate input arguments for each trajectory piece
-    print("Processing %s with %s total frames and stride %s" % (traj, str(sim_length), str(stride)))
-    for frag_idx, beg_frame in enumerate(range(0, sim_length, TRAJ_FRAG_SIZE)):
+    print("Processing %s with %s total frames and stride %s, skipping first %s frames"
+          % (traj, str(sim_length), str(stride), str(skip)))
+    for frag_idx, beg_frame in enumerate(range(skip, sim_length, TRAJ_FRAG_SIZE)):
         # if frag_idx > 0: break
         end_frame = beg_frame + TRAJ_FRAG_SIZE - 1
         # print("Preparing fragment %s, beg_frame:%s end_frame:%s" % (frag_idx, beg_frame, end_frame))

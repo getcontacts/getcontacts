@@ -65,6 +65,8 @@ optional arguments:
     --solv SOLVENT          resname of solvent molecule [default = "TIP3"]
     --sele SELECTION        atom selection query in VMD [default = None]
     --ligand LIGAND         resname of ligand molecule [default = None]
+    --stride STRIDE         skip frames with specified frequency [default = 1]
+    --skip SKIP             skip specified number of frames at beginning of trajectory [default = 0]
 
 geometric criteria options:
     --sb_cutoff_dist SALT_BRIDGE_CUTOFF_DISTANCE
@@ -188,6 +190,7 @@ def main(traj_required=True):
     parser.add_argument('--solv', type=str, default="TIP3", help='resname of solvent molecule')
     parser.add_argument('--sele', type=str, default=None, help='atom selection query in VMD')
     parser.add_argument('--stride', type=int, default=1, help='skip frames with specified frequency')
+    parser.add_argument('--skip', type=int, default=0, help='skip specified number of frames at beginning of trajectory')
     parser.add_argument('--ligand', type=str, nargs="+", default=[], help='resname of ligand molecule')
 
     # Parse geometric criterion arguments
@@ -231,6 +234,7 @@ def main(traj_required=True):
     solv = args.solv
     sele = args.sele
     stride = args.stride
+    skip = args.skip
     geom_criterion_values = process_geometric_criterion_args(args)
 
     # Check interaction types
@@ -247,7 +251,7 @@ def main(traj_required=True):
 
     # Begin computation
     tic = datetime.datetime.now()
-    compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, stride, solv, sele, ligand)
+    compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, stride, skip, solv, sele, ligand)
     toc = datetime.datetime.now()
     print("Computation time: " + str((toc-tic).total_seconds()) + " seconds")
 
