@@ -90,6 +90,10 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW
 
         element1 = atom1_label_split[3][0]
         element2 = atom2_label_split[3][0]
+        if element1 not in ATOM_RADIUS:
+            element1 = 'C'
+        if element2 not in ATOM_RADIUS:
+            element2 = 'C'
 
         distance = compute_distance(traj_frag_molid, frame_idx, atom1_label, atom2_label)
         vanderwaal_cutoff = ATOM_RADIUS[element1] + ATOM_RADIUS[element2] + VDW_EPSILON

@@ -49,7 +49,7 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label):
 
     residue_to_atom_names = {"PHE": "CG CE1 CE2", "TRP": "CD2 CZ2 CZ3", "TYR": "CG CE1 CE2"}
     chain, resname, resid = aromatic_residue_label.split(":")
-    evaltcl("set aromatic_atoms [atomselect %s \" (chain %s) and (resname %s) and (resid %s) and (name %s)\" frame %s]"
+    evaltcl("set aromatic_atoms [atomselect %s \"(chain %s) and (resname %s) and (resid '%s') and (name %s)\" frame %s]"
             % (traj_frag_molid, chain, resname, resid, residue_to_atom_names[resname], frame_idx))
     aromatic_atom_triplet = get_atom_selection_labels("aromatic_atoms")
     evaltcl('$aromatic_atoms delete')
@@ -135,6 +135,10 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, itype
     for aromatic1_res, aromatic2_res in res_pairs:
         aromatic1_atom_labels = residue_to_atom_labels[aromatic1_res]
         aromatic2_atom_labels = residue_to_atom_labels[aromatic2_res]
+
+        # Ignore interactions between residues with missing atoms
+        if len(aromatic1_atom_labels) != 3 or len(aromatic2_atom_labels) != 3:
+            continue
 
         # Distance between two aromatic centers must be below DISTANCE_CUTOFF
         arom1_atom1_coord = get_coord(traj_frag_molid, frame_idx, aromatic1_atom_labels[0])
