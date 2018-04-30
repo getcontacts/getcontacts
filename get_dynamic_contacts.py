@@ -1,160 +1,78 @@
 #!/usr/bin/env python3
+"""
+Computes non-covalent contact networks for MD simulations.
 
-############################################################################
-# Copyright 2018 Anthony Ma & Stanford University                          #
-#                                                                          #
-# Licensed under the Apache License, Version 2.0 (the "License");          #
-# you may not use this file except in compliance with the License.         #
-# You may obtain a copy of the License at                                  #
-#                                                                          #
-#     http://www.apache.org/licenses/LICENSE-2.0                           #
-#                                                                          #
-# Unless required by applicable law or agreed to in writing, software      #
-# distributed under the License is distributed on an "AS IS" BASIS,        #
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #
-# See the License for the specific language governing permissions and      #
-# limitations under the License.                                           #
-############################################################################
+The input is a topology, trajectory, and a specification of interaction-types. The
+output is a tab-separated file where each line (except the first two) records frame,
+interaction-type, and atoms involved in the interaction, e.g.:
 
-import argparse
-from contact_calc.compute_contacts import *
+    # total_frames:20000 interaction_types:sb,pc,ps,ts,hb
+    # Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]
+    0   sb     C:GLU:21:OE2    C:ARG:86:NH2
+    0   ps     C:TYR:36:CG     C:TRP:108:CG
+    0   ts     A:TYR:36:CG     A:TRP:108:CG
+    0   hbss   A:GLN:53:NE2    A:GLN:69:OE1
+    0   wb2    C:ASN:110:O     C:SER:111:OG    W:TIP3:1524:OH2    W:TIP3:2626:OH2
+    1   hbsb   A:LYS:28:N      A:HIS:27:ND1
+    1   hbsb   A:ASP:52:OD2    A:PHE:48:O
+    1   wb2    C:ASN:110:O     B:ARG:73:NH1    W:TIP3:1524:OH2    W:TIP3:506:OH2
+    1   wb2    C:ASN:110:O     C:SER:111:OG    W:TIP3:1524:OH2    W:TIP3:2626:OH2
+    ...
 
-HELP_STR = """
- ============================================================================
-| get_dynamic_contacts: A Python Library for computing non-covalent contacts |
-|                      throughout Molecular Dynamics Trajectories.           |
-|                      Version 1.1.0                                         |
-|                                                                            |
-| Contact: Anthony Kai Kwang Ma, anthonyma27@gmail.com                       |
- ============================================================================
+Interactions that involve more than two atoms (water bridges and extended water bridges)
+have extra columns to denote the identities of the water molecules. For simplicity, all
+stacking and pi-cation interactions involving an aromatic ring will be denoted by the
+CG atom.
 
-Command was:
-python3 get_dynamic_contacts.py --help
-
-usage: python3 get_dynamic_contacts.py [--help] [--topology TOPOLOGY] 
-                      [--trajectory TRAJECTORY]
-                      [--output OUTPUT_PATH] 
-                      [--cores NUM_CORES]
-                      [--solv SOLVENT]
-                      [--sele SELECTION]
-                      [--ligand LIGAND]
-                      [--itype INTERACTION_TYPES]
-                      [--sb_cutoff_dist SALT_BRIDGE_CUTOFF_DISTANCE]
-                      [--pc_cutoff_dist PI_CATION_CUTOFF_DISTANCE]
-                      [--pc_cutoff_ang PI_CATION_CUTOFF_ANGLE]
-                      [--ps_cutoff_dist PI_STACK_CUTOFF_DISTANCE]
-                      [--ps_cutoff_ang PI_STACK_CUTOFF_ANGLE]
-                      [--ps_psi_ang PI_STACK_PSI_ANGLE]
-                      [--ts_cutoff_dist T_STACK_CUTOFF_DISTANCE]
-                      [--ts_cutoff_ang T_STACK_CUTOFF_ANGLE]
-                      [--ts_psi_ang T_STACK_PSI_ANGLE]
-                      [--hbond_cutoff_dist HBOND_CUTOFF_DISTANCE]
-                      [--hbond_cutoff_ang HBOND_CUTOFF_ANGLE]
-                      [--vdw_epsilon VDW_EPSILON]
+Interaction types are denoted by the following abbreviations:
+  · sb - salt bridges
+  · pc - pi-cation
+  · ps - pi-stacking
+  · ts - T-stacking
+  · vdw - van der Waals
+  Hydrogen bond subtypes:
+    · hbbb - Backbone-backbone hydrogen bonds
+    · hbsb - Backbone-sidechain hydrogen bonds
+    · hbss - Sidechain-sidechain hydrogen bonds
+    · wb - Water-mediated hydrogen bond
+    · wb2 - Extended water-mediated hydrogen bond
+  Ligand-hydrogen bond subtypes
+    · hlb - Ligand-backbone hydrogen bonds
+    · hls - Ligand-sidechain hydrogen bonds
+    · lwb - Ligand water-mediated hydrogen bond
+    · lwb2 - Ligand extended water-mediated hydrogen bond
 
 
-required arguments:
-    --topology TOPOLOGY             path to topology file 
-    --trajectory TRAJECTORY         path to trajectory file
-    --output OUTPUT_PATH            path to output file
-    --itype INTERACTION_TYPES       list of interaction type flags
-
-optional arguments:
-    --help                  show this help message and exit
-    --cores NUM_CORES       number of cpu cores to parallelize upon [default = 6]
-    --solv SOLVENT          resname of solvent molecule [default = "TIP3"]
-    --sele SELECTION        atom selection query in VMD [default = None]
-    --ligand LIGAND         resname of ligand molecule [default = None]
-    --stride STRIDE         skip frames with specified frequency [default = 1]
-    --skip SKIP             skip specified number of frames at beginning of trajectory [default = 0]
-
-geometric criteria options:
-    --sb_cutoff_dist SALT_BRIDGE_CUTOFF_DISTANCE
-                    cutoff for distance between anion and cation 
-                    atoms [default = 4.0 angstroms]
-    --pc_cutoff_dist PI_CATION_CUTOFF_DISTANCE
-                    cutoff for distance between cation and centroid
-                    of aromatic ring [default = 6.0 angstroms]
-    --pc_cutoff_ang PI_CATION_CUTOFF_ANGLE
-                    cutoff for angle between normal vector projecting
-                    from aromatic plane and vector from aromatic center
-                    to cation atom [default = 60 degrees]
-    --ps_cutoff_dist PI_STACK_CUTOFF_DISTANCE
-                    cutoff for distance between centroids of two aromatic
-                    rings [default = 7.0 angstroms]
-    --ps_cutoff_ang PI_STACK_CUTOFF_ANGLE
-                    cutoff for angle between the normal vectors projecting
-                    from each aromatic plane [default = 30 degrees]
-    --ps_psi_ang PI_STACK_PSI_ANGLE
-                    cutoff for angle between normal vector projecting from
-                    aromatic plane 1 and vector between the two aromatic
-                    centroids [default = 45 degrees]
-    --ts_cutoff_dist T_STACK_CUTOFF_DISTANCE
-                    cutoff for distance between centroids of two aromatic
-                    rings [default = 5.0 angstroms]
-    --ts_cutoff_ang T_STACK_CUTOFF_ANGLE
-                    cutoff for angle between the normal vectors projecting
-                    from each aromatic plane minus 90 degrees [default = 30 degrees]
-    --ts_psi_ang T_STACK_PSI_ANGLE
-                    cutoff for angle between normal vector projecting from
-                    aromatic plane 1 and vector between the two aromatic
-                    centroids [default = 45 degrees]
-    --hbond_cutoff_dist HBOND_CUTOFF_DISTANCE
-                    cutoff for distance between donor and acceptor atoms 
-                    [default = 3.5 angstroms]
-    --hbond_cutoff_ang HBOND_CUTOFF_ANGLE
-                    cutoff for angle between donor hydrogen acceptor 
-                    [default = 70 degrees]
-    --vdw_epsilon VDW_EPSILON
-                    amount of padding for calculating vanderwaals contacts 
-                    [default = 0.5 angstroms]
-    --vdw_res_diff VDW_RES_DIFF
-                    minimum residue distance for which to consider computing 
-                    vdw interactions [default = 2]
-
-
-interaction type flags:
-    sb             salt bridges 
-    pc             pi-cation 
-    ps             pi-stacking
-    ts             t-stacking
-    vdw            vanderwaals
-    hb             hydrogen bonds
-    lhb            ligand hydrogen bonds
-
-output interaction subtypes:
-    hbbb           backbone-backbone hydrogen bonds
-    hbsb           backbone-sidechain hydrogen bonds
-    hbss           sidechain-sidechain hydrogen bonds
-    wb             water bridges
-    wb2            extended water bridges 
-    lwb            ligand water bridges
-    lwb2           extended ligand water bridges 
-    hls            ligand-sidechain residue hydrogen bonds 
-    hlb            ligand-backbone residue hydrogen bonds 
-
-
-Examples
-========
+Examples:
 
 Compute salt bridges and hydrogen bonds for residues 100 to 160:
-    python get_dynamic_contacts.py --topology TOP.pdb \
-    --trajectory TRAJ.nc \
-    --output output.tsv \
-    --cores 12 \
-    --solv IP3 \
-    --sele "chain A and resid 100 to 160" \
-    --ligand EJ4 \
-    --itype sb hb lhb
+    get_dynamic_contacts.py --topology TOP.pdb \\
+                            --trajectory TRAJ.nc \\
+                            --output output.tsv \\
+                            --cores 12 \\
+                            --solv IP3 \\
+                            --sele "chain A and resid 100 to 160" \\
+                            --ligand EJ4 \\
+                            --itypes sb hb lhb
 
 Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
-python get_dynamic_contacts.py --topology TOP.psf --trajectory TRAJ.dcd --output output.tsv --cores 6 --itype pc ps vdw
+    get_dynamic_contacts.py --topology TOP.psf \\
+                            --trajectory TRAJ.dcd \\
+                            --output output.tsv \\
+                            --cores 6 \\
+                            --itypes pc ps vdw
 
 Salt bridges and hydrogen bonds in the entire protein with modified distance cutoffs:
-python get_dynamic_contacts.py --topology TOP.mae --trajectory TRAJ.dcd --output output.tsv --cores 6 --sb_cutoff_dist 5.0 --hbond_cutoff_dist 4.5 --itype sb hb
+    get_dynamic_contacts.py --topology TOP.mae \\
+                            --trajectory TRAJ.dcd \\
+                            --output output.tsv \\
+                            --sb_cutoff_dist 5.0 \\
+                            --hbond_cutoff_dist 4.5 \\
+                            --itypes sb hb
 """
 
-DESCRIPTION = "Computes non-covalent contact networks in MD simulations."
+import contact_calc.argparsers as ap
+from contact_calc.compute_contacts import *
 
 
 def process_geometric_criterion_args(args):
@@ -176,54 +94,9 @@ def process_geometric_criterion_args(args):
     return geom_criterion_values
 
 
-def main(traj_required=True):
-    if "--help" in sys.argv or "-h" in sys.argv:
-        print(HELP_STR)
-        exit(1)
-
-    # Parse required and optional arguments
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument('--topology', type=str, required=True, help='path to topology file ')
-    parser.add_argument('--trajectory', type=str, required=traj_required, default=None, help='path to trajectory file')
-    parser.add_argument('--output', type=str, required=True, help='path to output file')
-    parser.add_argument('--cores', type=int, default=6, help='number of cpu cores to parallelize upon')
-    parser.add_argument('--solv', type=str, default="TIP3", help='resname of solvent molecule')
-    parser.add_argument('--sele', type=str, default=None, help='atom selection query in VMD')
-    parser.add_argument('--stride', type=int, default=1, help='skip frames with specified frequency')
-    parser.add_argument('--skip', type=int, default=0, help='skip specified number of frames at beginning of trajectory')
-    parser.add_argument('--ligand', type=str, nargs="+", default=[], help='resname of ligand molecule')
-
-    # Parse geometric criterion arguments
-    parser.add_argument('--sb_cutoff_dist', type=float, default=4.0, help='cutoff for distance between anion and cation atoms [default = 4.0 angstroms]')
-    parser.add_argument('--pc_cutoff_dist', type=float, default=6.0, help='cutoff for distance between cation and centroid of aromatic ring [default = 6.0 angstroms]')
-    parser.add_argument('--pc_cutoff_ang', type=float, default=60, help='cutoff for angle between normal vector projecting from aromatic plane and vector from aromatic center to cation atom [default = 60 degrees]')
-    parser.add_argument('--ps_cutoff_dist', type=float, default=7.0, help='cutoff for distance between centroids of two aromatic rings [default = 7.0 angstroms]')
-    parser.add_argument('--ps_cutoff_ang', type=float, default=30, help='cutoff for angle between the normal vectors projecting from each aromatic plane [default = 30 degrees]')
-    parser.add_argument('--ps_psi_ang', type=float, default=45, help='cutoff for angle between normal vector projecting from aromatic plane 1 and vector between the two aromatic centroids [default = 45 degrees]')
-    parser.add_argument('--ts_cutoff_dist', type=float, default=5.0, help='cutoff for distance between centroids of two aromatic rings [default = 5.0 angstroms]')
-    parser.add_argument('--ts_cutoff_ang', type=float, default=30, help='cutoff for angle between the normal vectors projecting from each aromatic plane minus 90 degrees [default = 30 degrees]')
-    parser.add_argument('--ts_psi_ang', type=float, default=45, help='cutoff for angle between normal vector projecting from aromatic plane 1 and vector between the two aromatic centroids [default = 45 degrees]')
-    parser.add_argument('--hbond_cutoff_dist', type=float, default=3.5, help='cutoff for distance between donor and acceptor atoms [default = 3.5 angstroms]')
-    parser.add_argument('--hbond_cutoff_ang', type=float, default=70, help='cutoff for angle between donor hydrogen acceptor [default = 70 degrees]')
-    parser.add_argument('--vdw_epsilon', type=float, default=0.5, help='amount of padding for calculating vanderwaals contacts [default = 0.5 angstroms]')
-    parser.add_argument('--vdw_res_diff', type=int, default=2, help='minimum residue distance for which to consider computing vdw interactions')
-
-
-    parser.add_argument('--itypes',
-                        required=True,
-                        type=str,
-                        nargs="+",
-                        metavar="ITYPE",
-                        help='Compute only these interaction types. Valid choices are: \n'
-                             '* all (default), \n'
-                             '* sb (salt-bridges), \n'
-                             '* pc (pi-cation), \n'
-                             '* ps (pi-stacking), \n'
-                             '* ts (t-stacking), \n'
-                             '* vdw (van der Waals), \n'
-                             '* hb (hydrogen bonds)\n'
-                             '* lhb (ligand hydrogen bonds)')
-
+def main():
+    # Parse arguments
+    parser = ap.build_getcontact_parser(__doc__, True)
     args, unknown = parser.parse_known_args()
 
     top = args.topology
@@ -244,8 +117,7 @@ def main(traj_required=True):
     else:
         for itype in args.itypes:
             if itype not in all_itypes:
-                print("Error: " + itype + " is not a valid interaction type")
-                exit(1)
+                parser.error(itype + " is not a valid interaction type")
 
         itypes = args.itypes
 
@@ -269,5 +141,6 @@ if __name__ == "__main__":
     main()
 
     # Suppress stdout from vmd as program terminates
-    devnull = open('/dev/null', "w")
+    devnull = open("/dev/null", "w")
     os.dup2(devnull.fileno(), 1)
+
