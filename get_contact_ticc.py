@@ -72,14 +72,14 @@ def run_ticc(input_data, output_filename, cluster_number=range(2, 11), process_p
     print("Data shape %s, %s" % (np.shape(input_data)[0], np.shape(input_data)[1]))
 
     # get params via BIC
-    cluster_number = cluster_number if isinstance(cluster_number, list) else [cluster_number]
+    cluster_number = cluster_number if isinstance(cluster_number, list) else list(cluster_number)
     beta = beta if isinstance(beta, list) else [beta]
     lambda_param = lambda_param if isinstance(lambda_param, list) else [lambda_param]
     BIC_Iters = max_iters if BIC_Iters is None else BIC_Iters
     problem_instance = ticc.ProblemInstance(input_data=input_data, window_size=window_size,
                                             maxIters=BIC_Iters, threshold=threshold)
-    clusterResults = ticc.runHyperParameterTuning(beta, lambda_param, cluster_number,
-                                                  process_pool_size, problem_instance)
+    clusterResults = ticc.runHyperParameterTuning(beta, lambda_param, cluster_number, process_pool_size,
+                                                  problem_instance)
     final_results = []
     for cluster_number, resultPackage in clusterResults:
         params, results, score = resultPackage
