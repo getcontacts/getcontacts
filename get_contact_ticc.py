@@ -18,19 +18,21 @@ __author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
 __license__ = "APACHE2"
 
 import contact_calc.argparsers as ap
+import argparse
+import contact_calc.io_util as io
 import numpy as np
 import logging
 import ticc
+from sklearn.decomposition import TruncatedSVD
+from scipy.sparse import csr_matrix
 
 
-def run_ticc(input_data, output_filename, cluster_number=range(2, 11), process_pool_size=10,
-             window_size=1, lambda_param=[1e-2], beta=[0.01, 0.1, 0.5, 10, 50, 100, 500],
-             max_iters=1000, threshold=2e-5, covariance_filename=None,
-             input_format='matrix', delimiter=',', BIC_Iters=15, input_dimensions=50,
-             logging_level=logging.INFO):
+def run_ticc(input_data, output_filename, cluster_number=range(2, 11), process_pool_size=10, window_size=1,
+             lambda_param=[1e-2], beta=[0.01, 0.1, 0.5, 10, 50, 100, 500], max_iters=1000, threshold=2e-5,
+             BIC_Iters=15, logging_level=logging.INFO):
     """
     Required Parameters:
-    -- input_filename: the path to the data file. see input_format below
+    -- input_data: see input_format below
     -- output_filename: the output file name to write the cluster assignments
     Optional Parameters: BIC
     For each of these parameters, one can choose to specify:
@@ -67,15 +69,12 @@ def run_ticc(input_data, output_filename, cluster_number=range(2, 11), process_p
     #         pca = PCA(n_components=input_dimensions)
     #         input_data = pca.fit_transform(input_data)
 
-    print("Data shape %s, %s" % (
-        np.shape(input_data)[0], np.shape(input_data)[1]))
+    print("Data shape %s, %s" % (np.shape(input_data)[0], np.shape(input_data)[1]))
 
     # get params via BIC
-    cluster_number = cluster_number if isinstance(
-        cluster_number, list) else [cluster_number]
+    cluster_number = cluster_number if isinstance(cluster_number, list) else [cluster_number]
     beta = beta if isinstance(beta, list) else [beta]
-    lambda_param = lambda_param if isinstance(
-        lambda_param, list) else [lambda_param]
+    lambda_param = lambda_param if isinstance(lambda_param, list) else [lambda_param]
     BIC_Iters = max_iters if BIC_Iters is None else BIC_Iters
     problem_instance = ticc.ProblemInstance(input_data=input_data, window_size=window_size,
                                             maxIters=BIC_Iters, threshold=threshold)
@@ -102,55 +101,77 @@ def run_ticc(input_data, output_filename, cluster_number=range(2, 11), process_p
     return final_results
 
 
-def retrieveInputGraphData(input_filename, input_dimensions, delim=','):
+def featurizeContacts(residue_contacts, dimensions):
     mapping = {}  # edge to value
     sparse_cols = []  # list of indices that should be 1
+    counter = 0
+    curr_timestamp = None
 
-    with open(input_filename, 'r') as contact_file:
-        datareader = csv.reader(csvfile, delimiter=delim, quotechar='|')
-        counter = 0
-        curr_timestamp = None
-        for row in datareader:
-            key = "%s_%s" % (row[0], row[1])
-            timestamp = row[2]
-            if timestamp != curr_timestamp:  # new time
-                curr_timestamp = timestamp
-                sparse_cols.append(set())
-            if key not in mapping:  # a new feature
-                # assign this key to the current counter value
-                mapping[key] = counter
-                counter += 1
-            # assign this feature into the current time step
-            sparse_cols[-1].add(mapping[key])
+    for contact in residue_contacts:
+        timestamp = contact[0]
+        key = "%s_%s" % (contact[1], contact[2])
+        if timestamp != curr_timestamp:  # new time
+            curr_timestamp = timestamp
+            sparse_cols.append(set())
+        if key not in mapping:  # a new feature
+            # assign this key to the current counter value
+            mapping[key] = counter
+            counter += 1
+        # assign this feature into the current time step
+        sparse_cols[-1].add(mapping[key])
 
-    lenRow = len(mapping.keys())
-    if input_dimensions is None or lenRow <= input_dimensions:  # do not need to SVD
+    num_cols = len(mapping.keys())
+    if dimensions is None or num_cols <= dimensions:  # do not need to SVD
         rows = []
         for indices in sparse_cols:
             # indices is a set
-            row = [1.0 if i in indices else 0.0 for i in range(lenRow)]
+            row = [1.0 if i in indices else 0.0 for i in range(num_cols)]
             rows.append(row)
         return np.array(rows)
     else:
-        # need to truncated svd
+        # need truncated SVD
         data = []
         rows = []
         cols = []
         for i, indices in enumerate(sparse_cols):  # row
-            for j in range(lenRow):  # col
+            for j in range(num_cols):  # col
                 if j in indices:
                     data.append(1)
                     rows.append(i)
                     cols.append(j)
-        mat = csr_matrix((data, (rows, cols)),
-                         shape=(len(sparse_cols), lenRow))
-        solver = TruncatedSVD(n_components=input_dimensions)
+        mat = csr_matrix((data, (rows, cols)), shape=(len(sparse_cols), num_cols))
+        solver = TruncatedSVD(n_components=dimensions)
         return solver.fit_transform(mat)
+
 
 def main():
     # Parse arguments
     parser = ap.PrintUsageParser(__doc__)
+    parser.add_argument("--input_contacts",
+                        type=argparse.FileType('r'),
+                        required=True,
+                        help="Path to contact file")
+    parser.add_argument("--clusters",
+                        type=int,
+                        required=False,
+                        default=5,
+                        help="Number of clusters")
+    parser.add_argument("--output",
+                        type=str,
+                        required=True,
+                        help="Path to output TICC file")
+    parser.add_argument("--max_dimension",
+                        type=int,
+                        required=False,
+                        default=50,
+                        help="Max number of dimensions")
     args = parser.parse_args()
+
+    atomic_contacts, num_frames = io.parse_contacts(args.input_contacts)
+    residue_contacts = io.res_contacts(atomic_contacts)
+    time_matrix = featurizeContacts(residue_contacts, args.max_dimension)
+    ticc = run_ticc(time_matrix, args.output)
+    print(ticc)
 
 
 if __name__ == "__main__":

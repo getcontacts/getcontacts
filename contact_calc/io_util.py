@@ -2,14 +2,14 @@ __author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
 __license__ = "APACHE2"
 
 
-def parse_contacts(input_file):
+def parse_contacts(input_lines):
     """
     Read a contact-file (tab-separated file with columns: frame, i-type, atomid1, atomid2[, atomid3[, atomid4]] and
     return it as a list of lists with frames converted to ints. The total number of frames is also returned
 
     Parameters
     ----------
-    input_file: str
+    input_file: iterable
         Valid and readable input-file
 
     Returns
@@ -17,29 +17,28 @@ def parse_contacts(input_file):
     (list of list, int)
         The list of interactions and the total number of frames
     """
-    with open(input_file) as f:
-        ret = []
-        total_frames = 0
-        for line in f:
-            line = line.strip()
-            if "total_frames" in line:
-                tokens = line.split(" ")
-                total_frames = int(tokens[1][tokens[1].find(":")+1:])
+    ret = []
+    total_frames = 0
+    for line in input_lines:
+        line = line.strip()
+        if "total_frames" in line:
+            tokens = line.split(" ")
+            total_frames = int(tokens[1][tokens[1].find(":")+1:])
 
-            if len(line) == 0 or line[0] == "#":
-                continue
+        if len(line) == 0 or line[0] == "#":
+            continue
 
-            tokens = line.split("\t")
-            tokens[0] = int(tokens[0])
+        tokens = line.split("\t")
+        tokens[0] = int(tokens[0])
 
-            ret.append(tokens)
+        ret.append(tokens)
 
-        return ret, total_frames
+    return ret, total_frames
 
 
 def res_contacts(contacts):
     """
-    Given a list of atomic contacts, compute the residue contacts
+    Convert atomic contacts into unique residue contacts.
 
     Example
     -------
@@ -68,6 +67,14 @@ def res_contacts(contacts):
             resi1, resi2 = resi2, resi1
         frame_dict[frame].add((resi1, resi2))
 
-    # todo convert to list
+    ret = []
+    for frame in sorted(frame_dict):
+        for resi1, resi2 in frame_dict[frame]:
+            ret.append([frame, resi1, resi2])
+
+    return ret
+
+
+
 
 
