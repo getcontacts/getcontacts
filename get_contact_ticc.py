@@ -101,7 +101,7 @@ def run_ticc(input_data, output_filename, cluster_number=range(2, 11), process_p
     return final_results
 
 
-def featurizeContacts(residue_contacts, dimensions):
+def featurize_contacts(residue_contacts, dimensions):
     mapping = {}  # edge to value
     sparse_cols = []  # list of indices that should be 1
     counter = 0
