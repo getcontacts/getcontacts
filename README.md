@@ -1,4 +1,4 @@
-# MDContactNetworks
+# GetContacts
 
 Application for efficiently computing non-covalent contact networks in molecular structures and MD simulations. Following example computes all salt bridges, pi cation, aromatic, and hydrogen bond interactions in a trajectory:
 ```bash
