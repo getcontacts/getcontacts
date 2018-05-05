@@ -19,7 +19,7 @@ __license__ = "APACHE2"
 
 import contact_calc.argparsers as ap
 import argparse
-import contact_calc.io_util as io
+import contact_calc.transformations as io
 import numpy as np
 import logging
 import ticc
@@ -29,7 +29,7 @@ from scipy.sparse import csr_matrix
 
 def run_ticc(input_data, output_filename, cluster_number=range(2, 11), process_pool_size=10, window_size=1,
              lambda_param=[1e-2], beta=[0.01, 0.1, 0.5, 10, 50, 100, 500], max_iters=1000, threshold=2e-5,
-             BIC_Iters=15, logging_level=logging.INFO):
+             BIC_Iters=15, logging_level=logging.CRITICAL):
     """
     Required Parameters:
     -- input_data: see input_format below
@@ -69,7 +69,7 @@ def run_ticc(input_data, output_filename, cluster_number=range(2, 11), process_p
     #         pca = PCA(n_components=input_dimensions)
     #         input_data = pca.fit_transform(input_data)
 
-    print("Data shape %s, %s" % (np.shape(input_data)[0], np.shape(input_data)[1]))
+    # print("Data shape %s, %s" % (np.shape(input_data)[0], np.shape(input_data)[1]))
 
     # get params via BIC
     cluster_number = cluster_number if isinstance(cluster_number, list) else list(cluster_number)
@@ -84,8 +84,8 @@ def run_ticc(input_data, output_filename, cluster_number=range(2, 11), process_p
     for cluster_number, resultPackage in clusterResults:
         params, results, score = resultPackage
         beta, lambda_param = params
-        print("Via BIC with score %s, using params beta: %s, clusterNum %s, lambda %s" % (
-            score, beta, cluster_number, lambda_param))
+        # print("Via BIC with score %s, using params beta: %s, clusterNum %s, lambda %s" % (
+        #     score, beta, cluster_number, lambda_param))
         # perform real run
         if BIC_Iters == max_iters:  # already performed the full run
             (cluster_assignments, cluster_MRFs) = results
@@ -94,8 +94,8 @@ def run_ticc(input_data, output_filename, cluster_number=range(2, 11), process_p
                 window_size=window_size, number_of_clusters=cluster_number, lambda_parameter=lambda_param,
                 beta=beta, maxIters=max_iters, threshold=threshold,
                 input_data=input_data, num_processes=process_pool_size, logging_level=logging_level)
-        outstream = "%s_%s" % (cluster_number, output_filename)
-        np.savetxt(outstream, cluster_assignment, fmt='%d', delimiter=',')
+        # outstream = "%s_%s" % (cluster_number, output_filename)
+        # np.savetxt(outstream, cluster_assignment, fmt='%d', delimiter=',')
         final_results.append(
             (cluster_assignment, cluster_MRFs, (beta, lambda_param, cluster_number)))
     return final_results
@@ -167,11 +167,17 @@ def main():
                         help="Max number of dimensions")
     args = parser.parse_args()
 
+    print("Reading atomic contacts from " + args.input_contacts.name)
     atomic_contacts, num_frames = io.parse_contacts(args.input_contacts)
+    print("Converting atomic contacts to residue contacts")
     residue_contacts = io.res_contacts(atomic_contacts)
-    time_matrix = featurizeContacts(residue_contacts, args.max_dimension)
-    ticc = run_ticc(time_matrix, args.output)
-    print(ticc)
+    print("Performing dimensionality reduction")
+    time_matrix = featurize_contacts(residue_contacts, args.max_dimension)
+    print("Running TICC (clustered time-segmentation)")
+    ticc = run_ticc(time_matrix, args.output, cluster_number=[args.clusters])
+    print("Writing time-segments to " + args.output)
+    with open(args.output, "w") as f:
+        f.writelines(map(lambda l: str(int(l)) + "\n", ticc[0][0]))
 
 
 if __name__ == "__main__":
