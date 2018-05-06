@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Computes a clustered time-segmentation from a multi-frame contact file using TICC [1].
 
