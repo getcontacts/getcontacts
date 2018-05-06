@@ -23,13 +23,14 @@ There are three subtypes of flare objects:
 (TODO: Expand a bit with examples)
 """
 
+__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
+__license__ = "Apache License 2.0"
+__all__ = ['create_flare', 'compose_flares', 'write_json', 'compose_frequencytable']
+
 import json
 import re
 import sys
-
-# __all__ = ['parse_contacts', 'parse_residuelabels', 'create_flare', 'compose_flares', 'write_json',
-#            'compose_frequencytable']
-__all__ = ['create_flare', 'compose_flares', 'write_json', 'compose_frequencytable']
+from contact_calc.transformations import res_contacts
 
 
 def write_json(flare, fstream):
@@ -90,9 +91,12 @@ def create_flare(contacts, resi_labels):
 
     Parameters
     ----------
-    contacts : list of tuples of (str, str, tuple, tuple [[, tuple], tuple])
+    contacts : list of list
         Each entry specifies a frame-number, an interaction type, and 2 to 4 atom-tuples depending on the interaction
         type. Water mediated and water-water mediated interactions will have waters in the third and fourth tuples.
+    #contacts : list of tuples of (str, str, tuple, tuple [[, tuple], tuple])
+    #    Each entry specifies a frame-number, an interaction type, and 2 to 4 atom-tuples depending on the interaction
+    #    type. Water mediated and water-water mediated interactions will have waters in the third and fourth tuples.
 
     resi_labels : dict of (str : dict of (str : str))
         Each key is a residue identifier and the associated value is a dictionary with the label, tree-path, and color
@@ -102,24 +106,24 @@ def create_flare(contacts, resi_labels):
     -------
     dict of str : list
         The types of the list contents varies depending on the key, but the format corresponds to the specifications of
-        jsons used as input for flareplot. For example
-        >>> {
-        >>>   "edges": [
-        >>>     {"name1": "ARG1", "name2": "ALA3", "frames": [0,4,10]},
-        >>>     {"name1": "ALA3", "name2": "THR2", "frames": [1,2]}
-        >>>   ],
-        >>>   "trees": [
-        >>>     {"treeName": "DefaultTree", "treePaths": ["Group1.ARG1", "Group1.THR2", "Group2.ALA3", "Group2.CYS4"]}
-        >>>   ],
-        >>>   "tracks": [
-        >>>     {"trackName": "DefaultTrack", "trackProperties": [
-        >>>       {"nodeName": "ARG1", "size": 1.0, "color": "red"},
-        >>>       {"nodeName": "THR2", "size": 1.0, "color": "red"},
-        >>>       {"nodeName": "ALA3", "size": 1.0, "color": "blue"},
-        >>>       {"nodeName": "CYS4", "size": 1.0, "color": "blue"}
-        >>>     ]}
-        >>>   ]
-        >>> }
+        jsons used as input for flareplot. For example:
+            {
+              "edges": [
+                {"name1": "ARG1", "name2": "ALA3", "frames": [0,4,10]},
+                {"name1": "ALA3", "name2": "THR2", "frames": [1,2]}
+              ],
+              "trees": [
+                {"treeName": "DefaultTree", "treePaths": ["Group1.ARG1", "Group1.THR2", "Group2.ALA3", "Group2.CYS4"]}
+              ],
+              "tracks": [
+                {"trackName": "DefaultTrack", "trackProperties": [
+                  {"nodeName": "ARG1", "size": 1.0, "color": "red"},
+                  {"nodeName": "THR2", "size": 1.0, "color": "red"},
+                  {"nodeName": "ALA3", "size": 1.0, "color": "blue"},
+                  {"nodeName": "CYS4", "size": 1.0, "color": "blue"}
+                ]}
+              ]
+            }
     """
     ret = {
         "edges": []
@@ -127,17 +131,20 @@ def create_flare(contacts, resi_labels):
 
     # Strip atom3, atom4, and atom names
     # unique_chains = set([c[2][0] for c in contacts] + [c[3][0] for c in contacts])
-    contacts = [(c[0], c[1], c[2][0:3], c[3][0:3]) for c in contacts]
+    # contacts = [(c[0], c[1], c[2][0:3], c[3][0:3]) for c in contacts]
+    rcontacts = res_contacts(contacts)
 
     resi_edges = {}
-    for contact in contacts:
+    for contact in rcontacts:
         # Compose a key for atom1 and atom2 that ignores the order of residues
-        a1_key = ":".join(contact[2][0:3])
-        a2_key = ":".join(contact[3][0:3])
-        if a1_key == a2_key:
-            continue
-        if a1_key > a2_key:
-            a1_key, a2_key = a2_key, a1_key
+        a1_key = contact[1]
+        a2_key = contact[2]
+        # a1_key = ":".join(contact[2][0:3])
+        # a2_key = ":".join(contact[3][0:3])
+        # if a1_key == a2_key:
+        #     continue
+        # if a1_key > a2_key:
+        #     a1_key, a2_key = a2_key, a1_key
         contact_key = a1_key + a2_key
 
         # Look up labels

@@ -43,7 +43,11 @@ is just used as a filter. A third column can be supplied indicating a color in
 CSS-format (e.g. '#FF0000' or 'red').
 """
 
+__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
+__license__ = "Apache License 2.0"
+
 from contact_calc.flare import *
+from contact_calc.transformations import *
 import sys
 
 
@@ -96,7 +100,6 @@ def main():
         print("Done - wrote flare-json to %s" % args.output.name)
     else:
         write_json(graph, sys.stdout)
-
 
 
 def parse_itypes(itype_argument):
@@ -213,6 +216,3 @@ if __name__ == "__main__":
     main()
 
 
-__license__ = "Apache License 2.0"
-__maintainer__ = "Rasmus Fonseca"
-__email__ = "fonseca.rasmus@gmail.com"

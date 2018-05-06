@@ -1,3 +1,6 @@
+__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
+__license__ = "Apache License 2.0"
+
 import unittest
 import contact_calc.transformations as ct
 
@@ -32,6 +35,8 @@ class TestTransformations(unittest.TestCase):
         self.assertEqual(len(rcontacts), 2)
         self.assertEqual(rcontacts[0][0], 0)
         self.assertEqual(rcontacts[1][0], 1)
+        self.assertEqual(rcontacts[1][1], "A:ARG:76")
+        self.assertEqual(rcontacts[1][2], "A:GLU:82")
 
 
 if __name__ == '__main__':

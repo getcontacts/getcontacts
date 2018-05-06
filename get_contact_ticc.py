@@ -169,15 +169,19 @@ def main():
 
     print("Reading atomic contacts from " + args.input_contacts.name)
     atomic_contacts, num_frames = io.parse_contacts(args.input_contacts)
+
     print("Converting atomic contacts to residue contacts")
     residue_contacts = io.res_contacts(atomic_contacts)
+
     print("Performing dimensionality reduction")
     time_matrix = featurize_contacts(residue_contacts, args.max_dimension)
+
     print("Running TICC (clustered time-segmentation)")
-    ticc = run_ticc(time_matrix, args.output, cluster_number=[args.clusters])
+    segmentation = run_ticc(time_matrix, args.output, cluster_number=[args.clusters])
+
     print("Writing time-segments to " + args.output)
     with open(args.output, "w") as f:
-        f.writelines(map(lambda l: str(int(l)) + "\n", ticc[0][0]))
+        f.writelines(map(lambda l: str(int(l)) + "\n", segmentation[0][0]))
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Read a contact-list and record frequencies of residue interactions. If --output
 is defined write the results to a file, otherwise write to stdout.

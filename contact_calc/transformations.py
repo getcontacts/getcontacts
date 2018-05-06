@@ -1,6 +1,5 @@
 __author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
 __license__ = "APACHE2"
-
 __all__ = ['parse_contacts', 'parse_residuelabels', 'res_contacts']
 
 
@@ -62,6 +61,19 @@ def parse_residuelabels(label_file):
     Parses a residue-label file and generates a dictionary mapping residue identifiers (e.g. A:ARG:123) to a
     user-specified label, trees that can be parsed by flareplots, and a color indicator for vertices.
 
+    Example
+    -------
+        parse_residuelabels([
+            "A:ALA:4    A4  white\n",
+            "A:CYS:5    C5  yellow\n",
+            "A:TRP:6    W6  white\n"
+        ])
+        # Returns:
+        # { "A:ALA:4": {"label": "A4", "color": "white"},
+        #   "A:CYS:5": {"label": "C5", "color": "yellow"},
+        #   "A:TRP:6": {"label": "W6", "color": "white"}
+        # }
+
     Parameters
     ----------
     label_file : file
@@ -109,7 +121,9 @@ def parse_residuelabels(label_file):
 
 def res_contacts(contacts):
     """
-    Convert atomic contacts into unique residue contacts.
+    Convert atomic contacts into unique residue contacts. The interaction type is removed as well as any third or
+    fourth atoms that are part of the interaction (e.g. water-bridges). Finally, the order of the residues within an
+    interaction is such that the first is lexicographically smaller than the second ('A:ARG' comes before 'A:CYS').
 
     Example
     -------
@@ -117,7 +131,7 @@ def res_contacts(contacts):
             [0, 'hbbb', 'A:ASN:108:O', 'A:ARG:110:N'],
             [0, 'vdw', 'A:ARG:110:N', 'A:ASN:108:CB']
         ])
-        # Returns: [[0, 'A:ASN:108', 'A:ARG:110']]
+        # Returns: [[0, 'A:ARG:110', 'A:ASN:108']]
 
     Parameters
     ----------
@@ -137,7 +151,7 @@ def res_contacts(contacts):
         frame = atom_contact[0]
         resi1 = ":".join(atom_contact[2].split(":")[0:3])
         resi2 = ":".join(atom_contact[3].split(":")[0:3])
-        if resi1 < resi2:
+        if resi2 < resi1:
             resi1, resi2 = resi2, resi1
         frame_dict[frame].add((resi1, resi2))
 
