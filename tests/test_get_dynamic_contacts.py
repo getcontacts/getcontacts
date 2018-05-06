@@ -19,12 +19,30 @@ class TestGetDynamicContacts(unittest.TestCase):
         self.assertTrue(os.path.exists(outfile))
         with open(outfile) as f:
             lines = f.readlines()
-            self.assertEqual(len(lines), 22195)
+            self.assertEqual(len(lines), 20283)
+
+            # Check that first two lines are comments
             self.assertEqual(lines[0][0], "#")
             self.assertEqual(lines[1][0], "#")
             self.assertEqual(lines[2][0], "0")
+
+            # Check that 20 frames total are generated
             frames = set([int(l.split()[0]) for l in lines[2:]])
             self.assertEqual(frames, set(range(20)))
+
+            # Check that there are no duplicate interactions, even if atom pairs are swapped
+            contact_hashes = set()
+            for line in lines[2:]:
+                tokens = line.strip().split("\t")
+                a1 = tokens[2]
+                a2 = tokens[3]
+                if a2 < a1:
+                    a1, a2 = a2, a1
+                chash = "\t".join(tokens[0:2] + [a1, a2])
+                if chash in contact_hashes:
+                    print(chash)
+                self.assertFalse(chash in contact_hashes)
+                contact_hashes.add(chash)
 
         os.remove(outfile)
 

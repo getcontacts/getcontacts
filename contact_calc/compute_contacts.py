@@ -257,7 +257,8 @@ def compute_fragment_contacts_helper(args):
 
 
 def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, stride, skip, solvent_resn, sele_id, ligand):
-    """ Computes non-covalent contacts across the entire trajectory and writes them to `output`.
+    """
+    Computes non-covalent contacts across the entire trajectory and writes them to `output`.
 
     Parameters
     ----------
@@ -315,21 +316,31 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, st
     pool.join()
     contacts = [x for y in contacts for x in y]  # Flatten
 
-    # Serial computation: Use this mode to debug since multiprocessing module doesn't trace back to bugs. 
+    # Serial computation: Use this mode to debug since multiprocessing module doesn't trace back to bugs.
     # contacts = compute_fragment_contacts_helper(input_args[0])
+
+    # Strip VMD id, order atom 1 and 2
+    for interaction in contacts:
+        for a in range(2, len(interaction)):
+            atom_str = interaction[a]
+            interaction[a] = atom_str[0:atom_str.rfind(":")]
+
+        # Sort atom 1 and 2 lexicographically
+        if interaction[3] < interaction[2]:
+            interaction[2], interaction[3] = interaction[3], interaction[2]  # Swap
 
     # Sort and write to output-file
     contacts.sort(key=lambda i: i[0])
+    contact_line_hash = set()
     with open(output, "w") as output_fd:
         output_fd.write("# total_frames:%d interaction_types:%s\n" % (sim_length, ",".join(itypes)))
         output_fd.write("# Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]\n")
         for interaction in contacts:
-            # Strip vmd ID from atom strings
-            for a in range(2, len(interaction)):
-                atom_str = interaction[a]
-                interaction[a] = atom_str[0:atom_str.rfind(":")]
-
             # Write to file
-            output_fd.write("\t".join(map(str, interaction)))
-            output_fd.write("\n")
+            interaction[0] = str(interaction[0])
+            contact_line = "\t".join(interaction)
+            if not contact_line in contact_line_hash:
+                output_fd.write(contact_line)
+                output_fd.write("\n")
+                contact_line_hash.add(contact_line)
 

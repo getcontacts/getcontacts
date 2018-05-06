@@ -215,10 +215,11 @@ For further examples, see e.g. [Flareplot input generation](https://github.com/G
 
 ## For developers
 
-Unit tests are located in `unittests` subfolders and use the python `unittest` module. To run all unit-tests, type
+Unit tests are located in `unittests` subfolders and use the python `unittest` module. To run just the unit-tests, type
 
     python -m unittest
 
-Integration tests verifying the functionality of all executables will be added soon. Pull-requests won't be accepted before all tests pass, but if there are any problems we are happy to help work them out.
+Integration tests verifying the functionality of executables are in the `tests`-folder. Pull-requests won't be accepted
+before all tests pass, but if there are any problems we are happy to help work them out.
 
 The code aims to be [PEP 8](http://pep8.org/) compliant, but pull-requests wont be rejected if they're not. 
