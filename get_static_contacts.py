@@ -21,7 +21,9 @@ output is a tab-separated file where each line (except the first two) records fr
 Interactions that involve more than two atoms (water bridges and extended water bridges)
 have extra columns to denote the identities of the water molecules. For simplicity, all
 stacking and pi-cation interactions involving an aromatic ring will be denoted by the
-CG atom.
+CG atom. If there are multiple conformers in the structure, all interactions between all
+conformers are computed, but the output will not reflect which conformers an interaction
+relates to.
 
 Interaction types are denoted by the following abbreviations:
   · sb - salt bridges
