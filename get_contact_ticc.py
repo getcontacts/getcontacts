@@ -15,7 +15,7 @@ the
 
 """
 __author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
-__license__ = "APACHE2"
+__license__ = "Apache License 2.0"
 
 import contact_calc.argparsers as ap
 import argparse
@@ -27,7 +27,7 @@ from sklearn.decomposition import TruncatedSVD
 from scipy.sparse import csr_matrix
 
 
-def run_ticc(input_data, output_filename, cluster_number=range(2, 11), process_pool_size=10, window_size=1,
+def run_ticc(input_data, cluster_number=range(2, 11), process_pool_size=10, window_size=1,
              lambda_param=[1e-2], beta=[0.01, 0.1, 0.5, 10, 50, 100, 500], max_iters=1000, threshold=2e-5,
              BIC_Iters=15, logging_level=logging.CRITICAL):
     """
@@ -154,8 +154,15 @@ def main():
     parser.add_argument("--clusters",
                         type=int,
                         required=False,
-                        default=5,
+                        nargs="+",
+                        default=[2, 5, 10],
                         help="Number of clusters")
+    parser.add_argument("--beta",
+                        type=int,
+                        required=False,
+                        nargs="+",
+                        default=[10, 50, 100],
+                        help="Beta parameter")
     parser.add_argument("--output",
                         type=str,
                         required=True,
@@ -177,7 +184,7 @@ def main():
     time_matrix = featurize_contacts(residue_contacts, args.max_dimension)
 
     print("Running TICC (clustered time-segmentation)")
-    segmentation = run_ticc(time_matrix, args.output, cluster_number=[args.clusters])
+    segmentation = run_ticc(time_matrix, cluster_number=args.clusters, beta=args.beta)
 
     print("Writing time-segments to " + args.output)
     with open(args.output, "w") as f:

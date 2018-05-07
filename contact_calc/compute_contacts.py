@@ -19,7 +19,7 @@
 ##############################################################################
 
 import datetime
-from multiprocessing import *
+from multiprocessing import Process, Queue
 from vmd import *  # Loads the static `molecule` object
 
 from .contact_utils import *
@@ -256,7 +256,8 @@ def compute_fragment_contacts_helper(args):
 #     return stitched_filename
 
 
-def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, stride, skip, solvent_resn, sele_id, ligand):
+def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
+                     stride, skip, solvent_resn, sele_id, ligand):
     """
     Computes non-covalent contacts across the entire trajectory and writes them to `output`.
 
@@ -285,7 +286,6 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, st
     ligand: list of string, default = None
         Include ligand resname if computing contacts between ligand and binding pocket residues
     """
-
     contact_types = []
     for itype in itypes:
         if itype == "hb":
@@ -297,50 +297,90 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, st
 
     index_to_label = gen_index_to_atom_label(top, traj)
     sim_length = simulation_length(top, traj)
-    input_args = []
 
     # Generate input arguments for each trajectory piece
+    inputqueue = Queue()
     print("Processing %s with %s total frames and stride %s, skipping first %s frames"
           % (traj, str(sim_length), str(stride), str(skip)))
+
     for frag_idx, beg_frame in enumerate(range(skip, sim_length, TRAJ_FRAG_SIZE)):
-        # if frag_idx > 0: break
         end_frame = beg_frame + TRAJ_FRAG_SIZE - 1
-        # print("Preparing fragment %s, beg_frame:%s end_frame:%s" % (frag_idx, beg_frame, end_frame))
-        input_args.append((frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values,
-                           stride, solvent_resn, sele_id, ligand, index_to_label))
+        inputqueue.put((frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values,
+                        stride, solvent_resn, sele_id, ligand, index_to_label))
 
-    # Parallel computation
-    pool = Pool(processes=cores)
-    contacts = pool.map(compute_fragment_contacts_helper, input_args)
-    pool.close()
-    pool.join()
-    contacts = [x for y in contacts for x in y]  # Flatten
+    # Set up result queue for workers to transfer results to the consumer
+    resultsqueue = Queue()
 
-    # Serial computation: Use this mode to debug since multiprocessing module doesn't trace back to bugs.
-    # contacts = compute_fragment_contacts_helper(input_args[0])
+    # Set up and start worker processes
+    num_workers = max(1, cores - 1)
+    for _ in range(num_workers):
+        inputqueue.put("DONE")  # Stops each worker process
+    workers = [Process(target=contact_worker, args=(inputqueue, resultsqueue)) for _ in range(num_workers)]
+    for w in workers:
+        w.start()
 
-    # Strip VMD id, order atom 1 and 2
-    for interaction in contacts:
-        for a in range(2, len(interaction)):
-            atom_str = interaction[a]
-            interaction[a] = atom_str[0:atom_str.rfind(":")]
+    # Set up and start consumer process which takes contact results and saves them to output
+    output_fd = open(output, "w")
+    consumer = Process(target=contact_consumer, args=(resultsqueue, output_fd, sim_length, itypes))
+    consumer.start()
 
-        # Sort atom 1 and 2 lexicographically
-        if interaction[3] < interaction[2]:
-            interaction[2], interaction[3] = interaction[3], interaction[2]  # Swap
+    # Wait for everyone to finish
+    for w in workers:
+        w.join()
+    resultsqueue.put("DONE")
+    consumer.join()
 
-    # Sort and write to output-file
-    contacts.sort(key=lambda i: i[0])
-    contact_line_hash = set()
-    with open(output, "w") as output_fd:
-        output_fd.write("# total_frames:%d interaction_types:%s\n" % (sim_length, ",".join(itypes)))
-        output_fd.write("# Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]\n")
-        for interaction in contacts:
-            # Write to file
-            interaction[0] = str(interaction[0])
-            contact_line = "\t".join(interaction)
-            if not contact_line in contact_line_hash:
-                output_fd.write(contact_line)
-                output_fd.write("\n")
-                contact_line_hash.add(contact_line)
 
+def contact_worker(inputqueue, resultsqueue):
+    while True:
+        args = inputqueue.get()
+        if args == "DONE":
+            return
+        contacts = compute_fragment_contacts(*args)
+        resultsqueue.put(contacts)
+
+
+def contact_consumer(resultsqueue, output_fd, sim_length, itypes):
+    import heapq
+
+    output_fd.write("# total_frames:%d interaction_types:%s\n" % (sim_length, ",".join(itypes)))
+    output_fd.write("# Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]\n")
+
+    resultheap = []
+    waiting_for_frame = 0
+
+    while True:
+        contacts = resultsqueue.get()
+        if contacts == "DONE":
+            output_fd.close()
+            break
+
+        first_contact_frame = contacts[0][0]
+        heapq.heappush(resultheap, (first_contact_frame, contacts))
+
+        # If this is the contact frame we're waiting for, go ahead and write it
+        while waiting_for_frame == first_contact_frame:
+            _, contacts = heapq.heappop(resultheap)
+            if resultheap:
+                first_contact_frame = resultheap[0][0]
+
+            # Strip VMD id, order atom 1 and 2
+            for interaction in contacts:
+                for a in range(2, len(interaction)):
+                    atom_str = interaction[a]
+                    interaction[a] = atom_str[0:atom_str.rfind(":")]
+
+                # Sort atom 1 and 2 lexicographically
+                if interaction[3] < interaction[2]:
+                    interaction[2], interaction[3] = interaction[3], interaction[2]  # Swap
+
+            contact_line_hash = set()
+            for interaction in contacts:
+                # Write to file
+                waiting_for_frame = max(waiting_for_frame, interaction[0] + 1)
+                interaction[0] = str(interaction[0])
+                contact_line = "\t".join(interaction)
+                if contact_line not in contact_line_hash:
+                    output_fd.write(contact_line)
+                    output_fd.write("\n")
+                    contact_line_hash.add(contact_line)

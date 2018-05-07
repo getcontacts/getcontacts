@@ -51,7 +51,7 @@ from contact_calc.transformations import *
 import sys
 
 
-def main():
+def main(argv=None):
     """
     Main function called once at the end of this module. Configures and parses command line arguments, parses input
     files and generates output files.
@@ -83,21 +83,21 @@ def main():
                           type=ap.FileType('r'),
                           help='Flare-label file')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.output:
         print("Parsing %s contacts from %s" % (args.itype, args.input.name))
 
     # Read contacts and generate graph
     itypes = parse_itypes(args.itype)
-    contacts = parse_contacts(args.input, itypes)
+    contacts, num_frames = parse_contacts(args.input, itypes)
     labels = parse_residuelabels(args.flarelabels)
     graph = create_flare(contacts, labels)  # create_graph(contacts, labels)
 
     # Write output
     if args.output:
         write_json(graph, args.output)
-        print("Done - wrote flare-json to %s" % args.output.name)
+        print("Done. Wrote flare-json to %s" % args.output)
     else:
         write_json(graph, sys.stdout)
 
