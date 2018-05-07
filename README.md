@@ -61,7 +61,6 @@ MDContactNetworks has the following dependencies
 * [vmd-python](https://github.com/Eigenstate/vmd-python) 
   * netcdf >= 4.3
   * tk = 8.5
-* python 3.6
 
 The easiest way to install netcdf is using a package manager. On a Mac, use the [homebrew package manager](https://brew.sh/) and run:
 ```bash
