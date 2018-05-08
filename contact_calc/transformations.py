@@ -1,7 +1,3 @@
-__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
-__license__ = "APACHE2"
-__all__ = ['parse_contacts', 'parse_residuelabels', 'res_contacts']
-
 
 def parse_contacts(input_lines, itypes=None):
     """
@@ -163,6 +159,5 @@ def res_contacts(contacts):
     return ret
 
 
-
-
-
+__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
+__license__ = "APACHE2"

@@ -43,9 +43,6 @@ is just used as a filter. A third column can be supplied indicating a color in
 CSS-format (e.g. '#FF0000' or 'red').
 """
 
-__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
-__license__ = "Apache License 2.0"
-
 from contact_calc.flare import *
 from contact_calc.transformations import *
 import sys
@@ -216,3 +213,5 @@ if __name__ == "__main__":
     main()
 
 
+__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
+__license__ = "Apache License 2.0"

@@ -66,8 +66,6 @@ Salt bridges and hydrogen bonds in the entire protein with modified distance cut
                            --hbond_cutoff_dist 4.5 \\
                            --itypes sb hb
 """
-__author__ = 'Anthony Ma <anthonyma27@gmail.com>, Rasmus Fonseca <fonseca.rasmus@gmail.com>'
-__license__ = "Apache License 2.0"
 
 import contact_calc.argparsers as ap
 from contact_calc.compute_contacts import *
@@ -142,3 +140,5 @@ if __name__ == "__main__":
     devnull = open("/dev/null", "w")
     os.dup2(devnull.fileno(), 1)
 
+__author__ = 'Anthony Ma <anthonyma27@gmail.com>, Rasmus Fonseca <fonseca.rasmus@gmail.com>'
+__license__ = "Apache License 2.0"

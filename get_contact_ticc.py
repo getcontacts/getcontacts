@@ -14,8 +14,6 @@ the
     ...
 
 """
-__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
-__license__ = "Apache License 2.0"
 
 import contact_calc.argparsers as ap
 import argparse
@@ -193,3 +191,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
+__license__ = "Apache License 2.0"

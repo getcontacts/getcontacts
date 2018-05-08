@@ -23,10 +23,6 @@ There are three subtypes of flare objects:
 (TODO: Expand a bit with examples)
 """
 
-__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
-__license__ = "Apache License 2.0"
-__all__ = ['create_flare', 'compose_flares', 'write_json', 'compose_frequencytable']
-
 import json
 import re
 import sys
@@ -391,6 +387,5 @@ def compose_flares(singleflares, names):
     return ret
 
 
+__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
 __license__ = "Apache License 2.0"
-__maintainer__ = "Rasmus Fonseca"
-__email__ = "fonseca.rasmus@gmail.com"

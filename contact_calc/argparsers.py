@@ -56,7 +56,7 @@ def build_getcontact_parser(program_description, trajectory):
                                 help="resname of solvent molecule")
     optional_group.add_argument("--sele", type=str, metavar="VMDSEL", default=None,
                                 help="atom selection query in VMD")
-    optional_group.add_argument("--ligand", type=str, metavar="LIGNAME", nargs="+", default=[],
+    optional_group.add_argument("--ligand", type=str, metavar="LIGNAME", nargs="*", default=[],
                                 help="resname of ligand molecules")
 
     if trajectory:
