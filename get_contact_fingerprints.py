@@ -43,6 +43,39 @@ def write_frequencytable(freq_table, col_labels, fname):
             out_file.write(",".join([res1, res2] + freq_strings) + "\n")
 
 
+def write_pymol_distances(multiflare, fname):
+    """
+    TODO: Document
+    """
+    from collections import defaultdict
+    # num_frames = max(multiflare["edges"], lambda e: e["frames"][-1]) + 1
+    num_frames = 0
+    for e in multiflare["edges"]:
+        num_frames = max(num_frames, e["frames"][-1] + 1)
+    iprofiles = map(lambda e: (e["name1"], e["name2"], str(e["frames"])), multiflare["edges"])
+    iprofile_hist = defaultdict(list)
+    for (n1, n2, iprofile) in iprofiles:
+        iprofile_hist[iprofile].append((n1, n2))
+
+    with open(fname, "w") as f:
+        prioritized_iprofiles = sorted(iprofile_hist.keys(), key=lambda k: len(iprofile_hist[k]), reverse=True)
+        for iprofile in prioritized_iprofiles:
+            iprofile_dec = ["-" for _ in range(num_frames)]
+            for cond in map(int, iprofile.strip('[]').split(",")):
+                print(cond)
+                iprofile_dec[cond] = '+'
+            iprofile_dec = "row_" + "".join(iprofile_dec)
+
+            for (n1, n2) in iprofile_hist[iprofile]:
+                if n1 == n2:
+                    continue
+                chain1 = n1.split(":")[0]
+                resi1 = n1.split(":")[2]
+                chain2 = n2.split(":")[0]
+                resi2 = n2.split(":")[2]
+                f.write("distance %s, ///%s/%s/CA, ///%s/%s/CA\n" % (iprofile_dec, chain1, resi1, chain2, resi2))
+
+
 def plot_frequencies(freq_table, col_labels, out_file, cluster_columns):
     import pandas as pd
     import matplotlib
@@ -117,6 +150,11 @@ def main():
                         required=False,
                         default=None,
                         help="If specified, a compare-flare will be written to this json-file")
+    parser.add_argument('--pymol_output',
+                        type=str,
+                        required=False,
+                        default=None,
+                        help="If specified, a distance-selection will be written to this pml-file")
 
     args = parser.parse_args()
 
@@ -128,7 +166,7 @@ def main():
         parser.error("--column_header arguments must match length of --input_frequencies")
 
     # Check output format and call corresponding function(s)
-    if args.table_output is None and args.flare_output is None and args.plot_output is None:
+    if all(a is None for a in [args.table_output, args.flare_output, args.plot_output, args.pymol_output]):
         parser.error("--table_output, --flare_output, or --plot_output must be specified")
 
     if args.table_output is not None:
@@ -143,6 +181,11 @@ def main():
     if args.plot_output is not None:
         plot_frequencies(freq_table, column_headers, args.plot_output, args.cluster_columns)
         print("Wrote fingerprint heatmap to "+args.plot_output)
+
+    if args.pymol_output is not None:
+        compare_flare = compose_frequencytable(freq_table, column_headers, args.frequency_cutoff)
+        write_pymol_distances(compare_flare, args.pymol_output)
+        print("Wrote pymol file to "+args.pymol_output)
 
 
 if __name__ == '__main__':
