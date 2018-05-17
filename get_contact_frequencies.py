@@ -1,20 +1,18 @@
 #!/usr/bin/env python
 """
-Determines the frequencies of residue pair contacts in molecular
-dynamics simulations. Given one or more MDContact outputs, this
-script determines the frequency of each unique interaction of the
-form (itype, residue 1, residue2), weighted by number of frames,
-across all inputs.
+Determines the frequencies of residue pair contacts in molecular dynamics simulations.
+Given one or more get_dynamic_contacts outputs, this script determines the frequency of
+each unique interaction of the form (itype, residue 1, residue2), weighted by number of
+frames, across all inputs.
 
-The inputs are one or more MDContact output file paths as well as an
-output path. The user may also specify a subset of interaction types
-to compute frequencies for. The user may additionally provide a label
-file to convert residue labellings (typically for the use of aligning
-sequences for performing frequency comparisons with other
-trajectories).
+The inputs are one or more get_dynamic_countacts output file paths as well as an
+output path. The user may also specify a subset of interaction types to compute
+frequencies for. The user may additionally provide a label file to convert residue
+labellings (typically for the use of aligning sequences for performing frequency
+comparisons with other trajectories).
 
-The output is a single tsv file with each row indicating residue
-id 1, residue id 2, and contact frequency.
+The output is a single tsv file with each row indicating residue id 1, residue id 2,
+and contact frequency.
 """
 
 from __future__ import division
