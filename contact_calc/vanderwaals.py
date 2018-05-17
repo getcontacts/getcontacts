@@ -40,7 +40,7 @@ ATOM_RADIUS = {'H': 1.20,
 ##############################################################################
 
 
-def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW_EPSILON, VDW_RES_DIFF):
+def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, ligands, VDW_EPSILON, VDW_RES_DIFF):
     """
     Compute all vanderwaals interactions in a frame of simulation
 
@@ -55,6 +55,8 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW
         {11205: "A:ASP:114:CA:11205, ...}
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
+    ligands: list of string
+        Residue names of ligands
     VDW_EPSILON: float, default = 0.5 angstroms
         amount of padding for calculating vanderwaals contacts
     VDW_RES_DIFF: int, default = 2
@@ -65,17 +67,24 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW
     vanderwaals: list of tuples, [(frame_idx, itype, atom1_label, atom2_label), ...]
         itype = "vdw"
     """
-    vanderwaals = []
-    if sele_id is None:
-        evaltcl("set full_protein [atomselect %s \" noh and protein \" frame %s]" %
-                (traj_frag_molid, frame_idx))
-    else:
-        evaltcl("set full_protein [atomselect %s \" noh and protein and (%s) \" frame %s]" %
-                (traj_frag_molid, sele_id, frame_idx))
+    custom_sele = "" if sele_id is None else "and (" + sele_id + ") "
+    custom_lig = "" if ligands is None else "or (resname " + (" ".join(ligands)) + ") "
+
+    evaltcl("set full_protein [atomselect %s \" noh and ( protein %s) %s\" frame %s]" %
+            (traj_frag_molid, custom_lig, custom_sele, frame_idx))
+
+    # if sele_id is None:
+    #     evaltcl("set full_protein [atomselect %s \" noh and protein \" frame %s]" %
+    #             (traj_frag_molid, frame_idx))
+    # else:
+    #     evaltcl("set full_protein [atomselect %s \" noh and protein and (%s) \" frame %s]" %
+    #             (traj_frag_molid, sele_id, frame_idx))
 
     contacts = evaltcl("measure contacts %s $full_protein" % SOFT_VDW_CUTOFF)
     contact_index_pairs = parse_contacts(contacts)
     evaltcl('$full_protein delete')
+
+    vanderwaals = []
     for atom1_index, atom2_index in contact_index_pairs:
         atom1_label, atom2_label = index_to_label[atom1_index], index_to_label[atom2_index]
         atom1_label_split = atom1_label.split(":")

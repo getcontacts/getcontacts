@@ -153,7 +153,7 @@ def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_r
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     ligand: list of string
-        ???
+        Residue names of ligands
     HBOND_CUTOFF_DISTANCE: float, default = 3.5 Angstroms
     HBOND_CUTOFF_ANGLE: float, default = 70 degrees
 

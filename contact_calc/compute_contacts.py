@@ -121,7 +121,7 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     if "ts" in ITYPES:
         frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
     if "vdw" in ITYPES:
-        frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, VDW_EPSILON, VDW_RES_DIFF)
+        frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, ligand, VDW_EPSILON, VDW_RES_DIFF)
     if "hb" in ITYPES:
         frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, None, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
     if "lhb" in ITYPES:
@@ -133,7 +133,8 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     return frame_contacts
 
 
-def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values, stride, solvent_resn, sele_id, ligand, index_to_label):
+def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values, stride,
+                              solvent_resn, sele_id, ligand, index_to_label):
     """ 
     Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
 
