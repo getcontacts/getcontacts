@@ -68,7 +68,7 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, lig
         itype = "vdw"
     """
     custom_sele = "" if sele_id is None else "and (" + sele_id + ") "
-    custom_lig = "" if ligands is None else "or (resname " + (" ".join(ligands)) + ") "
+    custom_lig = "" if not ligands else "or (resname " + (" ".join(ligands)) + ") "
 
     evaltcl("set full_protein [atomselect %s \" noh and ( protein %s) %s\" frame %s]" %
             (traj_frag_molid, custom_lig, custom_sele, frame_idx))
