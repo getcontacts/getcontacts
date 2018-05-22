@@ -101,7 +101,7 @@ get_dynamic_contacts.py --topology 5xnd_topology.pdb \
                         --itypes hb \
                         --output 5xnd_hbonds.tsv
 ```
-and verify that no error was thrown and that the `5xnd_hbonds.tsv` file contains around 1892 lines of interactions.
+and verify that no error was thrown and that the `5xnd_hbonds.tsv` file contains 1874 lines of interactions.
 
 ## Simulation and structure file format
 
