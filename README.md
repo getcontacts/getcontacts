@@ -2,10 +2,10 @@
 
 Application for efficiently computing non-covalent contact networks in molecular structures and MD simulations. Following example computes all salt bridges, pi cation, aromatic, and hydrogen bond interactions in a trajectory:
 ```bash
-dynamic_contacts.py --topology my_top.psf \
-                    --trajectory my_traj.dcd \
-                    -sb -pc -ps -ts -hb \
-                    --output my_contacts.tsv
+get_dynamic_contacts.py --topology my_top.psf \
+                        --trajectory my_traj.dcd \
+                        --itypes sb pc ps ts hb \
+                        --output my_contacts.tsv
 ```
 The output, `my_contacts.tsv`, is a tab-separated file where each line (except the first two) records frame, type, and atoms involved in an interaction:
 ```
@@ -57,7 +57,7 @@ Generated contact-list files are useful as inputs to visualization and analysis 
 
 ## Dependencies
 
-MDContactNetworks has the following dependencies
+GetContacts has the following dependencies
 * [vmd-python](https://github.com/Eigenstate/vmd-python) 
   * netcdf >= 4.3
   * tk = 8.5
@@ -84,28 +84,28 @@ python -c "import vmd"  # Should not throw error
 
 ## Installation
 
-To install MDContactNetworks locally, first set up dependencies (see above) and then run:
+To install GetContacts locally, first set up dependencies (see above) and then run:
 ```bash
-git clone https://github.com/akma327/MDContactNetworks
+git clone https://github.com/getcontacts/getcontacts
 
 # Add folder to PATH
-echo "export PATH=\$PATH:`pwd`/MDContactNetworks" >> ~/.bashrc
+echo "export PATH=\$PATH:`pwd`/getcontacts" >> ~/.bashrc
 source ~/.bashrc
 ```
 
 To test the installation, run:
 ```bash
-cd MDContactNetworks/example
-dynamic_contacts.py --topology 5xnd_topology.pdb \
-                    --trajectory 5xnd_trajectory.dcd \
-                    --hbond \
-                    --output 5xnd_hbonds.tsv
+cd getcontacts/example
+get_dynamic_contacts.py --topology 5xnd_topology.pdb \
+                        --trajectory 5xnd_trajectory.dcd \
+                        --itypes hb \
+                        --output 5xnd_hbonds.tsv
 ```
 and verify that no error was thrown and that the `5xnd_hbonds.tsv` file contains around 1892 lines of interactions.
 
 ## Simulation and structure file format
 
-MDContactNetworks is compatible with all topology and reimaged trajectory file formats readable by [VMD](https://www-s.ks.uiuc.edu/Research/vmd/).
+GetContacts is compatible with all topology and reimaged trajectory file formats readable by [VMD](https://www-s.ks.uiuc.edu/Research/vmd/).
 
 ## Running the Code
 
@@ -119,26 +119,16 @@ Required Arguments:
         Path to simulation trajectory fragment
     --output STRING
         Path to output file
-
-    At least one of the following interaction type indicators:
-    -all, --all-interactions
-    -sb, --salt-bridge
-    -pc, --pi-cation
-    -ps, --pi-stacking
-    -ts, --t-stacking
-    -vdw, --vanderwaals
-    -hb, --hbond
-        All hydrogen bond subtypes
-    -lhb, --ligand-hbond
-        All ligand-hydrogen bond subtypes
-
+    --itypes STRING [STRING ...]
+        Specifies interaction types (see above)
+          all, sb, pc, ps, ts, vdw, hb, lhb
 
 Optional Arguments:
 
     --cores INT 
         Number of CPU cores for parallelization [default = 6]
-    --ligand STRING 
-        Resname of ligand molecule [default = ""]
+    --ligand STRING [STRING ...]
+        Resname of ligand molecule(s) [default = ""]
     --sele STRING 
         VMD selection query to compute contacts in specified region of protein 
         [default = "protein"]
@@ -184,32 +174,32 @@ Arguments for adjusting geometric criteria:
 
 Compute all pi-cation, pi-stacking, and van der Waals contacts throughout an entire simulation:
 
-    dynamic_contacts.py --topology TOP.psf \
-                        --trajectory TRAJ.dcd \
-                        --output output_pc_ps_vdw.tsv \
-                        -pc -ps -vdw
+    get_dynamic_contacts.py --topology TOP.psf \
+                            --trajectory TRAJ.dcd \
+                            --output output_pc_ps_vdw.tsv \
+                            --itypes pc ps vdw
 
 Compute salt bridges and hydrogen bonds for residues 100 to 160, including those that involves a ligand:
 
-    dynamic_contacts.py --topology TOP.pdb \
-                        --trajectory TRAJ.nc \
-                        --output loop-ligand_sb_hb.tsv \
-                        --cores 12 \
-                        --solv IP3 \
-                        --sele "chain A and resid 100 to 160" \
-                        --ligand EJ4 \
-                        -sb -hb -lhb
+    get_dynamic_contacts.py --topology TOP.pdb \
+                            --trajectory TRAJ.nc \
+                            --output loop-ligand_sb_hb.tsv \
+                            --cores 12 \
+                            --solv IP3 \
+                            --sele "chain A and resid 100 to 160" \
+                            --ligand EJ4 \
+                            --itypes sb hb lhb
 
 Locate salt bridges and hydrogen bonds using a modified distance cutoffs:
 
-    dynamic_contacts.py --topology TOP.mae \
-                        --trajectory TRAJ.dcd \
-                        --output output_sb_hb.tsv \
-                        --sb_cutoff_dist 5.0 \
-                        --hbond_cutoff_dist 4.5 \
-                        -sb -hb
+    get_dynamic_contacts.py --topology TOP.mae \
+                            --trajectory TRAJ.dcd \
+                            --output output_sb_hb.tsv \
+                            --sb_cutoff_dist 5.0 \
+                            --hbond_cutoff_dist 4.5 \
+                            --itypes sb hb
 
-For further examples, see e.g. [Flareplot input generation](https://github.com/GPCRviz/flareplot/tree/master/input).
+For further examples, see the [GetContacts main page](https://getcontacts.github.io).
 
 
 ## For developers
