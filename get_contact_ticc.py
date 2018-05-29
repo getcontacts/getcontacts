@@ -2,9 +2,9 @@
 """
 Computes a clustered time-segmentation from a multi-frame contact file using TICC [1].
 
-The input is a contact-file and a desired number of clusters, k. The output is a
-tab-separated file where each line records a frame-number, the assigned cluster, and
-the
+The input is a contact-file and a desired number of clusters, k. The output is a file
+with the contents of the segmentation. It can either be a tab-separated file where each
+line records a frame-number and the assigned cluster.
 
     0   0
     1   0
@@ -13,6 +13,8 @@ the
     4   1
     ...
 
+It can also be a multi-flare file for use in displaying differences on the flareplot
+webpage (gpcrviz.github.io/flareplot).
 """
 
 import contact_calc.argparsers as ap
@@ -23,6 +25,7 @@ import logging
 import ticc
 from sklearn.decomposition import TruncatedSVD
 from scipy.sparse import csr_matrix
+from contact_calc.transformations import res_contacts, gen_counts, gen_frequencies
 
 
 def run_ticc(input_data, cluster_number=range(2, 11), process_pool_size=10, window_size=1,
@@ -154,23 +157,31 @@ def main():
                         required=False,
                         nargs="+",
                         default=[2, 5, 10],
-                        help="Number of clusters")
+                        help="Number of clusters [default: '2 5 10']")
+    parser.add_argument("--tab_output",
+                        type=str,
+                        required=False,
+                        help="Path to TICC output file (tab-separated time/cluster indicators)")
+    parser.add_argument("--frequency_output",
+                        type=str,
+                        required=False,
+                        help="Prefix to TICC output files (one res-frequency file for each cluster)")
     parser.add_argument("--beta",
                         type=int,
                         required=False,
                         nargs="+",
                         default=[10, 50, 100],
-                        help="Beta parameter")
-    parser.add_argument("--output",
-                        type=str,
-                        required=True,
-                        help="Path to output TICC file")
+                        help="Beta parameter [default: '10 50 100']")
     parser.add_argument("--max_dimension",
                         type=int,
                         required=False,
                         default=50,
-                        help="Max number of dimensions")
+                        help="Max number of dimensions [default: 50]")
     args = parser.parse_args()
+
+    # Check output format and call corresponding function(s)
+    if all(a is None for a in [args.tab_output, args.frequency_output]):
+        parser.error("--tab_output or --frequency_output must be specified")
 
     print("Reading atomic contacts from " + args.input_contacts.name)
     atomic_contacts, num_frames = io.parse_contacts(args.input_contacts)
@@ -184,9 +195,33 @@ def main():
     print("Running TICC (clustered time-segmentation)")
     segmentation = run_ticc(time_matrix, cluster_number=args.clusters, beta=args.beta)
 
-    print("Writing time-segments to " + args.output)
-    with open(args.output, "w") as f:
-        f.writelines(map(lambda l: str(int(l)) + "\n", segmentation[0][0]))
+    if args.tab_output is not None:
+        print("Writing time-segments to " + args.tab_output)
+        with open(args.tab_output, "w") as f:
+            f.writelines(map(lambda l: str(int(l)) + "\n", segmentation[0][0]))
+
+    if args.frequency_output is not None:
+        k = segmentation[0][2][2]
+        for c in range(k):
+            # print("c = "+str(c))
+            cluster_frames = set([frame for frame, cluster in enumerate(segmentation[0][0]) if cluster == c])
+            cluster_contacts = [c for c in residue_contacts if c[0] in cluster_frames]
+
+            # print(cluster_contacts)
+            # print(set([contact[0] for contact in cluster_contacts]))
+            cluster_res_contacts = res_contacts(cluster_contacts)
+            counts = gen_counts(cluster_contacts, None, None)
+            total_frames, frequencies = gen_frequencies([counts])
+
+            fname = "%s_resfreq_cluster%03d.tsv" % (args.frequency_output, c)
+            print("Writing frequency-flare to " + fname)
+            with open(fname, "w") as output_file:
+                output_file.write('#\ttotal_frames:%d\tinteraction_types:all\n' % total_frames)
+                output_file.write('#\tColumns:\tresidue_1,\tresidue_2\tframe_count\tcontact_frequency\n')
+                for (res1, res2), (count, frequency) in frequencies.items():
+                    output_file.write('\t'.join([res1, res2, "%.3f" % frequency]) + "\n")
+
+    # print(segmentation[0][2])
 
 
 if __name__ == "__main__":

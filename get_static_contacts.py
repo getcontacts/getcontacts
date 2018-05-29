@@ -90,10 +90,10 @@ def process_geometric_criterion_args(args):
     return geom_criterion_values
 
 
-def main():
+def main(argv=None):
     # Parse arguments
     parser = ap.build_getcontact_parser(__doc__, False)
-    args, unknown = parser.parse_known_args()
+    args, unknown = parser.parse_known_args(argv)
 
     top = args.structure
     traj = args.structure
