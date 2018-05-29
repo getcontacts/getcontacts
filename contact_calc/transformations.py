@@ -219,7 +219,8 @@ def gen_frequencies(count_list):
 
 def relabel(residue_contacts, residuelabels):
     """
-    Relabel and filter residue contacts according to the residuelabel dictionary
+    Relabel and filter residue contacts according to the residuelabel dictionary. If the labels dictionary is None then
+    just return the input residue_contacts
 
     For example:
         contacts = [
@@ -231,6 +232,13 @@ def relabel(residue_contacts, residuelabels):
         labels = {'A:ARG:110': 'R110', 'A:ASN:108': 'N108', 'A:NDP:201': 'Ligand', 'A:FOL:200': 'Ligand'}
         relabel(contacts, labels)
         # => [(0, 'N108', 'R110'), (0, 'Ligand', 'N108'), (1, 'Ligand', 'R110')]
+        relabel(contacts, None)
+        # => [
+        #      [0, 'A:ARG:110', 'A:ASN:108'],
+        #      [0, 'A:FOL:200', 'A:ASN:108'],
+        #      [0, 'A:NDP:201', 'A:ASN:108'],
+        #      [1, 'A:ARG:110', 'A:NDP:201']
+        #    ]
 
     Parameters
     ----------
@@ -245,7 +253,9 @@ def relabel(residue_contacts, residuelabels):
         Remapped and filtered residue-contacts specified as tuple of (int, string, string). Frames are guaranteed
         to be sorted
     """
-    print('relabel')
+    if residuelabels is None:
+        return residue_contacts
+
     ret = set()
     for frame, res1, res2 in residue_contacts:
         if res1 in residuelabels and res2 in residuelabels:

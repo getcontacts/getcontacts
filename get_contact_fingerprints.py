@@ -10,7 +10,7 @@ import contact_calc.argparsers as ap
 import argparse
 import numpy as np
 from contact_calc.flare import compose_frequencytable, write_json
-
+from contact_calc.transformations import parse_frequencyfiles
 
 
 def write_frequencytable(freq_table, col_labels, fname):
@@ -90,7 +90,7 @@ def plot_frequencies(freq_table, col_labels, out_file, cluster_columns):
     fingerprints.savefig(out_file)
 
 
-def main():
+def main(argv=None):
     # Parse command line arguments
     parser = ap.PrintUsageParser(description=__doc__)
     parser.add_argument('--input_frequencies',
@@ -134,7 +134,7 @@ def main():
                         default=None,
                         help="If specified, a distance-selection will be written to this pml-file")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     freq_table = parse_frequencyfiles(args.input_frequencies, args.frequency_cutoff)
 
