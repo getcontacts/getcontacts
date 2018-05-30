@@ -1,5 +1,3 @@
-__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
-__license__ = "Apache License 2.0"
 
 import unittest
 import get_dynamic_contacts
@@ -33,3 +31,7 @@ class TestGetContactFlare(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
+__license__ = "Apache License 2.0"

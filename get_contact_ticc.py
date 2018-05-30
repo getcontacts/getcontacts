@@ -19,7 +19,7 @@ webpage (gpcrviz.github.io/flareplot).
 
 import contact_calc.argparsers as ap
 import argparse
-import contact_calc.transformations as io
+from contact_calc.transformations import *
 import numpy as np
 import logging
 import ticc
@@ -145,49 +145,55 @@ def featurize_contacts(residue_contacts, dimensions):
         return solver.fit_transform(mat)
 
 
-def main():
+def main(argv=None):
     # Parse arguments
     parser = ap.PrintUsageParser(__doc__)
     parser.add_argument("--input_contacts",
                         type=argparse.FileType('r'),
                         required=True,
+                        metavar="FILE",
                         help="Path to contact file")
     parser.add_argument("--clusters",
                         type=int,
                         required=False,
                         nargs="+",
                         default=[2, 5, 10],
-                        help="Number of clusters [default: '2 5 10']")
+                        metavar="INT",
+                        help="Number of clusters [default: 2 5 10]")
     parser.add_argument("--tab_output",
                         type=str,
                         required=False,
+                        metavar="FILE",
                         help="Path to TICC output file (tab-separated time/cluster indicators)")
     parser.add_argument("--frequency_output",
                         type=str,
                         required=False,
+                        metavar="FILE",
                         help="Prefix to TICC output files (one res-frequency file for each cluster)")
     parser.add_argument("--beta",
                         type=int,
                         required=False,
                         nargs="+",
                         default=[10, 50, 100],
-                        help="Beta parameter [default: '10 50 100']")
+                        metavar="INT",
+                        help="Beta parameter [default: 10 50 100]")
     parser.add_argument("--max_dimension",
                         type=int,
                         required=False,
                         default=50,
+                        metavar="INT",
                         help="Max number of dimensions [default: 50]")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     # Check output format and call corresponding function(s)
     if all(a is None for a in [args.tab_output, args.frequency_output]):
         parser.error("--tab_output or --frequency_output must be specified")
 
     print("Reading atomic contacts from " + args.input_contacts.name)
-    atomic_contacts, num_frames = io.parse_contacts(args.input_contacts)
+    atomic_contacts, num_frames = parse_contacts(args.input_contacts)
 
     print("Converting atomic contacts to residue contacts")
-    residue_contacts = io.res_contacts(atomic_contacts)
+    residue_contacts = res_contacts(atomic_contacts)
 
     print("Performing dimensionality reduction")
     time_matrix = featurize_contacts(residue_contacts, args.max_dimension)
@@ -206,12 +212,10 @@ def main():
             # print("c = "+str(c))
             cluster_frames = set([frame for frame, cluster in enumerate(segmentation[0][0]) if cluster == c])
             cluster_contacts = [c for c in residue_contacts if c[0] in cluster_frames]
+            num_frames = len(cluster_frames)
 
-            # print(cluster_contacts)
-            # print(set([contact[0] for contact in cluster_contacts]))
-            cluster_res_contacts = res_contacts(cluster_contacts)
-            counts = gen_counts(cluster_contacts, None, None)
-            total_frames, frequencies = gen_frequencies([counts])
+            counts = gen_counts(cluster_contacts)
+            total_frames, frequencies = gen_frequencies([(num_frames, counts)])
 
             fname = "%s_resfreq_cluster%03d.tsv" % (args.frequency_output, c)
             print("Writing frequency-flare to " + fname)

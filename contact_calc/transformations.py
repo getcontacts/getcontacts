@@ -136,6 +136,7 @@ def res_contacts(contacts):
     List of list
         Each entry is a list with a frame and two residue identifiers
     """
+    # print(contacts)
     from collections import defaultdict
     # Associates a frame-number with a set of contacts
     frame_dict = defaultdict(set)
@@ -204,6 +205,8 @@ def gen_frequencies(count_list):
     (int, dict of (str, str): (int, float))
         Total framecount and mapping of residue ID pairs to the number of frames in which they contact and the frequency
     """
+    # print("gen_frequencies")
+    # print(count_list)
     from collections import defaultdict
     rescontact_count = defaultdict(int)
     total_frames = 0
