@@ -26,5 +26,6 @@ install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest
   - source activate test-environment
   - conda install -c https://conda.anaconda.org/rbetz vmd-python
+  - pip install ticc==0.1.4
 script:
   - python -m pytest # or py.test for Python versions 3.5 and below
