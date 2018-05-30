@@ -25,7 +25,7 @@ install:
   - source activate test-environment
   - conda install -c https://conda.anaconda.org/rbetz vmd-python
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      conda install futures
+      conda install futures;
     fi
   - pip install ticc==0.1.4
 script:
