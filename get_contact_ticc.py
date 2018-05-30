@@ -209,9 +209,8 @@ def main(argv=None):
     if args.frequency_output is not None:
         k = segmentation[0][2][2]
         for c in range(k):
-            # print("c = "+str(c))
             cluster_frames = set([frame for frame, cluster in enumerate(segmentation[0][0]) if cluster == c])
-            cluster_contacts = [c for c in residue_contacts if c[0] in cluster_frames]
+            cluster_contacts = [contact for contact in residue_contacts if contact[0] in cluster_frames]
             num_frames = len(cluster_frames)
 
             counts = gen_counts(cluster_contacts)
