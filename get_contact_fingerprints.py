@@ -60,7 +60,7 @@ def plot_frequencies(freq_table, col_labels, out_file, cluster_columns):
     import os
     # if "DISPLAY" not in os.environ:
         # matplotlib.use('agg')
-    matplotlib.use('TkAgg')
+    matplotlib.use('Agg')
 
     import seaborn as sns; 
     sns.set(color_codes=True)
