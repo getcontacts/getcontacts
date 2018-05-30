@@ -23,7 +23,7 @@ install:
   - conda info -a
 
   # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest numpy scipy sklearn pandas futures
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest numpy scipy scikit-learn pandas futures
   - source activate test-environment
   - conda install -c https://conda.anaconda.org/rbetz vmd-python
   - pip install ticc==0.1.4
