@@ -1,5 +1,3 @@
-__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
-__license__ = "Apache License 2.0"
 
 import unittest
 import get_dynamic_contacts
@@ -7,7 +5,7 @@ import get_contact_flare
 import os
 
 
-class TestGetDynamicContacts(unittest.TestCase):
+class TestGetContactFlare(unittest.TestCase):
 
     def test_5xnd_nolabel(self):
         contact_file = "tests/5xnd_contacts.tsv"
@@ -18,7 +16,7 @@ class TestGetDynamicContacts(unittest.TestCase):
         get_dynamic_contacts.main(argv=argv)
         self.assertTrue(os.path.exists(contact_file))
 
-        flare_file = "tests/5xnd_timeflare.tsv"
+        flare_file = "tests/5xnd_timeflare.json"
         argv = ("--input " + contact_file + " "
                 "--output " + flare_file).split(" ")
         get_contact_flare.main(argv=argv)
@@ -33,3 +31,7 @@ class TestGetDynamicContacts(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+__author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
+__license__ = "Apache License 2.0"
