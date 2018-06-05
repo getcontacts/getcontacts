@@ -106,7 +106,9 @@ def parse_residuelabels(label_file):
         if flarelabel in flarelabels:
             raise AssertionError("Flare label '"+flarelabel+"' used twice in "+label_file.name)
 
-        ret[residentifier] = {"label": flarelabel, "treepath": flaretreepath, "color": flarecolor}
+        # ret[residentifier] = {"label": flarelabel, "treepath": flaretreepath, "color": flarecolor}
+        ret[0][residentifier] = flaretreepath
+        ret[1][residentifier] = flarecolor
         flarelabels.add(flarelabel)
 
     return ret
