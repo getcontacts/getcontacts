@@ -37,10 +37,10 @@ def parse_frequencyfiles(freq_files, freq_cutoff):
 
 def write_frequencytable(freq_table, col_labels, fname):
     with open(fname, "w") as out_file:
-        out_file.write(",".join(["", ""] + col_labels) + "\n")
+        out_file.write("\t".join(["", ""] + col_labels) + "\n")
         for (res1, res2) in freq_table:
             freq_strings = [str(freq) for freq in freq_table[(res1, res2)]]
-            out_file.write(",".join([res1, res2] + freq_strings) + "\n")
+            out_file.write("\t".join([res1, res2] + freq_strings) + "\n")
 
 
 def write_pymol_distances(multiflare, fname):
