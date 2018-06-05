@@ -61,6 +61,8 @@ GetContacts has the following dependencies
 * [vmd-python](https://github.com/Eigenstate/vmd-python) 
   * netcdf >= 4.3
   * tk = 8.5
+* numpy scipy expat matplotlib scikit-learn pytest pandas seaborn cython
+* futures (if using python 2.7)
 
 The easiest way to install netcdf is using a package manager. On a Mac, use the [homebrew package manager](https://brew.sh/) and run:
 ```bash
@@ -80,6 +82,12 @@ python setup.py build
 python setup.py install
 cd ..
 python -c "import vmd"  # Should not throw error
+```
+
+The remaining dependencies can be installed using either `pip` or `conda`, e.g.
+```bash
+conda install tk=8.5 numpy scipy expat matplotlib scikit-learn pytest pandas seaborn cython
+conda install futures  # Only do this if using python2.7
 ```
 
 ## Installation
