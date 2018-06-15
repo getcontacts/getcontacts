@@ -102,8 +102,9 @@ def main(argv=None):
     ligand = args.ligand
     solv = args.solv
     sele = args.sele
+    beg = 0
+    end = 0
     stride = 1
-    skip = 0
     geom_criterion_values = process_geometric_criterion_args(args)
 
     # Check interaction types
@@ -119,9 +120,9 @@ def main(argv=None):
 
     # Begin computation
     tic = datetime.datetime.now()
-    compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, stride, skip, solv, sele, ligand)
+    compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, beg, end, stride, solv, sele, ligand)
     toc = datetime.datetime.now()
-    print("Computation time: " + str((toc-tic).total_seconds()) + " seconds")
+    print("\nTotal computation time: " + str((toc-tic).total_seconds()) + " seconds")
 
     print("topology=%s" % top)
     print("trajectory=%s" % traj)
