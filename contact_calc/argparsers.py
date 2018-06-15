@@ -62,10 +62,12 @@ def build_getcontact_parser(program_description, trajectory):
     if trajectory:
         optional_group.add_argument("--cores", type=int, metavar="INT", default=6,
                                     help="number of cpu cores to parallelize on [default = 6]")
+        optional_group.add_argument("--beg", type=int, metavar="INT", default=0,
+                                    help="first frame to read [default = 0]")
+        optional_group.add_argument("--end", type=int, metavar="INT", default=None,
+                                    help="last frame to read (unless end-of-trajectory is met first) [default = infty]")
         optional_group.add_argument("--stride", type=int, metavar="INT", default=1,
-                                    help="skip frames with specified frequency [default = 1]")
-        optional_group.add_argument("--skip", type=int, metavar="INT", default=0,
-                                    help="skip specified number of frames at beginning of trajectory [default = 0]")
+                                    help="steps between computed frames [default = 1]")
 
     # Parse geometric criterion arguments
     geometric_group = parser.add_argument_group("Geometric criteria")

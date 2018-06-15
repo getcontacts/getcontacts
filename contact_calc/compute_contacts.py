@@ -145,7 +145,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
     beg_frame: int
         Start frame of trajectory fragment
     end_frame: int
-        End frame of trajectory fragment
+        Last frame of trajectory fragment
     top: str
         Topology in .pdb or .mae format
     traj: str
@@ -190,11 +190,17 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
 
     # Update frame-number so it's not relative to beg_frame
     for fc in fragment_contacts:
-        fc[0] = beg_frame + fc[0]
+        fc[0] = beg_frame + (fc[0] * stride)
 
     toc = datetime.datetime.now()
-    print("Finished computing contacts for fragment %d (frames %d to %d) in %s s" %
-          (frag_idx, frag_idx * 100, frag_idx * 100 + num_frag_frames - 1, (toc-tic).total_seconds()))
+    print("Finished computing contacts for fragment %d: %d frames from %d to %d by strides of %d taking %s s" %
+          (frag_idx, num_frag_frames, beg_frame, beg_frame + num_frag_frames * stride - 1, stride, (toc-tic).total_seconds()))
+    # print("Finished computing contacts for fragment %d (frames %d to %d) in %s s" %
+    #       (frag_idx,
+    #        frag_idx * TRAJ_FRAG_SIZE,
+    #        frag_idx * TRAJ_FRAG_SIZE + num_frag_frames - 1,
+    #        (toc-tic).total_seconds())
+    #       )
 
     # Write directly out to temporary output
     # print("Writing output to seperate files, one for each itype ...")
@@ -258,7 +264,7 @@ def compute_fragment_contacts_helper(args):
 
 
 def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
-                     stride, skip, solvent_resn, sele_id, ligand):
+                     beg, end, stride, solvent_resn, sele_id, ligand):
     """
     Computes non-covalent contacts across the entire trajectory and writes them to `output`.
 
@@ -274,12 +280,14 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         Denotes the list of non-covalent interaction types to compute contacts for 
     geom_criterion_values: dict
         Dictionary containing the cutoff values for all geometric criteria
-    cores: int, default = 6
+    cores: int, default
         Number of CPU cores to parallelize over
-    stride: int, default = 1
-        Frequency to skip frames in trajectory
-    skip: int, default = 0
-        Number of frames to skip at the beginning of the trajectory (to allow equilibriation)
+    beg: int
+        First frame to read
+    end: int
+        Last frame to read
+    stride: int, default
+        The number of frames to increment after each read frame
     solvent_resn: string, default = TIP3
         Denotes the resname of solvent in simulation
     sele_id: string, default = None
@@ -299,13 +307,19 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
     index_to_label = gen_index_to_atom_label(top, traj)
     sim_length = simulation_length(top, traj)
 
+    beg = max(min(beg, sim_length-1), 0)
+    end = min(max(end, beg), sim_length - 1)
+    stride = max(1, stride)
+    num_fragments = math.ceil((end - beg + 1) / (TRAJ_FRAG_SIZE * stride))
+
     # Generate input arguments for each trajectory piece
     inputqueue = Queue()
-    print("Processing %s with %s total frames and stride %s, skipping first %s frames"
-          % (traj, str(sim_length), str(stride), str(skip)))
+    print("Processing %s (frame %d to %d with stride of %d) as %d fragments\n" %
+          (traj, beg, end, stride, num_fragments))
 
-    for frag_idx, beg_frame in enumerate(range(skip, sim_length, TRAJ_FRAG_SIZE)):
-        end_frame = beg_frame + TRAJ_FRAG_SIZE - 1
+    for frag_idx, beg_frame in enumerate(range(beg, end + 1, TRAJ_FRAG_SIZE * stride)):
+        end_frame = beg_frame + (TRAJ_FRAG_SIZE * stride) - 1
+        # print(frag_idx, beg_frame, end_frame, stride)
         inputqueue.put((frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values,
                         stride, solvent_resn, sele_id, ligand, index_to_label))
 
@@ -322,7 +336,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
 
     # Set up and start consumer process which takes contact results and saves them to output
     output_fd = open(output, "w")
-    consumer = Process(target=contact_consumer, args=(resultsqueue, output_fd, sim_length, itypes))
+    consumer = Process(target=contact_consumer, args=(resultsqueue, output_fd, sim_length, itypes, beg, end, stride))
     consumer.start()
 
     # Wait for everyone to finish
@@ -338,17 +352,20 @@ def contact_worker(inputqueue, resultsqueue):
         if args == "DONE":
             return
         contacts = compute_fragment_contacts(*args)
+        # print(args)
         resultsqueue.put(contacts)
 
 
-def contact_consumer(resultsqueue, output_fd, sim_length, itypes):
+def contact_consumer(resultsqueue, output_fd, sim_length, itypes, beg, end, stride):
     import heapq
 
-    output_fd.write("# total_frames:%d interaction_types:%s\n" % (sim_length, ",".join(itypes)))
+    total_frames = math.ceil((end - beg + 1) / stride)
+    output_fd.write("# total_frames:%d beg:%d end:%d stride:%d interaction_types:%s\n" %
+                    (total_frames, beg, end, stride, ",".join(itypes)))
     output_fd.write("# Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]\n")
 
     resultheap = []
-    waiting_for_frame = 0
+    waiting_for_frame = beg
 
     while True:
         contacts = resultsqueue.get()
@@ -356,6 +373,7 @@ def contact_consumer(resultsqueue, output_fd, sim_length, itypes):
             output_fd.close()
             break
 
+        # print(contacts)
         first_contact_frame = contacts[0][0]
         heapq.heappush(resultheap, (first_contact_frame, contacts))
 
@@ -378,7 +396,7 @@ def contact_consumer(resultsqueue, output_fd, sim_length, itypes):
             contact_line_hash = set()
             for interaction in contacts:
                 # Write to file
-                waiting_for_frame = max(waiting_for_frame, interaction[0] + 1)
+                waiting_for_frame = max(waiting_for_frame, interaction[0] + stride)
                 interaction[0] = str(interaction[0])
                 contact_line = "\t".join(interaction)
                 if contact_line not in contact_line_hash:
