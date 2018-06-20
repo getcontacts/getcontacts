@@ -73,6 +73,10 @@ def main(argv=None):
                           required=False,
                           type=str,
                           help='An image file to write the Jaccard-matrix to (png and svg supported)')
+    optional.add_argument('--correlation_output',
+                          required=False,
+                          type=str,
+                          help='An image file to write the Jaccard-matrix to (png and svg supported)')
     optional.add_argument('--labels',
                           required=False,
                           type=str,
@@ -80,16 +84,19 @@ def main(argv=None):
                           help='Interaction pattern labels. If not specified, the regexes will be used')
 
     args = parser.parse_args(argv)
-    if args.trace_output is None and args.jaccard_output is None:
+    if args.trace_output is None and args.jaccard_output is None and args.correlation_output is None:
         parser.error("--trace_output or --jaccard_output must be specified")
 
     # Process arguments
     itypes = parse_itypes(['all'])
-    interaction_patterns = parse_interaction_patterns(args.interactions)
-    labels = parse_labels(args.labels, args.input_contacts, args.interactions)
+    print("Reading contacts")
     contact_lists = [parse_contacts(contact_file, itypes)[0] for contact_file in args.input_contacts]
+    print("Parsing interaction patterns")
+    interaction_patterns = parse_interaction_patterns(args.interactions, contact_lists)
+    labels = parse_labels(args.labels, args.input_contacts, interaction_patterns)
 
     # Filter contacts and generate trace
+    print("Filtering interactions")
     contact_frames = filter_contacts(contact_lists, interaction_patterns)
 
     if args.trace_output is not None:
@@ -98,14 +105,34 @@ def main(argv=None):
     if args.jaccard_output is not None:
         write_jaccard(contact_frames, labels, args.jaccard_output)
 
+    if args.correlation_output is not None:
+        write_correlation(contact_frames, labels, args.correlation_output)
 
-def parse_interaction_patterns(ipatterns):
+
+def parse_interaction_patterns(ipatterns, contact_lists):
     ip_str_pairs = [ip.split() for ip in ipatterns]
-    if any([len(ip) != 2 for ip in ip_str_pairs]):
+
+    if any([len(ip) not in [1, 2] for ip in ip_str_pairs]):
         sys.stderr.write("Error: Interactions must be valid space-separated regular expressions\n")
         sys.exit(-1)
 
-    return [(re.compile(ip[0]), re.compile(ip[1])) for ip in ip_str_pairs]
+    re_pats = [list(map(re.compile, ip)) for ip in ip_str_pairs]
+    ret = []
+    for re_pat in re_pats:
+        if len(re_pat) == 1:
+            pat = re_pat[0]
+            pat_partners = set()
+            for contact_list in contact_lists:
+                pat_partners |= set([c[3] for c in contact_list if pat.match(c[2])] + \
+                                    [c[2] for c in contact_list if pat.match(c[3])])
+
+            ret += [(pat, re.compile(p)) for p in pat_partners]
+        if len(re_pat) == 2:
+            ret.append((re_pat[0], re_pat[1]))
+
+    # for re_pat in ret:
+    #     print(re_pat[0].pattern, re_pat[1].pattern)
+    return ret
 
 
 def parse_labels(labels, input_files, interactions):
@@ -121,7 +148,7 @@ def parse_labels(labels, input_files, interactions):
 
     from itertools import product
 
-    return [f.name + ": " + i.replace(" ", " - ") for i, f in product(interactions, input_files)]
+    return [i[0].pattern + " - " + i[1].pattern for i, _ in product(interactions, input_files)]
 
 
 def parse_itypes(itype_argument):
@@ -151,6 +178,55 @@ def filter_contacts(contact_lists, interaction_patterns):
     return ret
 
 
+def write_correlation(contact_frames, labels, output_file):
+    # Example adapted from https://seaborn.pydata.org/examples/many_pairwise_correlations.html
+    import numpy as np
+    import pandas as pd
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    # print(contact_frames)
+
+    sns.set(style="white")
+
+    # Convert frames to pandas dataframe (rows are time, cols interactions)
+    rows = max(map(max, contact_frames)) + 1
+    cols = len(contact_frames)
+    d = pd.DataFrame(data=np.zeros(shape=(rows, cols)), columns=labels)
+    for i, contacts in enumerate(contact_frames):
+        d[labels[i]][contacts] = 1
+
+    # print(d)
+
+    # Compute the correlation matrix
+    dmat = d.corr()
+    np.fill_diagonal(dmat.values, 0)
+    # vmax = max(vmax, -vmin)
+    # vmin = min(vmin, -vmax)
+    vmax = 1
+    vmin = -1
+    # print(jac_sim)
+    # print(vmin, vmax)
+
+    # Generate a mask for the upper triangle
+    mask = np.zeros_like(dmat, dtype=np.bool)
+    mask[np.triu_indices_from(mask)] = True
+
+    # Set up the matplotlib figure
+    f, ax = plt.subplots(figsize=(11, 9))
+    # plt.subplots(figsize=(11, 9))
+
+    # Generate a custom diverging colormap
+    cmap = sns.diverging_palette(220, 10, as_cmap=True)
+
+    # Draw the heatmap with the mask and correct aspect ratio
+    hm = sns.heatmap(dmat, mask=mask, cmap=cmap, vmax=vmax, vmin=vmin, center=0, square=True, linewidths=0)
+    # sns.heatmap(corr, mask=mask, cmap=cmap, vmax=, center=0, square=True, linewidths=0, cbar_kws={"shrink": .5})
+    f.tight_layout()
+
+    print("Writing correlation matrix to", output_file)
+    f.savefig(output_file)
+
+
 def write_jaccard(contact_frames, labels, output_file):
     # Example adapted from https://seaborn.pydata.org/examples/many_pairwise_correlations.html
     import numpy as np
@@ -177,8 +253,10 @@ def write_jaccard(contact_frames, labels, output_file):
     np.fill_diagonal(jac_sim.values, 0)
     vmax = max(jac_sim.max())
     vmin = min(jac_sim.min())
-    vmax = max(vmax, -vmin)
-    vmin = min(vmin, -vmax)
+    # vmax = max(vmax, -vmin)
+    # vmin = min(vmin, -vmax)
+    vmax = 1
+    vmin = 0
     # print(jac_sim)
     # print(vmin, vmax)
 
@@ -194,8 +272,10 @@ def write_jaccard(contact_frames, labels, output_file):
     cmap = sns.diverging_palette(220, 10, as_cmap=True)
 
     # Draw the heatmap with the mask and correct aspect ratio
-    hm = sns.heatmap(jac_sim, mask=mask, cmap=cmap, vmax=vmax, vmin=vmin, center=0, square=True, linewidths=0)
+    hm = sns.heatmap(jac_sim, mask=mask, cmap=cmap, vmax=vmax, vmin=vmin, center=0.5, square=True, linewidths=0)
     # sns.heatmap(corr, mask=mask, cmap=cmap, vmax=, center=0, square=True, linewidths=0, cbar_kws={"shrink": .5})
+    f.tight_layout()
+
     print("Writing Jaccard similarity to", output_file)
     f.savefig(output_file)
 
@@ -206,7 +286,7 @@ def write_trace(contact_frames, labels, output_file):
 
     Parameters
     ==========
-    contact_frames: list of int
+    contact_frames: list of list of int
         Indicates all frame numbers for which a certain interaction is present
     labels: list of str
         The labels to write next to each trace
@@ -214,15 +294,37 @@ def write_trace(contact_frames, labels, output_file):
         Path to an image file supported by matplotlib
     """
     assert len(contact_frames) == len(labels)
-    # TODO: Remove these print-statements
-    print("contact_frames:")
-    print(contact_frames)
-    print("labels:")
-    print(labels)
-    print("output_file:")
-    print(output_file)
-    # TODO: Write trace plots here
-    pass
+
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import MaxNLocator
+
+    num_interactions = len(contact_frames)
+    num_frames = max(map(max, contact_frames)) + 1
+    f, axs = plt.subplots(num_interactions, sharex=True, sharey=True)
+
+    # Do actual plotting
+    for ax, contacts, label in zip(axs, contact_frames, labels):
+        contact_set = set(contacts)
+        x = range(num_frames)
+        y = [1 if c in contact_set else 0 for c in range(num_frames)]
+        ax.bar(x, y, width=1.0, linewidth=0, color="#76b8cb")
+        ax.set_yticks([])
+        ax.set_ylabel(label, rotation=0, va='center', ha='left')
+        ax.yaxis.set_label_coords(1.05, 0.5)
+
+    plt.xlim((-0.5, num_frames - 0.5))
+    plt.ylim((0, 1))
+    # for ax in axs:
+    #     ax.get_yaxis().set_visible(False)
+    for ax in axs[:-1]:
+        ax.get_xaxis().set_visible(False)
+    plt.tight_layout()
+    f.subplots_adjust(hspace=0)
+    # plt.setp([a.get_xticklabels() for a in axs[:-1]], visible=False)
+    axs[-1].xaxis.set_major_locator(MaxNLocator(integer=True))
+
+    print("Writing trace-plot to", output_file)
+    f.savefig(output_file)
 
 
 if __name__ == "__main__":
