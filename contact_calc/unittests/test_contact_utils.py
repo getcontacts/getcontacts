@@ -2,42 +2,38 @@ __author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
 __license__ = "Apache License 2.0"
 
 import unittest
-import contact_calc.transformations as ct
+from contact_calc.contact_utils import *
+import numpy as np
+from numpy.linalg import norm
 
 
-class TestTransformations(unittest.TestCase):
-    def setUp(self):
-        self.input_lines = [
-            "# total_frames:2 interaction_types:sb,vdw\n",
-            "# Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]\n",
-            "0\tsb\tA:GLU:82:OE1\tA:ARG:76:NH2\n",
-            "0\tsb\tA:GLU:82:OE2\tA:ARG:76:NH1\n",
-            "1\tsb\tA:GLU:82:OE2\tA:ARG:76:NH2\n",
-            "1\tvdw\tA:GLU:82:OE2\tA:ARG:76:NH2\n"
-        ]
+class TestContactUtils(unittest.TestCase):
 
-    def test_parse_contacts(self):
-        contacts, num_frames = ct.parse_contacts(self.input_lines, set(['sb']))
-        self.assertEqual(len(contacts), 3)
-        self.assertEqual(num_frames, 2)
-        self.assertTrue(all([c[1] == 'sb' for c in contacts]))
-        self.assertEqual(type(contacts[0][0]), int)
-        self.assertEqual(type(contacts[0][1]), str)
-        self.assertEqual(type(contacts[0][2]), str)
-        self.assertEqual(type(contacts[0][3]), str)
+    def test_points_to_vector(self):
+        p1 = np.array([0, 0, 0])
+        p2 = np.array([1, 0, 0])
+        p3 = np.array([1, 1, 1])
 
-    def test_parse_residuelabels(self):
-        pass
+        self.assertAlmostEqual(norm(points_to_vector(p1, p1)), 0)
+        self.assertAlmostEqual(norm(points_to_vector(p1, p2)), 1)
+        self.assertAlmostEqual(norm(points_to_vector(p2, p3)), math.sqrt(2))
+        self.assertAlmostEqual(norm(points_to_vector(p3, p2) + points_to_vector(p2, p3)), 0)
 
-    def test_res_contacts(self):
-        contacts, num_frames = ct.parse_contacts(self.input_lines, set(['sb']))
-        rcontacts = ct.res_contacts(contacts)
-        self.assertEqual(len(rcontacts), 2)
-        self.assertEqual(rcontacts[0][0], 0)
-        self.assertEqual(rcontacts[1][0], 1)
-        self.assertEqual(rcontacts[1][1], "A:ARG:76")
-        self.assertEqual(rcontacts[1][2], "A:GLU:82")
+    def test_vector_length(self):
+        self.assertAlmostEqual(calc_vector_length(np.array([0, 0, 0])), 0)
+        self.assertAlmostEqual(calc_vector_length(np.array([0, 3, 0])), 3)
+        self.assertAlmostEqual(calc_vector_length(np.array([2, 0, 0])), 2)
+        self.assertAlmostEqual(calc_vector_length(np.array([0, 0, 4])), 4)
+        self.assertAlmostEqual(calc_vector_length(np.array([1, 1, 1])), math.sqrt(3))
 
+    def test_calc_angle_between_vectors(self):
+        self.assertAlmostEqual(calc_angle_between_vectors(np.array([1, 0, 0]), np.array([0, 1, 0])), 90, 5)
+        self.assertAlmostEqual(calc_angle_between_vectors(np.array([1, 1, 0]), np.array([1, 1, 0])), 0, 5)
+        self.assertAlmostEqual(calc_angle_between_vectors(np.array([1, 1, 0]), np.array([-1, -1, 0])), 180, 5)
+
+    def test_calc_geom_distance(self):
+        self.assertAlmostEqual(calc_geom_distance(np.array([1, 1, 1]), np.array([1, 1, 1])), 0, 5)
+        self.assertAlmostEqual(calc_geom_distance(np.array([-1, -1, -1]), np.array([1, 1, 1])), math.sqrt(3)*2, 5)
 
 if __name__ == '__main__':
     unittest.main()
