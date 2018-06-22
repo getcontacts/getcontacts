@@ -25,6 +25,7 @@ import re
 import sys
 import os
 from contextlib import contextmanager
+from numpy.linalg import norm
 
 
 def atoi(text):
@@ -622,16 +623,16 @@ def points_to_vector(point1, point2):
     """
     Return vector from point1 to point2
     """
-    vector = point2 - point1
-    return vector
+    return point2 - point1
 
 
 def calc_vector_length(vector):
     """
     Compute length of vector
     """
-    vector_length = math.sqrt(np.dot(vector, vector))
-    return vector_length
+    return norm(vector)
+    # vector_length = math.sqrt(np.dot(vector, vector))
+    # return vector_length
 
 
 def calc_angle_between_vectors(vector1, vector2):
@@ -651,6 +652,13 @@ def calc_geom_distance(point1, point2):
     """
     Compute distance between two points
 
+    Parameters
+    ----------
+    point1: array_like of number
+        First point
+    point2: array_like of number
+        Second point
+
     Returns
     -------
     distance: float
@@ -662,6 +670,15 @@ def calc_geom_distance(point1, point2):
 def calc_geom_centroid(point1, point2, point3):
     """
     Compute centroid between three points
+
+    Parameters
+    ----------
+    point1: array_like of number
+        First point
+    point2: array_like of number
+        Second point
+    point3: array_like of number
+        Second point
 
     Returns
     -------
