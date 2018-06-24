@@ -27,7 +27,7 @@ __all__ = ['prep_salt_bridge_computation', 'compute_salt_bridges']
 ##############################################################################
 
 
-def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id):
+def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2):
     """
     Compute all possible anion and cation atoms from first frame of simulation
 
@@ -40,12 +40,35 @@ def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id):
         List of atom labels for atoms in LYS, ARG, HIS that
         can form salt bridges
     """
-    anion_list = get_anion_atoms(traj_frag_molid, frame_idx, sele_id)
-    cation_list = get_cation_atoms(traj_frag_molid, frame_idx, sele_id)
+    anion_list = get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2)
+    cation_list = get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2)
     return anion_list, cation_list
 
 
-def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, SALT_BRIDGE_CUTOFF_DISTANCE=4.0):
+def filter_dual_selection_salt_bridges(salt_bridges, traj_frag_molid, frame_idx, sele_id, sele_id2):
+    """
+    When computing salt bridges between two selections X and Y, return contacts that are 
+    formed between atoms in selection X and selection Y. 
+
+    Returns
+    -------
+    filtered_salt_bridges: list of tuples, [(frame_index, itype, atom1_label, atom2_label), ...]
+        itype = "sb"
+    """
+
+    sele1_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id)
+    sele2_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id2)
+
+    ### Filter and keep only contacts between atoms in sele_id and sele_id2 
+    filtered_salt_bridges = []
+    for sb_contact in salt_bridges:
+        frame_idx, itype, anion_atom, cation_atom = sb_contact
+        if((anion_atom in sele1_atoms and cation_atom in sele2_atoms) or (anion_atom in sele2_atoms and cation_atom in sele1_atoms)):
+            filtered_salt_bridges.append(sb_contact)
+
+    return filtered_salt_bridges
+
+def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, SALT_BRIDGE_CUTOFF_DISTANCE=4.0):
     """
     Compute salt bridges in a frame of simulation
 
@@ -65,12 +88,16 @@ def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, SALT_BRIDGE_CUTOFF
     salt_bridges: list of tuples, [(frame_index, itype, atom1_label, atom2_label), ...]
         itype = "sb"
     """
-    anion_list, cation_list = prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id)
+    anion_list, cation_list = prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2)
     salt_bridges = []
     for anion_atom in anion_list:
         for cation_atom in cation_list:
             dist = compute_distance(traj_frag_molid, frame_idx, anion_atom, cation_atom)
             if dist < SALT_BRIDGE_CUTOFF_DISTANCE:
                 salt_bridges.append([frame_idx, "sb", anion_atom, cation_atom])
+
+    ### Process dual selection output if user provides two selection queries
+    if(sele_id != None and sele_id2 != None):
+        salt_bridges = filter_dual_selection_salt_bridges(salt_bridges, traj_frag_molid, frame_idx, sele_id, sele_id2)
 
     return salt_bridges

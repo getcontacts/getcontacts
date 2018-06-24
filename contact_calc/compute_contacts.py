@@ -60,7 +60,7 @@ full_name_dirs = {'hbbb': 'hydrogen_bonds/backbone_backbone_hydrogen_bonds',
 # format and most efficient way to write to disk.
 
 
-def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele_id,
+def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele_id, sele_id2, 
                            ligand, index_to_label):
     """
     Computes each of the specified non-covalent interaction type for a single frame
@@ -81,6 +81,8 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
         Denotes the resname of solvent in simulation
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
+    sele_id2: string, default = None
+        If second VMD query is specified, then compute contacts between atom selection 1 and 2 
     chain_id: string, default = None
         Specify chain of protein to perform computation on 
     ligand: list of string, default = None
@@ -95,6 +97,7 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
 
     """
     # tic = datetime.datetime.now()
+    # print("testing sele = %s; sele2 = %s" % (sele_id, sele_id2))
 
     # Extract geometric criterion
     SALT_BRIDGE_CUTOFF_DISTANCE = geom_criterion_values['SALT_BRIDGE_CUTOFF_DISTANCE']
@@ -113,7 +116,7 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
 
     frame_contacts = []
     if "sb" in ITYPES:
-        frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, SALT_BRIDGE_CUTOFF_DISTANCE)
+        frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, SALT_BRIDGE_CUTOFF_DISTANCE)
     if "pc" in ITYPES:
         frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, PI_CATION_CUTOFF_DISTANCE, PI_CATION_CUTOFF_ANGLE)
     if "ps" in ITYPES:
@@ -134,7 +137,7 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
 
 
 def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values, stride,
-                              solvent_resn, sele_id, ligand, index_to_label):
+                              solvent_resn, sele_id, sele_id2, ligand, index_to_label):
     """ 
     Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
 
@@ -162,6 +165,8 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
         Denotes the resname of solvent in simulation
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
+    sele_id2: string, default = None
+        If second VMD query is specified, then compute contacts between atom selection 1 and 2 
     ligand: list of string, default = None
         Include ligand resname if computing contacts between ligand and binding pocket residues
     index_to_label: dict 
@@ -183,7 +188,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
     for frame_idx in range(num_frag_frames):
         # if frame_idx > 1: break
         fragment_contacts += compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, itypes, geom_criterion_values,
-                                                    solvent_resn, sele_id, ligand, index_to_label)
+                                                    solvent_resn, sele_id, sele_id2, ligand, index_to_label)
 
     # Delete trajectory fragment to clear memory
     molecule.delete(traj_frag_molid)
@@ -264,7 +269,7 @@ def compute_fragment_contacts_helper(args):
 
 
 def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
-                     beg, end, stride, solvent_resn, sele_id, ligand):
+                     beg, end, stride, solvent_resn, sele_id, sele_id2, ligand):
     """
     Computes non-covalent contacts across the entire trajectory and writes them to `output`.
 
@@ -292,6 +297,8 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         Denotes the resname of solvent in simulation
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
+    sele_id2: string, default = None
+        If second VMD query is specified, then compute contacts between atom selection 1 and 2 
     ligand: list of string, default = None
         Include ligand resname if computing contacts between ligand and binding pocket residues
     """
@@ -321,7 +328,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         end_frame = beg_frame + (TRAJ_FRAG_SIZE * stride) - 1
         # print(frag_idx, beg_frame, end_frame, stride)
         inputqueue.put((frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values,
-                        stride, solvent_resn, sele_id, ligand, index_to_label))
+                        stride, solvent_resn, sele_id, sele_id2, ligand, index_to_label))
 
     # Set up result queue for workers to transfer results to the consumer
     resultsqueue = Queue()

@@ -107,10 +107,15 @@ def main(argv=None):
     ligand = args.ligand
     solv = args.solv
     sele = args.sele
+    sele2 = args.sele2
     beg = args.beg
     end = args.end if args.end else sys.maxsize
     stride = args.stride
     geom_criterion_values = process_geometric_criterion_args(args)
+
+    # If user mistakenly includes only sele2
+    if(sele == None and sele2 != None):
+        sele, sele2 = sele2, sele
 
     # Check interaction types
     all_itypes = ["sb", "pc", "ps", "ts", "vdw", "hb", "lhb"]
@@ -125,7 +130,7 @@ def main(argv=None):
 
     # Begin computation
     tic = datetime.datetime.now()
-    compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, beg, end, stride, solv, sele, ligand)
+    compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, beg, end, stride, solv, sele, sele2, ligand)
     toc = datetime.datetime.now()
     print("\nTotal computation time: " + str((toc-tic).total_seconds()) + " seconds")
 
@@ -136,6 +141,7 @@ def main(argv=None):
     print("ligand=%s" % ",".join(ligand))
     print("solv=%s" % solv)
     print("sele=%s" % sele)
+    print("sele=%s" % sele2)
     print("stride=%s" % stride)
 
 
