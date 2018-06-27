@@ -32,7 +32,14 @@ SOFT_DISTANCE_CUTOFF = 10.0  # Angstroms
 ##############################################################################
 
 
-def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id,
+def filter_dual_selection_pi_cation(sele1_atoms, sele2_atoms, cation_atom_label, arom_atom1_label, arom_atom2_label, arom_atom3_label):
+    both_sel1_bool = (cation_atom_label in sele1_atoms) and ((arom_atom1_label in sele2_atoms) or (arom_atom2_label in sele2_atoms) or (arom_atom3_label in sele2_atoms))
+    both_sel2_bool = (cation_atom_label in sele2_atoms) and ((arom_atom1_label in sele1_atoms) or (arom_atom2_label in sele1_atoms) or (arom_atom3_label in sele1_atoms))
+    if(both_sel1_bool or both_sel2_bool):
+        return False # dont filter
+    return True
+
+def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
                       PI_CATION_CUTOFF_DISTANCE=6.0, PI_CATION_CUTOFF_ANGLE=60):
     """
     Compute pi-cation interactions in a frame of simulation
@@ -63,7 +70,7 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id,
     """
     pi_cations = []
 
-    if sele_id is None:
+    if sele_id == None and sele_id2 == None:
         cation_atom_sel = "set cation_atoms [atomselect %s \" " \
                           "((resname LYS) and (name NZ)) or " \
                           "((resname ARG) and (name NH1 NH2)) or " \
@@ -73,7 +80,7 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id,
                             "((resname PHE) and (name CG CE1 CE2)) or " \
                             "((resname TRP) and (name CD2 CZ2 CZ3)) or " \
                             "((resname TYR) and (name CG CE1 CE2)) \" frame %s]" % (traj_frag_molid, frame_idx)
-    else:
+    elif sele_id != None and sele_id2 == None:
         cation_atom_sel = "set cation_atoms [atomselect %s \" " \
                           "((resname LYS) and (name NZ) and (%s)) or " \
                           "((resname ARG) and (name NH1 NH2) and (%s)) or " \
@@ -84,12 +91,30 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id,
                             "((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or " \
                             "((resname TYR) and (name CG CE1 CE2) and (%s))\" frame %s]" % \
                             (traj_frag_molid, sele_id, sele_id, sele_id, frame_idx)
+    elif sele_id != None and sele_id2 != None:
+        sele_union = "(%s) or (%s)" % (sele_id, sele_id2)
+        cation_atom_sel = "set cation_atoms [atomselect %s \" " \
+                          "((resname LYS) and (name NZ) and (%s)) or " \
+                          "((resname ARG) and (name NH1 NH2) and (%s)) or " \
+                          "((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s))\" frame %s]" % \
+                          (traj_frag_molid, sele_union, sele_union, sele_union, frame_idx)
+        aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" " \
+                            "((resname PHE) and (name CG CE1 CE2) and (%s)) or " \
+                            "((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or " \
+                            "((resname TYR) and (name CG CE1 CE2) and (%s))\" frame %s]" % \
+                            (traj_frag_molid, sele_union, sele_union, sele_union, frame_idx)
+
 
     evaltcl(cation_atom_sel)
     evaltcl(aromatic_atom_sel)
     contacts = evaltcl("measure contacts %s $cation_atoms $aromatic_atoms" % SOFT_DISTANCE_CUTOFF)
     evaltcl("$cation_atoms delete")
     evaltcl("$aromatic_atoms delete")
+
+    # This computation can eventually be moved out of this method for better efficiency. 
+    if(sele_id != None and sele_id2 != None):
+        sele1_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id)
+        sele2_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id2)
 
     # Evaluate geometric criterion if all three points of an aromatic
     # residue are sufficiently close to a cation atom
@@ -112,6 +137,11 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id,
             continue
         aromatic_atom_labels = sorted(list(aromatic_atom_labels))
         arom_atom1_label, arom_atom2_label, arom_atom3_label = aromatic_atom_labels
+
+        # If dual selection then perform filter
+        if(sele_id != None and sele_id2 != None):
+            if(filter_dual_selection_pi_cation(sele1_atoms, sele2_atoms, cation_atom_label, arom_atom1_label, arom_atom2_label, arom_atom3_label) == True):
+                continue
 
         # Compute coordinates of cation and aromatic atoms
         cation_coord = get_coord(traj_frag_molid, frame_idx, cation_atom_label)
