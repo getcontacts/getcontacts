@@ -94,11 +94,12 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id,
     # Evaluate geometric criterion if all three points of an aromatic
     # residue are sufficiently close to a cation atom
     contact_index_pairs = parse_contacts(contacts)
+    # map every distinct combination of cation atom and aromatic residue to the three atoms on the aromatic atom
     pi_cation_aromatic_grouping = {}
     for cation_index, aromatic_index in contact_index_pairs:
         cation_label = index_to_label[cation_index]
         aromatic_label = index_to_label[aromatic_index]
-        pi_cation_aromatic_res_key = cation_label + ":" + ":".join(aromatic_label.split(":")[2])
+        pi_cation_aromatic_res_key = cation_label + ":" + ":".join(aromatic_label.split(":")[0:3])
         if pi_cation_aromatic_res_key not in pi_cation_aromatic_grouping:
             pi_cation_aromatic_grouping[pi_cation_aromatic_res_key] = set()
         pi_cation_aromatic_grouping[pi_cation_aromatic_res_key].add(aromatic_label)
