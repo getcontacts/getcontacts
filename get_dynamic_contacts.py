@@ -127,7 +127,8 @@ def main(argv=None):
     tic = datetime.datetime.now()
     compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, beg, end, stride, solv, sele, ligand)
     toc = datetime.datetime.now()
-    print("\nTotal computation time: " + str((toc-tic).total_seconds()) + " seconds")
+    total_time = (toc-tic).total_seconds()
+    print("\nTotal computation time:", total_time, "seconds")
 
     print("topology=%s" % top)
     print("trajectory=%s" % traj)
