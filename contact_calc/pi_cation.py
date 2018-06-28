@@ -55,6 +55,8 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
         {11205: "A:ASP:114:CA:11205, ...}
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
+    sele_id2: string, default = None
+        If second VMD query is specified, then compute contacts between atom selection 1 and 2 
     PI_CATION_CUTOFF_DISTANCE: float, default = 6.0 angstroms
         cutoff for distance between cation and centroid of aromatic ring
     PI_CATION_CUTOFF_ANGLE: float, default = 60 degrees
