@@ -193,7 +193,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
         fc[0] = beg_frame + (fc[0] * stride)
 
     toc = datetime.datetime.now()
-    print("Finished computing contacts for fragment %d: %d frames from %d to %d by strides of %d taking %s s" %
+    print("Finished computing contacts for fragment %d: %d frames from %d to %d in strides of %d taking %s s" %
           (frag_idx, num_frag_frames, beg_frame, beg_frame + num_frag_frames * stride - 1, stride, (toc-tic).total_seconds()))
     # print("Finished computing contacts for fragment %d (frames %d to %d) in %s s" %
     #       (frag_idx,
@@ -327,7 +327,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
     resultsqueue = Queue()
 
     # Set up and start worker processes
-    num_workers = max(1, cores - 1)
+    num_workers = max(1, cores)
     for _ in range(num_workers):
         inputqueue.put("DONE")  # Stops each worker process
     workers = [Process(target=contact_worker, args=(inputqueue, resultsqueue)) for _ in range(num_workers)]
