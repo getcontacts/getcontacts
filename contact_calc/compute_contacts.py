@@ -126,9 +126,9 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     if "vdw" in ITYPES:
         frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, ligand, VDW_EPSILON, VDW_RES_DIFF)
     if "hb" in ITYPES:
-        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, None, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
+        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, sele_id2, None, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
     if "lhb" in ITYPES:
-        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, ligand, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
+        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, sele_id2, ligand, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
 
     # toc = datetime.datetime.now()
     # print("Finished computing contacts for frame %d (frag %d) in %s s" %

@@ -211,7 +211,8 @@ def get_selection_atoms(traj_frag_molid, frame_idx, selection_id):
     protein_selection_list: list of strings 
         List of atom labels for atoms in protein selection 
     """
-    evaltcl("set selection_id [atomselect %s \" (protein) and (%s) \" frame %s]" % (traj_frag_molid, selection_id, frame_idx))
+    # evaltcl("set selection_id [atomselect %s \" (protein) and (%s) \" frame %s]" % (traj_frag_molid, selection_id, frame_idx))
+    evaltcl("set selection_id [atomselect %s \" (%s) \" frame %s]" % (traj_frag_molid, selection_id, frame_idx))
     protein_selection_list = get_atom_selection_labels("selection_id")
     evaltcl('$selection_id delete')
     return protein_selection_list
