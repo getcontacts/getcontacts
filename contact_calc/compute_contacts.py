@@ -120,7 +120,7 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     if "pc" in ITYPES:
         frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, PI_CATION_CUTOFF_DISTANCE, PI_CATION_CUTOFF_ANGLE)
     if "ps" in ITYPES:
-        frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, PI_STACK_CUTOFF_DISTANCE, PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
+        frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, PI_STACK_CUTOFF_DISTANCE, PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
     if "ts" in ITYPES:
         frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
     if "vdw" in ITYPES:
@@ -220,7 +220,6 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
     #     fd_map[itype].close()
     #
     # return frag_idx, num_frag_frames - 1
-
     return fragment_contacts
 
 
@@ -380,11 +379,11 @@ def contact_consumer(resultsqueue, output_fd, sim_length, itypes, beg, end, stri
             output_fd.close()
             break
 
-        # print(contacts)
         first_contact_frame = contacts[0][0]
         heapq.heappush(resultheap, (first_contact_frame, contacts))
 
         # If this is the contact frame we're waiting for, go ahead and write it
+        # print("Issue #38 test", contacts)
         while waiting_for_frame == first_contact_frame:
             _, contacts = heapq.heappop(resultheap)
             if resultheap:

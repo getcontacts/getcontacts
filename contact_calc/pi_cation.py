@@ -33,9 +33,9 @@ SOFT_DISTANCE_CUTOFF = 10.0  # Angstroms
 
 
 def filter_dual_selection_pi_cation(sele1_atoms, sele2_atoms, cation_atom_label, arom_atom1_label, arom_atom2_label, arom_atom3_label):
-    both_sel1_bool = (cation_atom_label in sele1_atoms) and ((arom_atom1_label in sele2_atoms) or (arom_atom2_label in sele2_atoms) or (arom_atom3_label in sele2_atoms))
-    both_sel2_bool = (cation_atom_label in sele2_atoms) and ((arom_atom1_label in sele1_atoms) or (arom_atom2_label in sele1_atoms) or (arom_atom3_label in sele1_atoms))
-    if(both_sel1_bool or both_sel2_bool):
+    cation1_arom2 = (cation_atom_label in sele1_atoms) and ((arom_atom1_label in sele2_atoms) or (arom_atom2_label in sele2_atoms) or (arom_atom3_label in sele2_atoms))
+    cation2_arom1 = (cation_atom_label in sele2_atoms) and ((arom_atom1_label in sele1_atoms) or (arom_atom2_label in sele1_atoms) or (arom_atom3_label in sele1_atoms))
+    if(cation1_arom2 or cation2_arom1):
         return False # dont filter
     return True
 
