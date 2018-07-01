@@ -1,5 +1,7 @@
 # GetContacts
 
+[![Build Status](https://travis-ci.com/getcontacts/getcontacts.svg?branch=master)](https://travis-ci.com/getcontacts/getcontacts)
+
 Application for efficiently computing non-covalent contact networks in molecular structures and MD simulations. Following example computes all salt bridges, pi cation, aromatic, and hydrogen bond interactions in a trajectory:
 ```bash
 get_dynamic_contacts.py --topology my_top.psf \
