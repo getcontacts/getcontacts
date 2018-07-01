@@ -42,7 +42,12 @@ def filter_dual_selection_hbond(sele1_atoms, sele2_atoms, atom1_label, atom2_lab
     atom1_label: string 
         Label for atom participating in hydrogen bond
     atom2_label: string 
-        Label for atom participating in hydrogen bond 
+        Label for atom participating in hydrogen bond
+
+    Returns
+    -------
+    filter_bool: bool 
+        True to filter out interaction
     """
 
     dual_sel1 = (atom1_label in sele1_atoms) and (atom2_label in sele2_atoms)

@@ -29,7 +29,7 @@ __all__ = ['compute_pi_stacking', 'compute_t_stacking']
 
 def filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_atom_labels, aromatic2_atom_labels):
     """
-    Filter out interactions that are not between selection 1 and selection 2
+    Filter out aromatic interactions that are not between selection 1 and selection 2
 
     Parameters
     ----------
@@ -41,6 +41,11 @@ def filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_atom_labe
         Triplet of atom labels for aromatic 1 
     aromatic2_atom_labels: tuple 
         Triplet of atom labels for aromatic 2
+
+    Returns
+    -------
+    filter_bool: bool 
+        True to filter out interaction
 
     """
 

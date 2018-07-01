@@ -26,25 +26,6 @@ __all__ = ['prep_salt_bridge_computation', 'compute_salt_bridges']
 # Functions
 ##############################################################################
 
-
-def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2):
-    """
-    Compute all possible anion and cation atoms from first frame of simulation
-
-    Returns
-    -------
-    anion_list: list of strings
-        List of atom labels for atoms in ASP or GLU that
-        can form salt bridges
-    cation_list: list of strings
-        List of atom labels for atoms in LYS, ARG, HIS that
-        can form salt bridges
-    """
-    anion_list = get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2)
-    cation_list = get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2)
-    return anion_list, cation_list
-
-
 def filter_dual_selection_salt_bridges(salt_bridges, traj_frag_molid, frame_idx, sele_id, sele_id2):
     """
     When computing salt bridges between two selections X and Y, return contacts that are 
@@ -67,6 +48,23 @@ def filter_dual_selection_salt_bridges(salt_bridges, traj_frag_molid, frame_idx,
             filtered_salt_bridges.append(sb_contact)
 
     return filtered_salt_bridges
+
+def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2):
+    """
+    Compute all possible anion and cation atoms from first frame of simulation
+
+    Returns
+    -------
+    anion_list: list of strings
+        List of atom labels for atoms in ASP or GLU that
+        can form salt bridges
+    cation_list: list of strings
+        List of atom labels for atoms in LYS, ARG, HIS that
+        can form salt bridges
+    """
+    anion_list = get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2)
+    cation_list = get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2)
+    return anion_list, cation_list
 
 def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, SALT_BRIDGE_CUTOFF_DISTANCE=4.0):
     """
