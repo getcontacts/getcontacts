@@ -122,7 +122,7 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     if "ps" in ITYPES:
         frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, PI_STACK_CUTOFF_DISTANCE, PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
     if "ts" in ITYPES:
-        frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
+        frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
     if "vdw" in ITYPES:
         frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, ligand, VDW_EPSILON, VDW_RES_DIFF)
     if "hb" in ITYPES:
