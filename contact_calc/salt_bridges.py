@@ -26,28 +26,27 @@ __all__ = ['prep_salt_bridge_computation', 'compute_salt_bridges']
 # Functions
 ##############################################################################
 
-def filter_dual_selection_salt_bridges(salt_bridges, traj_frag_molid, frame_idx, sele_id, sele_id2):
+def filter_dual_selection_salt_bridges(sele1_atoms, sele2_atoms, anion_atom, cation_atom):
     """
-    When computing salt bridges between two selections X and Y, return contacts that are 
-    formed between atoms in selection X and selection Y. 
+    Filter out salt bridge interaction that is not between selection 1 and selection 2
 
-    Returns
-    -------
-    filtered_salt_bridges: list of tuples, [(frame_index, itype, atom1_label, atom2_label), ...]
-        itype = "sb"
+    Parameters
+    ----------
+    sele1_atoms: list 
+        List of atom label strings for all atoms in selection 1
+    sele2_atoms: list 
+        List of atom label strings for all atoms in selection 2
+    anion_atom: string 
+        Atom label for anion
+    cation_atom: string 
+        Atom label for cation
+
     """
-
-    sele1_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id)
-    sele2_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id2)
-
-    ### Filter and keep only contacts between atoms in sele_id and sele_id2 
-    filtered_salt_bridges = []
-    for sb_contact in salt_bridges:
-        frame_idx, itype, anion_atom, cation_atom = sb_contact
-        if((anion_atom in sele1_atoms and cation_atom in sele2_atoms) or (anion_atom in sele2_atoms and cation_atom in sele1_atoms)):
-            filtered_salt_bridges.append(sb_contact)
-
-    return filtered_salt_bridges
+    dual_sel1 = (anion_atom in sele1_atoms and cation_atom in sele2_atoms)
+    dual_sel2 = (anion_atom in sele2_atoms and cation_atom in sele1_atoms) 
+    if(dual_sel1 or dual_sel2):
+        return False
+    return True
 
 def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2):
     """
@@ -89,15 +88,20 @@ def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, SALT_BRI
         itype = "sb"
     """
     anion_list, cation_list = prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2)
+
+    if(sele_id != None and sele_id2 != None):
+        sele1_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id)
+        sele2_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id2)
+
     salt_bridges = []
     for anion_atom in anion_list:
         for cation_atom in cation_list:
+            ### Process dual selection output if user provides two selection queries
+            if(sele_id != None and sele_id2 != None):
+                if(filter_dual_selection_salt_bridges(sele1_atoms, sele2_atoms, anion_atom, cation_atom) == True):
+                    continue
             dist = compute_distance(traj_frag_molid, frame_idx, anion_atom, cation_atom)
             if dist < SALT_BRIDGE_CUTOFF_DISTANCE:
                 salt_bridges.append([frame_idx, "sb", anion_atom, cation_atom])
-
-    ### Process dual selection output if user provides two selection queries
-    if(sele_id != None and sele_id2 != None):
-        salt_bridges = filter_dual_selection_salt_bridges(salt_bridges, traj_frag_molid, frame_idx, sele_id, sele_id2)
 
     return salt_bridges
