@@ -83,6 +83,10 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
         Compute contacts on subset of atom selection based on VMD query
     sele_id2: string, default = None
         If second VMD query is specified, then compute contacts between atom selection 1 and 2 
+    sele1_atoms: list 
+        List of atom label strings for all atoms in selection 1
+    sele2_atoms: list 
+        List of atom label strings for all atoms in selection 2
     chain_id: string, default = None
         Specify chain of protein to perform computation on 
     ligand: list of string, default = None

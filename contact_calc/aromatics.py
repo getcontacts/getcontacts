@@ -101,6 +101,10 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
         Compute contacts on subset of atom selection based on VMD query
     sele_id2: string, default = None
         If second VMD query is specified, then compute contacts between atom selection 1 and 2 
+    sele1_atoms: list 
+        List of atom label strings for all atoms in selection 1
+    sele2_atoms: list 
+        List of atom label strings for all atoms in selection 2
     itype: string
         Specify which type of aromatics ("ps" or "ts") to compute
     SOFT_DISTANCE_CUTOFF: float
@@ -253,7 +257,11 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sel
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele_id2: string, default = None
-        If second VMD query is specified, then compute contacts between atom selection 1 and 2 
+        If second VMD query is specified, then compute contacts between atom selection 1 and 2
+    sele1_atoms: list 
+        List of atom label strings for all atoms in selection 1
+    sele2_atoms: list 
+        List of atom label strings for all atoms in selection 2
     PI_STACK_CUTOFF_DISTANCE: float, default = 7.0 angstroms
         cutoff for distance between centroids of two aromatic rings
     PI_STACK_CUTOFF_ANGLE: float, default = 30 degrees
@@ -293,7 +301,11 @@ def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele_id2: string, default = None
-        If second VMD query is specified, then compute contacts between atom selection 1 and 2 
+        If second VMD query is specified, then compute contacts between atom selection 1 and 2
+    sele1_atoms: list 
+        List of atom label strings for all atoms in selection 1
+    sele2_atoms: list 
+        List of atom label strings for all atoms in selection 2
     T_STACK_CUTOFF_DISTANCE: float, default = 5.0 angstroms
         cutoff for distance between centroids of two aromatic rings
     T_STACK_CUTOFF_ANGLE: float, default = 30 degrees
