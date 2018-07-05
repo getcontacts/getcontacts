@@ -189,7 +189,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
 
     # Handles dual selection
     sele1_atoms, sele2_atoms = None, None 
-    if sele_id is None and sele_id2 is None:
+    if sele_id != None and sele_id2 != None:
         sele1_atoms = get_selection_atoms(traj_frag_molid, 0, sele_id)
         sele2_atoms = get_selection_atoms(traj_frag_molid, 0, sele_id2)
 
