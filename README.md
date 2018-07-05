@@ -226,3 +226,7 @@ Integration tests verifying the functionality of executables are in the `tests`-
 Pull-requests won't be accepted before all tests pass, but if there are any problems we are happy to help work them out.
 
 The code aims to be [PEP 8](http://pep8.org/) compliant, but pull-requests wont be rejected if they're not. 
+
+## Citation
+
+https://getcontacts.github.io/
