@@ -52,25 +52,26 @@ class TestGetDynamicContacts(unittest.TestCase):
         (see issue #38).
         """
         outfile = "tests/5xnd_contacts.tsv"
-        argv = ("--topology tests/5xnd_topology.pdb "
-                "--trajectory tests/5xnd_trajectory.dcd "
-                "--itypes sb --sele 'resname ASP LYS' "
-                "--output " + outfile).split(" ")
+        argv = ["--topology", "tests/5xnd_topology.pdb",
+                "--trajectory", "tests/5xnd_trajectory.dcd",
+                "--itypes", "sb",
+                "--sele", "resname ASP LYS",
+                "--output", outfile]
         get_dynamic_contacts.main(argv=argv)
 
         self.assertTrue(os.path.exists(outfile))
         with open(outfile) as f:
             lines = f.readlines()
-            self.assertEqual(len(lines), 20)
+            self.assertEqual(len(lines), 22)
 
             # Check that first two lines are comments
             self.assertEqual(lines[0][0], "#")
             self.assertEqual(lines[1][0], "#")
             self.assertEqual(lines[2][0], "1")
 
-            # Check that 20 frames total are generated
+            # Check that 12 frames total are generated
             frames = set([int(l.split()[0]) for l in lines[2:]])
-            self.assertEqual(frames, set(range(22)))
+            self.assertEqual(frames, set([1, 2, 3, 4, 5, 8, 12, 13, 15, 16, 18, 19]))
 
         os.remove(outfile)
 
