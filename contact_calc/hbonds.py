@@ -146,7 +146,7 @@ def calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id,
     return donors, acceptors
 
 
-def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, sele_id2, ligand=None,
+def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand=None,
                            HBOND_CUTOFF_DISTANCE=3.5, HBOND_CUTOFF_ANGLE=70):
     """
     Compute hydrogen bonds involving protein for a single frame of simulation
@@ -191,11 +191,6 @@ def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_r
 
     # Perform post processing on hbonds list to stratify into different subtypes
     if itype == "hb":
-        # Optimize this computation
-        sele1_atoms, sele2_atoms = None, None
-        if(sele_id != None and sele_id2 != None):
-            sele1_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id)
-            sele2_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id2)
         hbond_subtypes = stratify_hbond_subtypes(hbonds, solvent_resn, sele1_atoms, sele2_atoms)
     elif itype == "lhb":
         hbond_subtypes = stratify_ligand_hbond_subtypes(hbonds, solvent_resn, ligand)

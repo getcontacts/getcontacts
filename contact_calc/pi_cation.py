@@ -59,7 +59,7 @@ def filter_dual_selection_pi_cation(sele1_atoms, sele2_atoms, cation_atom_label,
         return False # dont filter
     return True
 
-def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
+def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms,
                       PI_CATION_CUTOFF_DISTANCE=6.0, PI_CATION_CUTOFF_ANGLE=60):
     """
     Compute pi-cation interactions in a frame of simulation
@@ -133,11 +133,6 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
     evaltcl("$cation_atoms delete")
     evaltcl("$aromatic_atoms delete")
 
-    # This computation can eventually be moved out of this method for better efficiency. 
-    if(sele_id != None and sele_id2 != None):
-        sele1_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id)
-        sele2_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id2)
-
     # Evaluate geometric criterion if all three points of an aromatic
     # residue are sufficiently close to a cation atom
     contact_index_pairs = parse_contacts(contacts)
@@ -161,7 +156,7 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
         arom_atom1_label, arom_atom2_label, arom_atom3_label = aromatic_atom_labels
 
         # If dual selection then perform filter
-        if(sele_id != None and sele_id2 != None):
+        if(sele1_atoms != None and sele2_atoms != None):
             if(filter_dual_selection_pi_cation(sele1_atoms, sele2_atoms, cation_atom_label, arom_atom1_label, arom_atom2_label, arom_atom3_label) == True):
                 continue
 

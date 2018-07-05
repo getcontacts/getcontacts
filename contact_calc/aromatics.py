@@ -83,7 +83,7 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label):
     return aromatic_atom_triplet
 
 
-def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, itype,
+def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, itype,
                       SOFT_DISTANCE_CUTOFF, DISTANCE_CUTOFF, ANGLE_CUTOFF, PSI_ANGLE_CUTOFF):
     """
     Compute aromatic interactions in a frame of simulation
@@ -144,11 +144,6 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
     contacts = evaltcl("measure contacts %s $aromatic_atoms" % (SOFT_DISTANCE_CUTOFF))
     evaltcl("$aromatic_atoms delete")
 
-    # This computation can eventually be made more efficient 
-    if(sele_id != None and sele_id2 != None):
-        sele1_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id)
-        sele2_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id2)
-
     # Calculate set of distinct aromatic candidate pairs that may have pi-stacking
     contact_index_pairs = parse_contacts(contacts)
     res_pairs = set()
@@ -185,7 +180,7 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
             continue
 
         # If dual selection then perform filter 
-        if(sele_id != None and sele_id2 != None):
+        if(sele1_atoms != None and sele2_atoms != None):
             if(filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_atom_labels, aromatic2_atom_labels) == True):
                 continue 
 
@@ -241,7 +236,7 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
     return aromatics
 
 
-def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
+def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms,
                         PI_STACK_CUTOFF_DISTANCE=7.0, PI_STACK_CUTOFF_ANGLE=30, PI_STACK_PSI_ANGLE=45):
     """
     Compute pi-stacking interactions in a frame of simulation
@@ -275,13 +270,13 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sel
     """
 
     PI_STACK_SOFT_DISTANCE_CUTOFF = 10.0  # angstroms
-    pi_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, "ps",
+    pi_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, "ps",
                                     PI_STACK_SOFT_DISTANCE_CUTOFF, PI_STACK_CUTOFF_DISTANCE,
                                     PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
     return pi_stacking
 
 
-def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
+def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms,
                        T_STACK_CUTOFF_DISTANCE=5.0, T_STACK_CUTOFF_ANGLE=30, T_STACK_PSI_ANGLE=45):
     """
     Compute t-stacking interactions in a frame of simulation
@@ -316,7 +311,7 @@ def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele
     """
 
     T_STACK_SOFT_DISTANCE_CUTOFF = 6.0  # angstroms
-    t_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, "ts",
+    t_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, "ts",
                                    T_STACK_SOFT_DISTANCE_CUTOFF, T_STACK_CUTOFF_DISTANCE,
                                    T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
     return t_stacking

@@ -65,7 +65,7 @@ def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2):
     cation_list = get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2)
     return anion_list, cation_list
 
-def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, SALT_BRIDGE_CUTOFF_DISTANCE=4.0):
+def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, sele1_atoms, sele2_atoms, SALT_BRIDGE_CUTOFF_DISTANCE=4.0):
     """
     Compute salt bridges in a frame of simulation
 
@@ -89,15 +89,11 @@ def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, SALT_BRI
     """
     anion_list, cation_list = prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2)
 
-    if(sele_id != None and sele_id2 != None):
-        sele1_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id)
-        sele2_atoms = get_selection_atoms(traj_frag_molid, frame_idx, sele_id2)
-
     salt_bridges = []
     for anion_atom in anion_list:
         for cation_atom in cation_list:
             ### Process dual selection output if user provides two selection queries
-            if(sele_id != None and sele_id2 != None):
+            if(sele1_atoms != None and sele2_atoms != None):
                 if(filter_dual_selection_salt_bridges(sele1_atoms, sele2_atoms, anion_atom, cation_atom) == True):
                     continue
             dist = compute_distance(traj_frag_molid, frame_idx, anion_atom, cation_atom)

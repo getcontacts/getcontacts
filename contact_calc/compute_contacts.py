@@ -60,7 +60,7 @@ full_name_dirs = {'hbbb': 'hydrogen_bonds/backbone_backbone_hydrogen_bonds',
 # format and most efficient way to write to disk.
 
 
-def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele_id, sele_id2, 
+def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms,
                            ligand, index_to_label):
     """
     Computes each of the specified non-covalent interaction type for a single frame
@@ -116,19 +116,19 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
 
     frame_contacts = []
     if "sb" in ITYPES:
-        frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, SALT_BRIDGE_CUTOFF_DISTANCE)
+        frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, sele1_atoms, sele2_atoms, SALT_BRIDGE_CUTOFF_DISTANCE)
     if "pc" in ITYPES:
-        frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, PI_CATION_CUTOFF_DISTANCE, PI_CATION_CUTOFF_ANGLE)
+        frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, PI_CATION_CUTOFF_DISTANCE, PI_CATION_CUTOFF_ANGLE)
     if "ps" in ITYPES:
-        frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, PI_STACK_CUTOFF_DISTANCE, PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
+        frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, PI_STACK_CUTOFF_DISTANCE, PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
     if "ts" in ITYPES:
-        frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
+        frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
     if "vdw" in ITYPES:
-        frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, ligand, VDW_EPSILON, VDW_RES_DIFF)
+        frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, VDW_EPSILON, VDW_RES_DIFF)
     if "hb" in ITYPES:
-        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, sele_id2, None, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
+        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, None, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
     if "lhb" in ITYPES:
-        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, sele_id2, ligand, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
+        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
 
     # toc = datetime.datetime.now()
     # print("Finished computing contacts for frame %d (frag %d) in %s s" %
@@ -183,12 +183,18 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
     traj_frag_molid = load_traj(top, traj, beg_frame, end_frame, stride)
     fragment_contacts = []
 
+    # Handles dual selection
+    sele1_atoms, sele2_atoms = None, None 
+    if(sele_id != None and sele_id2 != None):
+        sele1_atoms = get_selection_atoms(traj_frag_molid, 0, sele_id)
+        sele2_atoms = get_selection_atoms(traj_frag_molid, 0, sele_id2)
+
     # Compute contacts for each frame
     num_frag_frames = molecule.numframes(traj_frag_molid)
     for frame_idx in range(num_frag_frames):
         # if frame_idx > 1: break
         fragment_contacts += compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, itypes, geom_criterion_values,
-                                                    solvent_resn, sele_id, sele_id2, ligand, index_to_label)
+                                                    solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, index_to_label)
 
     # Delete trajectory fragment to clear memory
     molecule.delete(traj_frag_molid)
