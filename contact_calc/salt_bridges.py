@@ -26,6 +26,7 @@ __all__ = ['prep_salt_bridge_computation', 'compute_salt_bridges']
 # Functions
 ##############################################################################
 
+
 def filter_dual_selection_salt_bridges(sele1_atoms, sele2_atoms, anion_atom, cation_atom):
     """
     Filter out salt bridge interaction that is not between selection 1 and selection 2
@@ -44,9 +45,10 @@ def filter_dual_selection_salt_bridges(sele1_atoms, sele2_atoms, anion_atom, cat
     """
     dual_sel1 = (anion_atom in sele1_atoms and cation_atom in sele2_atoms)
     dual_sel2 = (anion_atom in sele2_atoms and cation_atom in sele1_atoms) 
-    if(dual_sel1 or dual_sel2):
+    if dual_sel1 or dual_sel2:
         return False
     return True
+
 
 def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2):
     """
@@ -65,7 +67,9 @@ def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2):
     cation_list = get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2)
     return anion_list, cation_list
 
-def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, sele1_atoms, sele2_atoms, SALT_BRIDGE_CUTOFF_DISTANCE=4.0):
+
+def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, sele1_atoms, sele2_atoms,
+                         SALT_BRIDGE_CUTOFF_DISTANCE=4.0):
     """
     Compute salt bridges in a frame of simulation
 
@@ -96,9 +100,9 @@ def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, sele1_at
     salt_bridges = []
     for anion_atom in anion_list:
         for cation_atom in cation_list:
-            ### Process dual selection output if user provides two selection queries
-            if(sele1_atoms != None and sele2_atoms != None):
-                if(filter_dual_selection_salt_bridges(sele1_atoms, sele2_atoms, anion_atom, cation_atom) == True):
+            # Process dual selection output if user provides two selection queries
+            if sele1_atoms is not None and sele2_atoms is not None:
+                if filter_dual_selection_salt_bridges(sele1_atoms, sele2_atoms, anion_atom, cation_atom):
                     continue
             dist = compute_distance(traj_frag_molid, frame_idx, anion_atom, cation_atom)
             if dist < SALT_BRIDGE_CUTOFF_DISTANCE:

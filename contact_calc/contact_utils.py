@@ -202,6 +202,7 @@ def gen_index_to_atom_label(top, traj):
     molecule.delete(trajid)
     return index_to_label
 
+
 def get_selection_atoms(traj_frag_molid, frame_idx, selection_id):
     """
     Get list of atoms in protein within VMD selection query 
@@ -230,19 +231,19 @@ def get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
     """
     anion_list = []
 
-    if sele_id == None and sele_id2 == None:
+    if sele_id is None and sele_id2 is None:
         evaltcl("set ASP [atomselect %s \" "
                 "(resname ASP) and (name OD1 OD2) \" frame %s]" % (traj_frag_molid, frame_idx))
         evaltcl("set GLU [atomselect %s \" "
                 "(resname GLU) and (name OE1 OE2) \" frame %s]" % (traj_frag_molid, frame_idx))
     
-    elif sele_id != None and sele_id2 == None:
+    elif sele_id is not None and sele_id2 is None:
         evaltcl("set ASP [atomselect %s \" "
                 "(resname ASP) and (name OD1 OD2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
         evaltcl("set GLU [atomselect %s \" "
                 "(resname GLU) and (name OE1 OE2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
     
-    elif sele_id != None and sele_id2 != None: 
+    elif sele_id is not None and sele_id2 is not None:
         sele_union = "(%s) or (%s)" % (sele_id, sele_id2)
         evaltcl("set ASP [atomselect %s \" "
                 "(resname ASP) and (name OD1 OD2) and (%s) \" frame %s]" % (traj_frag_molid, sele_union, frame_idx))
@@ -269,7 +270,7 @@ def get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
     """
     cation_list = []
 
-    if sele_id == None and sele_id2 == None:
+    if sele_id is None and sele_id2 is None:
         evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) \" frame %s]" %
                 (traj_frag_molid, frame_idx))
         evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) \" frame %s]" %
@@ -277,7 +278,7 @@ def get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
         evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) \" frame %s]" %
                 (traj_frag_molid, frame_idx))
     
-    elif sele_id != None and sele_id2 == None:
+    elif sele_id is not None and sele_id2 is None:
         evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) and (%s) \" frame %s]" %
                 (traj_frag_molid, sele_id, frame_idx))
         evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) and (%s) \" frame %s]" %
@@ -285,7 +286,7 @@ def get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
         evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s) \" "
                 "frame %s]" % (traj_frag_molid, sele_id, frame_idx))
     
-    elif sele_id != None and sele_id2 != None:
+    elif sele_id is not None and sele_id2 is not None:
         sele_union = "(%s) or (%s)" % (sele_id, sele_id2)
         evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) and (%s) \" frame %s]" %
                 (traj_frag_molid, sele_union, frame_idx))
@@ -293,7 +294,6 @@ def get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
                 (traj_frag_molid, sele_union, frame_idx))
         evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s) \" "
                 "frame %s]" % (traj_frag_molid, sele_union, frame_idx))
-
 
     cation_list += get_atom_selection_labels("LYS")
     cation_list += get_atom_selection_labels("ARG")

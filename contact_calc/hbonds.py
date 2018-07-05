@@ -103,19 +103,19 @@ def calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id,
     """
 
     # Measure Hbonds command
-    if sele_id == None and sele_id2 == None:
+    if sele_id is None and sele_id2 is None:
         measure_hbonds_command = "measure hbonds %s %s [atomselect %s \"" \
                                  "(resname %s and within %s of protein) or " \
                                  "protein and not lipid and not carbon and not sulfur\" frame %s]" % \
                                  (HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE, traj_frag_molid, solvent_resn,
                                   WATER_TO_PROTEIN_DIST, frame_idx)
-    elif sele_id != None and sele_id2 == None:
+    elif sele_id is not None and sele_id2 is None:
         measure_hbonds_command = "measure hbonds %s %s [atomselect %s \"" \
                                  "(resname %s and within %s of (protein and (%s))) or " \
                                  "protein and (%s) and not lipid and not carbon and not sulfur\" frame %s]" % \
                                  (HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE, traj_frag_molid, solvent_resn,
                                   WATER_TO_PROTEIN_DIST, sele_id, sele_id, frame_idx)
-    elif sele_id != None and sele_id2 != None:
+    elif sele_id is not None and sele_id2 is not None:
         sele_union = "(%s) or (%s)" % (sele_id, sele_id2)
         measure_hbonds_command = "measure hbonds %s %s [atomselect %s \"" \
                                  "(resname %s and within %s of (protein and (%s))) or " \
@@ -146,7 +146,9 @@ def calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id,
     return donors, acceptors
 
 
-def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand=None,
+def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn,
+                           sele_id, sele_id2,
+                           sele1_atoms, sele2_atoms, ligand=None,
                            HBOND_CUTOFF_DISTANCE=3.5, HBOND_CUTOFF_ANGLE=70):
     """
     Compute hydrogen bonds involving protein for a single frame of simulation

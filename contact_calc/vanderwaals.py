@@ -39,6 +39,7 @@ ATOM_RADIUS = {'H': 1.20,
 # Functions
 ##############################################################################
 
+
 def filter_dual_selection_vdw(sele1_atoms, sele2_atoms, atom1_label, atom2_label):
     """
     Filter out van der waals interactions that are not between selection 1 and selection 2
@@ -62,12 +63,13 @@ def filter_dual_selection_vdw(sele1_atoms, sele2_atoms, atom1_label, atom2_label
 
     dual_sel1 = (atom1_label in sele1_atoms) and (atom2_label in sele2_atoms)
     dual_sel2 = (atom1_label in sele2_atoms) and (atom2_label in sele1_atoms)
-    if(dual_sel1 or dual_sel2):
+    if dual_sel1 or dual_sel2:
         return False
     return True
 
 
-def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligands, VDW_EPSILON, VDW_RES_DIFF):
+def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
+                        sele1_atoms, sele2_atoms, ligands, VDW_EPSILON, VDW_RES_DIFF):
     """
     Compute all vanderwaals interactions in a frame of simulation
 
@@ -100,13 +102,13 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sel
     vanderwaals: list of tuples, [(frame_idx, itype, atom1_label, atom2_label), ...]
         itype = "vdw"
     """
-    if sele_id == None and sele_id2 == None:
+    if sele_id is None and sele_id2 is None:
         custom_sele = ""
-    elif sele_id != None and sele_id2 == None:
-        custom_sele = "and (%s) " % (sele_id)
-    elif sele_id != None and sele_id2 != None:
+    elif sele_id is not None and sele_id2 is None:
+        custom_sele = "and (%s) " % sele_id
+    elif sele_id is not None and sele_id2 is not None:
         sele_union = "(%s) or (%s)" % (sele_id, sele_id2)
-        custom_sele = "and (%s) " % (sele_union)
+        custom_sele = "and (%s) " % sele_union
     # custom_sele = "" if sele_id is None else "and (" + sele_id + ") "
     custom_lig = "" if not ligands else "or (resname " + (" ".join(ligands)) + ") "
 
@@ -129,8 +131,8 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sel
         atom1_label, atom2_label = index_to_label[atom1_index], index_to_label[atom2_index]
 
         # If dual selection then perform filter
-        if(sele1_atoms != None and sele2_atoms != None):
-            if(filter_dual_selection_vdw(sele1_atoms, sele2_atoms, atom1_label, atom2_label) == True):
+        if sele1_atoms is not None and sele2_atoms is not None:
+            if filter_dual_selection_vdw(sele1_atoms, sele2_atoms, atom1_label, atom2_label):
                 continue
         atom1_label_split = atom1_label.split(":")
         atom2_label_split = atom2_label.split(":")

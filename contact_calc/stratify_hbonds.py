@@ -56,6 +56,7 @@ def filter_dual_selection_hbond(sele1_atoms, sele2_atoms, atom1_label, atom2_lab
         return False
     return True 
 
+
 def residue_vs_water_hbonds(hbonds, solvent_resn):
     """
     Split hbonds into those involving residues only and those mediated by water.
@@ -81,9 +82,10 @@ def stratify_residue_hbonds(residue_hbonds, sele1_atoms, sele2_atoms):
 
     # Iterate through each residue hbond and bin into appropriate subtype
     for frame_idx, atom1_label, atom2_label, itype in residue_hbonds:
-        if(sele1_atoms != None and sele2_atoms != None):
-            if(filter_dual_selection_hbond(sele1_atoms, sele2_atoms, atom1_label, atom2_label) == True):
+        if sele1_atoms is not None and sele2_atoms is not None:
+            if filter_dual_selection_hbond(sele1_atoms, sele2_atoms, atom1_label, atom2_label):
                 continue
+
         atom1 = atom1_label.split(":")[3]
         atom2 = atom2_label.split(":")[3]
 
@@ -113,8 +115,8 @@ def stratify_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele2_atoms):
         for res_atom_pair in itertools.combinations(protein_atoms, 2):
             res_atom1, res_atom2 = res_atom_pair
             if res_atom1 != res_atom2:
-                if(sele1_atoms != None and sele2_atoms != None):
-                    if(filter_dual_selection_hbond(sele1_atoms, sele2_atoms, res_atom1, res_atom2) == True):
+                if sele1_atoms is not None and sele2_atoms is not None:
+                    if filter_dual_selection_hbond(sele1_atoms, sele2_atoms, res_atom1, res_atom2):
                         continue
                 water_bridges.add((frame_idx, "wb", res_atom1, res_atom2, water))
 
@@ -143,8 +145,8 @@ def stratify_extended_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele
 
     wb2 = []
     for frame_idx, itype, atom1, atom2, water1, water2 in extended_water_bridges:
-        if(sele1_atoms != None and sele2_atoms != None):
-            if(filter_dual_selection_hbond(sele1_atoms, sele2_atoms, atom1, atom2) == True):
+        if sele1_atoms is not None and sele2_atoms is not None:
+            if filter_dual_selection_hbond(sele1_atoms, sele2_atoms, atom1, atom2):
                 continue
         wb2.append([frame_idx, itype, atom1, atom2, water1, water2])
 

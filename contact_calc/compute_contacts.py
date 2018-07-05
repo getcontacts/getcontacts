@@ -352,7 +352,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
 
     # Set up and start consumer process which takes contact results and saves them to output
     output_fd = open(output, "w")
-    consumer = Process(target=contact_consumer, args=(resultsqueue, output_fd, sim_length, itypes, beg, end, stride))
+    consumer = Process(target=contact_consumer, args=(resultsqueue, output_fd, itypes, beg, end, stride))
     consumer.start()
 
     # Wait for everyone to finish
@@ -375,7 +375,7 @@ def contact_worker(inputqueue, resultsqueue):
         resultsqueue.put((frag_idx, contacts))
 
 
-def contact_consumer(resultsqueue, output_fd, sim_length, itypes, beg, end, stride):
+def contact_consumer(resultsqueue, output_fd, itypes, beg, end, stride):
     import heapq
 
     total_frames = math.ceil((end - beg + 1) / stride)
@@ -384,38 +384,23 @@ def contact_consumer(resultsqueue, output_fd, sim_length, itypes, beg, end, stri
     output_fd.write("# Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]\n")
 
     resultheap = []
-    # waiting_for_frame = beg
     waiting_for_fragment = 0
 
     while True:
         result = resultsqueue.get()
-        # print("====================== consumer ====================== ")
         if result == "DONE":
-            # print("consumer DONE")
             assert not resultheap, "resultheap not empty .. unwritten contacts on termination"
             output_fd.close()
             break
 
-        # print(contacts)
-        # first_contact_frame = contacts[0][0]
-        # heapq.heappush(resultheap, (first_contact_frame, contacts))
-        # heapq.heappush(resultheap, (first_contact_frame, contacts))
         fragment = result[0]
         contacts = result[1]
         heapq.heappush(resultheap, (fragment, contacts))
-        # print(fragment)
 
         # If this is the contact frame we're waiting for, go ahead and write it
-        # while waiting_for_frame == first_contact_frame:
         while resultheap and waiting_for_fragment == resultheap[0][0]:
-            # _, contacts = heapq.heappop(resultheap)
             fragment, contacts = heapq.heappop(resultheap)
-            # fragment = result[0]
-            # contacts = result[1]
-            # print("popped fragment",fragment)
             waiting_for_fragment = fragment + 1
-            # if resultheap:
-            #     first_contact_frame = resultheap[0][0]
 
             # Strip VMD id, order atom 1 and 2
             for interaction in contacts:
