@@ -35,5 +35,6 @@ class TestContactUtils(unittest.TestCase):
         self.assertAlmostEqual(calc_geom_distance(np.array([1, 1, 1]), np.array([1, 1, 1])), 0, 5)
         self.assertAlmostEqual(calc_geom_distance(np.array([-1, -1, -1]), np.array([1, 1, 1])), math.sqrt(3)*2, 5)
 
+
 if __name__ == '__main__':
     unittest.main()

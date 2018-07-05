@@ -32,7 +32,7 @@ from .vanderwaals import *
 ##############################################################################
 # Global Variables
 ##############################################################################
-TRAJ_FRAG_SIZE = 100
+TRAJ_FRAG_SIZE = 3
 full_name_dirs = {'hbbb': 'hydrogen_bonds/backbone_backbone_hydrogen_bonds',
                   'hbsb': 'hydrogen_bonds/sidechain_backbone_hydrogen_bonds',
                   'hbss': 'hydrogen_bonds/sidechain_sidechain_hydrogen_bonds',
@@ -349,11 +349,14 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
 def contact_worker(inputqueue, resultsqueue):
     while True:
         args = inputqueue.get()
+        # print("====================== producer ====================== ")
+        # print(args)
         if args == "DONE":
             return
         contacts = compute_fragment_contacts(*args)
         # print(args)
-        resultsqueue.put(contacts)
+        frag_idx = args[0]
+        resultsqueue.put((frag_idx, contacts))
 
 
 def contact_consumer(resultsqueue, output_fd, sim_length, itypes, beg, end, stride):
@@ -365,23 +368,38 @@ def contact_consumer(resultsqueue, output_fd, sim_length, itypes, beg, end, stri
     output_fd.write("# Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]\n")
 
     resultheap = []
-    waiting_for_frame = beg
+    # waiting_for_frame = beg
+    waiting_for_fragment = 0
 
     while True:
-        contacts = resultsqueue.get()
-        if contacts == "DONE":
+        result = resultsqueue.get()
+        # print("====================== consumer ====================== ")
+        if result == "DONE":
+            # print("consumer DONE")
+            assert not resultheap, "resultheap not empty .. unwritten contacts on termination"
             output_fd.close()
             break
 
         # print(contacts)
-        first_contact_frame = contacts[0][0]
-        heapq.heappush(resultheap, (first_contact_frame, contacts))
+        # first_contact_frame = contacts[0][0]
+        # heapq.heappush(resultheap, (first_contact_frame, contacts))
+        # heapq.heappush(resultheap, (first_contact_frame, contacts))
+        fragment = result[0]
+        contacts = result[1]
+        heapq.heappush(resultheap, (fragment, contacts))
+        # print(fragment)
 
         # If this is the contact frame we're waiting for, go ahead and write it
-        while waiting_for_frame == first_contact_frame:
-            _, contacts = heapq.heappop(resultheap)
-            if resultheap:
-                first_contact_frame = resultheap[0][0]
+        # while waiting_for_frame == first_contact_frame:
+        while resultheap and waiting_for_fragment == resultheap[0][0]:
+            # _, contacts = heapq.heappop(resultheap)
+            fragment, contacts = heapq.heappop(resultheap)
+            # fragment = result[0]
+            # contacts = result[1]
+            # print("popped fragment",fragment)
+            waiting_for_fragment = fragment + 1
+            # if resultheap:
+            #     first_contact_frame = resultheap[0][0]
 
             # Strip VMD id, order atom 1 and 2
             for interaction in contacts:
@@ -396,7 +414,7 @@ def contact_consumer(resultsqueue, output_fd, sim_length, itypes, beg, end, stri
             contact_line_hash = set()
             for interaction in contacts:
                 # Write to file
-                waiting_for_frame = max(waiting_for_frame, interaction[0] + stride)
+                # waiting_for_frame = max(waiting_for_frame, interaction[0] + stride)
                 interaction[0] = str(interaction[0])
                 contact_line = "\t".join(interaction)
                 if contact_line not in contact_line_hash:

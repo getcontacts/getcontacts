@@ -13,7 +13,7 @@ class TestGetDynamicContacts(unittest.TestCase):
         argv = ("--topology tests/5xnd_topology.pdb "
                 "--trajectory tests/5xnd_trajectory.dcd "
                 "--output " + outfile + " "
-                "--itypes all").split(" ")
+                                        "--itypes all").split(" ")
         get_dynamic_contacts.main(argv=argv)
 
         self.assertTrue(os.path.exists(outfile))
@@ -43,6 +43,34 @@ class TestGetDynamicContacts(unittest.TestCase):
                     print(chash)
                 self.assertFalse(chash in contact_hashes)
                 contact_hashes.add(chash)
+
+        os.remove(outfile)
+
+    def test_empty_frames(self):
+        """
+        Tests that the multithreading doesnt discard a fragment when no contacts are found in the first frame
+        (see issue #38).
+        """
+        outfile = "tests/5xnd_contacts.tsv"
+        argv = ("--topology tests/5xnd_topology.pdb "
+                "--trajectory tests/5xnd_trajectory.dcd "
+                "--itypes sb --sele 'resname ASP LYS' "
+                "--output " + outfile).split(" ")
+        get_dynamic_contacts.main(argv=argv)
+
+        self.assertTrue(os.path.exists(outfile))
+        with open(outfile) as f:
+            lines = f.readlines()
+            self.assertEqual(len(lines), 20)
+
+            # Check that first two lines are comments
+            self.assertEqual(lines[0][0], "#")
+            self.assertEqual(lines[1][0], "#")
+            self.assertEqual(lines[2][0], "1")
+
+            # Check that 20 frames total are generated
+            frames = set([int(l.split()[0]) for l in lines[2:]])
+            self.assertEqual(frames, set(range(20)))
 
         os.remove(outfile)
 
