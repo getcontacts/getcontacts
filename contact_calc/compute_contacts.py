@@ -32,7 +32,7 @@ from .vanderwaals import *
 ##############################################################################
 # Global Variables
 ##############################################################################
-TRAJ_FRAG_SIZE = 3
+TRAJ_FRAG_SIZE = 100
 full_name_dirs = {'hbbb': 'hydrogen_bonds/backbone_backbone_hydrogen_bonds',
                   'hbsb': 'hydrogen_bonds/sidechain_backbone_hydrogen_bonds',
                   'hbss': 'hydrogen_bonds/sidechain_sidechain_hydrogen_bonds',

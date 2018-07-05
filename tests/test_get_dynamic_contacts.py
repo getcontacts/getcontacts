@@ -70,7 +70,7 @@ class TestGetDynamicContacts(unittest.TestCase):
 
             # Check that 20 frames total are generated
             frames = set([int(l.split()[0]) for l in lines[2:]])
-            self.assertEqual(frames, set(range(20)))
+            self.assertEqual(frames, set(range(22)))
 
         os.remove(outfile)
 
