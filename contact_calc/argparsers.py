@@ -101,8 +101,12 @@ def build_getcontact_parser(program_description, trajectory):
                                       "vector between the two aromatic centroids [default = 45 degrees]")
     geometric_group.add_argument("--hbond_cutoff_dist", type=float, metavar="FLOAT", default=3.5,
                                  help="cutoff for distance between donor and acceptor atoms [default = 3.5 angstroms]")
-    geometric_group.add_argument("--hbond_cutoff_ang", type=float, metavar="FLOAT", default=70,
+    if(trajectory):
+        geometric_group.add_argument("--hbond_cutoff_ang", type=float, metavar="FLOAT", default=70,
                                  help="cutoff for angle between donor hydrogen acceptor [default = 70 degrees]")
+    else:
+        geometric_group.add_argument("--hbond_cutoff_ang", type=float, metavar="FLOAT", default=180,
+                                 help="cutoff for angle between donor hydrogen acceptor [default = 180 degrees]")
     geometric_group.add_argument("--vdw_epsilon", type=float, metavar="FLOAT", default=0.5,
                                  help="amount of padding for calculating vanderwaals contacts "
                                       "[default = 0.5 angstroms]")
