@@ -29,6 +29,21 @@ __all__ = ["stratify_hbond_subtypes"]
 # Functions
 ##############################################################################
 
+def filter_short_range_hbonds(atom1_label, atom2_label, HBOND_RES_DIFF):
+    """
+    Filter out hbonds that are within specified cutoff residue distance
+    """
+    atom1_label_split = atom1_label.split(":")
+    atom2_label_split = atom2_label.split(":")
+    chain1 = atom1_label_split[0]
+    chain2 = atom2_label_split[0]
+    resi1 = int(atom1_label_split[2])
+    resi2 = int(atom2_label_split[2])
+    if(chain1 == chain2 and abs(resi1-resi2) < HBOND_RES_DIFF):
+        return True
+    return False
+
+
 def filter_dual_selection_hbond(sele1_atoms, sele2_atoms, atom1_label, atom2_label):
     """
     Filter out hbond interaction that are not between atoms in selection 1 and selection 2
@@ -84,15 +99,8 @@ def stratify_residue_hbonds(residue_hbonds, sele1_atoms, sele2_atoms, HBOND_RES_
     for frame_idx, atom1_label, atom2_label, itype in residue_hbonds:
 
         # Filter out interaction that are within HBOND_RES_DIFF distance
-        if(HBOND_RES_DIFF != 0):
-            atom1_label_split = atom1_label.split(":")
-            atom2_label_split = atom2_label.split(":")
-            chain1 = atom1_label_split[0]
-            chain2 = atom2_label_split[0]
-            resi1 = int(atom1_label_split[2])
-            resi2 = int(atom2_label_split[2])
-            if(chain1 == chain2 and abs(resi1-resi2) < HBOND_RES_DIFF):
-                continue
+        if(HBOND_RES_DIFF != 0 and filter_short_range_hbonds(atom1_label, atom2_label, HBOND_RES_DIFF) == True):
+            continue
 
         # Filter dual selection
         if sele1_atoms is not None and sele2_atoms is not None:
@@ -129,15 +137,8 @@ def stratify_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele2_atoms, 
             res_atom1, res_atom2 = res_atom_pair
 
             # Filter out interaction that are within HBOND_RES_DIFF distance
-            if(HBOND_RES_DIFF != 0):
-                atom1_label_split = res_atom1.split(":")
-                atom2_label_split = res_atom2.split(":")
-                chain1 = atom1_label_split[0]
-                chain2 = atom2_label_split[0]
-                resi1 = int(atom1_label_split[2])
-                resi2 = int(atom2_label_split[2])
-                if(chain1 == chain2 and abs(resi1-resi2) < HBOND_RES_DIFF):
-                    continue
+            if(HBOND_RES_DIFF != 0 and filter_short_range_hbonds(res_atom1, res_atom2, HBOND_RES_DIFF) == True):
+                continue
 
             # Dual selection filter
             if res_atom1 != res_atom2:
@@ -173,15 +174,8 @@ def stratify_extended_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele
     for frame_idx, itype, atom1, atom2, water1, water2 in extended_water_bridges:
 
         # Filter out interaction that are within HBOND_RES_DIFF distance
-        if(HBOND_RES_DIFF != 0):
-            atom1_label_split = atom1.split(":")
-            atom2_label_split = atom2.split(":")
-            chain1 = atom1_label_split[0]
-            chain2 = atom2_label_split[0]
-            resi1 = int(atom1_label_split[2])
-            resi2 = int(atom2_label_split[2])
-            if(chain1 == chain2 and abs(resi1-resi2) < HBOND_RES_DIFF):
-                continue
+        if(HBOND_RES_DIFF != 0 and filter_short_range_hbonds(atom1, atom2, HBOND_RES_DIFF) == True):
+            continue
 
         # Filter dual selection 
         if sele1_atoms is not None and sele2_atoms is not None:
@@ -209,6 +203,7 @@ def stratify_hbond_subtypes(hbonds, solvent_resn, sele1_atoms=None, sele2_atoms=
     sele2_atoms: list [default = None]
         If user is doing dual selection for hydrogen bond, then pass in the list of 
         atom labels for atom selection 2 to filter
+    HBOND_RES_DIFF: int, default = 0 for simulation, 1 for structures
 
     Returns
     -------
