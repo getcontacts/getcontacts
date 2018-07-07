@@ -119,6 +119,13 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     VDW_EPSILON = geom_criterion_values['VDW_EPSILON']
     VDW_RES_DIFF = geom_criterion_values['VDW_RES_DIFF']
 
+    if(ligand != [] and ('hb' in ITYPES and 'lhb' not in ITYPES)):
+        print("[*** Warning ***] Ligand is specified with hb itype. Will include hbonds involving ligand in output.\n")
+        ITYPES += ['lhb']
+    if(ligand == [] and 'lhb' in ITYPES):
+        print("[*** Warning ***] Must specify --ligand argument to compute lhb interactions.\n")
+        ITYPES.remove('lhb')
+
     frame_contacts = []
     if "sb" in ITYPES:
         frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, sele1_atoms, sele2_atoms, SALT_BRIDGE_CUTOFF_DISTANCE)
