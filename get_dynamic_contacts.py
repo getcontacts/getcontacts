@@ -89,6 +89,7 @@ def process_geometric_criterion_args(args):
         "T_STACK_PSI_ANGLE": args.ts_psi_ang,
         "HBOND_CUTOFF_DISTANCE": args.hbond_cutoff_dist,
         "HBOND_CUTOFF_ANGLE": args.hbond_cutoff_ang,
+        "HBOND_RES_DIFF": args.hbond_res_diff,
         "VDW_EPSILON": args.vdw_epsilon,
         "VDW_RES_DIFF": args.vdw_res_diff
     }

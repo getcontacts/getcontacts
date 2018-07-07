@@ -72,7 +72,7 @@ def residue_vs_water_hbonds(hbonds, solvent_resn):
     return residue_hbonds, water_hbonds
 
 
-def stratify_residue_hbonds(residue_hbonds, sele1_atoms, sele2_atoms):
+def stratify_residue_hbonds(residue_hbonds, sele1_atoms, sele2_atoms, HBOND_RES_DIFF):
     """
     Stratify residue to residue hbonds into those between sidechain-sidechain,
     sidechain-backbone, and backbone-backbone
@@ -82,6 +82,19 @@ def stratify_residue_hbonds(residue_hbonds, sele1_atoms, sele2_atoms):
 
     # Iterate through each residue hbond and bin into appropriate subtype
     for frame_idx, atom1_label, atom2_label, itype in residue_hbonds:
+
+        # Filter out interaction that are within HBOND_RES_DIFF distance
+        if(HBOND_RES_DIFF != 0):
+            atom1_label_split = atom1_label.split(":")
+            atom2_label_split = atom2_label.split(":")
+            chain1 = atom1_label_split[0]
+            chain2 = atom2_label_split[0]
+            resi1 = int(atom1_label_split[2])
+            resi2 = int(atom2_label_split[2])
+            if(chain1 == chain2 and abs(resi1-resi2) < HBOND_RES_DIFF):
+                continue
+
+        # Filter dual selection
         if sele1_atoms is not None and sele2_atoms is not None:
             if filter_dual_selection_hbond(sele1_atoms, sele2_atoms, atom1_label, atom2_label):
                 continue
@@ -102,7 +115,7 @@ def stratify_residue_hbonds(residue_hbonds, sele1_atoms, sele2_atoms):
     return hbss, hbsb, hbbb
 
 
-def stratify_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele2_atoms):
+def stratify_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele2_atoms, HBOND_RES_DIFF):
     """
     Infer direct water bridges between residues that both have hbond
     with the same water (ie res1 -- water -- res2)
@@ -114,6 +127,19 @@ def stratify_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele2_atoms):
         protein_atoms = sorted(list(water_to_residues[water]))
         for res_atom_pair in itertools.combinations(protein_atoms, 2):
             res_atom1, res_atom2 = res_atom_pair
+
+            # Filter out interaction that are within HBOND_RES_DIFF distance
+            if(HBOND_RES_DIFF != 0):
+                atom1_label_split = res_atom1.split(":")
+                atom2_label_split = res_atom2.split(":")
+                chain1 = atom1_label_split[0]
+                chain2 = atom2_label_split[0]
+                resi1 = int(atom1_label_split[2])
+                resi2 = int(atom2_label_split[2])
+                if(chain1 == chain2 and abs(resi1-resi2) < HBOND_RES_DIFF):
+                    continue
+
+            # Dual selection filter
             if res_atom1 != res_atom2:
                 if sele1_atoms is not None and sele2_atoms is not None:
                     if filter_dual_selection_hbond(sele1_atoms, sele2_atoms, res_atom1, res_atom2):
@@ -124,7 +150,7 @@ def stratify_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele2_atoms):
     return wb
 
 
-def stratify_extended_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele2_atoms):
+def stratify_extended_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele2_atoms, HBOND_RES_DIFF):
     """
     Infer extended water bridges between residues that form hbond with
     water molecules that also have hbond between them.
@@ -145,6 +171,19 @@ def stratify_extended_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele
 
     wb2 = []
     for frame_idx, itype, atom1, atom2, water1, water2 in extended_water_bridges:
+
+        # Filter out interaction that are within HBOND_RES_DIFF distance
+        if(HBOND_RES_DIFF != 0):
+            atom1_label_split = atom1.split(":")
+            atom2_label_split = atom2.split(":")
+            chain1 = atom1_label_split[0]
+            chain2 = atom2_label_split[0]
+            resi1 = int(atom1_label_split[2])
+            resi2 = int(atom2_label_split[2])
+            if(chain1 == chain2 and abs(resi1-resi2) < HBOND_RES_DIFF):
+                continue
+
+        # Filter dual selection 
         if sele1_atoms is not None and sele2_atoms is not None:
             if filter_dual_selection_hbond(sele1_atoms, sele2_atoms, atom1, atom2):
                 continue
@@ -153,7 +192,7 @@ def stratify_extended_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele
     return wb2
 
 
-def stratify_hbond_subtypes(hbonds, solvent_resn, sele1_atoms=None, sele2_atoms=None):
+def stratify_hbond_subtypes(hbonds, solvent_resn, sele1_atoms=None, sele2_atoms=None, HBOND_RES_DIFF=0):
     """
     Stratify the full hbonds list into the following subtypes: sidechain-sidechain,
     sidechain-backbone, backbone-backbone, water-bridge, and extended water-bridge
@@ -179,9 +218,9 @@ def stratify_hbond_subtypes(hbonds, solvent_resn, sele1_atoms=None, sele2_atoms=
         water bridge and extended water bridge respectively.
     """
     residue_hbonds, water_hbonds = residue_vs_water_hbonds(hbonds, solvent_resn)
-    hbss, hbsb, hbbb = stratify_residue_hbonds(residue_hbonds, sele1_atoms, sele2_atoms)
-    wb = stratify_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele2_atoms)
-    wb2 = stratify_extended_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele2_atoms)
+    hbss, hbsb, hbbb = stratify_residue_hbonds(residue_hbonds, sele1_atoms, sele2_atoms, HBOND_RES_DIFF)
+    wb = stratify_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele2_atoms, HBOND_RES_DIFF)
+    wb2 = stratify_extended_water_bridge(water_hbonds, solvent_resn, sele1_atoms, sele2_atoms, HBOND_RES_DIFF)
     hbonds = hbss + hbsb + hbbb + wb + wb2
 
     return hbonds
