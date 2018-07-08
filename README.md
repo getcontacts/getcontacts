@@ -152,6 +152,9 @@ Optional Arguments:
     --sele STRING 
         VMD selection query to compute contacts in specified region of protein 
         [default = "protein"]
+    --sele2 STRING
+        Second VMD selection query to compute contacts between two regions of the protein
+        [defaukt = None]
     --solv STRING 
         Solvent identifier in simulation [default = "TIP3"]
 
@@ -183,7 +186,10 @@ Arguments for adjusting geometric criteria:
     --hbond_cutoff_dist FLOAT
         Cutoff for distance between donor and acceptor atoms [default = 3.5 Angstroms]
     --hbond_cutoff_ang FLOAT
-        Cutoff for angle between donor hydrogen acceptor [default = 70 degrees]
+        Cutoff for angle between donor hydrogen acceptor [default = 70 degrees in simulation, 180 in structures]
+    --hbond_res_diff INT
+        Minimum residue distance for which to consider computing hbond interactions 
+        [default = 0 in simulations 1 in structures]
     --vdw_epsilon FLOAT
         Amount of padding for calculating vanderwaals contacts [default = 0.5 Angstroms]
     --vdw_res_diff INT
@@ -209,6 +215,16 @@ Compute salt bridges and hydrogen bonds for residues 100 to 160, including those
                             --sele "chain A and resid 100 to 160" \
                             --ligand EJ4 \
                             --itypes sb hb lhb
+
+Compute all interactions formed at a protein-protein interface throughout simulation:
+
+    get_dynamic_contacts.py --topology TOP.pdb \
+                                --trajectory TRAJ.nc \
+                                --output protein_interface_all.tsv \
+                                --cores 12 \
+                                --sele "chain A" \
+                                --sele2 "chain B" \
+                                --itypes all
 
 Locate salt bridges and hydrogen bonds using a modified distance cutoffs:
 
@@ -238,4 +254,6 @@ The code aims to be [PEP 8](http://pep8.org/) compliant, but pull-requests wont 
 
 ## Citation
 
-https://getcontacts.github.io/
+When using GetContacts for publication, please cite: 
+
+``https://getcontacts.github.io/``
