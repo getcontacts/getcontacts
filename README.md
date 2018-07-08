@@ -30,6 +30,15 @@ The output, `my_contacts.tsv`, is a tab-separated file where each line (except t
 4   sb     A:GLU:47:OE2    A:LYS:33:NZ
 4   pc     A:LYS:9:NZ      A:TYR:21:CG
 4   hbbb   A:ILE:12:N      A:THR:20:O
+5   vdw    A:LYS:164:CG    A:THR:161:OG1
+5   vdw    A:LYS:164:CD    A:THR:161:OG1
+6   vdw    A:ALA:156:O     A:PHE:159:C
+6   hbls   A:EJ4:1219:OAD  A:TYR:129:OH
+6   hbls   A:ASP:128:OD2   A:EJ4:1219:OAQ
+7   hblb   C:LEU:87:N      A:EJ4:1219:OAQ
+7   lwb    A:EJ4:1219:NAN  A:LYS:214:NZ    A:HOH:1316:O
+7   lwb2   A:EJ4:1219:NAN  A:LYS:214:NZ    A:HOH:1316:O       A:HOH:1315:O
+7   lwb2   A:EJ4:1219:NAN  A:TYR:129:OH    A:HOH:1316:O       A:HOH:1311:O
 ...
 ```
 Interactions that involve more than two atoms (i.e. water bridges and extended water bridges) have extra columns to denote the identities of the water molecules. For simplicity, all stacking and pi-cation interactions involving an aromatic ring will be denoted by the CG atom. 
@@ -40,15 +49,15 @@ Interaction types are denoted by the following abbreviations:
 * **ps** - pi-stacking
 * **ts** - T-stacking
 * **vdw** - van der Waals
-* Hydrogen bond subtypes
+* **hb** - Hydrogen bond subtypes
   * **hbbb** - Backbone-backbone hydrogen bonds
   * **hbsb** - Backbone-sidechain hydrogen bonds
   * **hbss** - Sidechain-sidechain hydrogen bonds
   * **wb** - Water-mediated hydrogen bond
   * **wb2** - Extended water-mediated hydrogen bond
-* Ligand-hydrogen bond subtypes 
-  * **hlb** - Ligand-backbone hydrogen bonds
-  * **hls** - Ligand-sidechain hydrogen bonds
+* **lhb** - Ligand-hydrogen bond subtypes 
+  * **hblb** - Ligand-backbone hydrogen bonds
+  * **hbls** - Ligand-sidechain hydrogen bonds
   * **lwb** - Ligand water-mediated hydrogen bond
   * **lwb2** - Ligand extended water-mediated hydrogen bond
 

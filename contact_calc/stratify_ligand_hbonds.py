@@ -49,7 +49,7 @@ def stratify_ligand_residue_hbonds(ligand_residue_hbonds, ligands):
     or backbone atoms.
     """
     backbone_atoms = ['N', 'O']
-    hls, hlb = [], []
+    hbls, hblb = [], []
 
     # Iterate through each ligand residue hbond and bin into appropriate subtype
     for frame_idx, atom1_label, atom2_label, itype in ligand_residue_hbonds:
@@ -69,11 +69,11 @@ def stratify_ligand_residue_hbonds(ligand_residue_hbonds, ligands):
 
         res_atom_name = res_atom.split(":")[3]
         if res_atom_name in backbone_atoms:
-            hlb.append([frame_idx, "hlb", lig_atom, res_atom])
+            hblb.append([frame_idx, "hblb", lig_atom, res_atom])
         else:
-            hls.append([frame_idx, "hls", lig_atom, res_atom])
+            hbls.append([frame_idx, "hbls", lig_atom, res_atom])
 
-    return hls, hlb
+    return hbls, hblb
 
 
 def stratify_ligand_vs_protein(atom_list, ligands):
@@ -155,9 +155,9 @@ def stratify_ligand_hbond_subtypes(hbonds, solvent_resn, ligand):
         and extended ligand water bridge respectively.
     """
     ligand_residue_hbonds, water_hbonds = ligand_residue_vs_water_hbonds(hbonds, solvent_resn, ligand)
-    hls, hlb = stratify_ligand_residue_hbonds(ligand_residue_hbonds, ligand)
+    hbls, hblb = stratify_ligand_residue_hbonds(ligand_residue_hbonds, ligand)
     lwb = stratify_ligand_water_bridge(water_hbonds, solvent_resn, ligand)
     lwb2 = stratify_extended_ligand_water_bridge(water_hbonds, solvent_resn, ligand)
-    hbonds = hls + hlb + lwb + lwb2
+    hbonds = hbls + hblb + lwb + lwb2
 
     return hbonds

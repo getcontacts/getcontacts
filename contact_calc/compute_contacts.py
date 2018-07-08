@@ -324,7 +324,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         if itype == "hb":
             contact_types += ["hbbb", "hbsb", "hbss", "wb", "wb2"]
         elif itype == "lhb":
-            contact_types += ["hls", "hlb", "lwb", "lwb2"]
+            contact_types += ["hbls", "hblb", "lwb", "lwb2"]
         else:
             contact_types += [itype]
 
