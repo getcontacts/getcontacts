@@ -123,10 +123,11 @@ def get_atom_selection_labels(selection_id):
     Returns list of atom labels for each atom in selection_id
     """
     chains, resnames, resids, names, indices = get_atom_selection_properties(selection_id)
-    atom_labels = []
+    atom_labels = set()
     for idx in range(len(chains)):
         chain, resname, resid, name, index = chains[idx], resnames[idx], resids[idx], names[idx], indices[idx]
-        atom_labels.append("%s:%s:%s:%s:%s" % (chain, resname, resid, name, index))
+        label = "%s:%s:%s:%s:%s" % (chain, resname, resid, name, index)
+        atom_labels.add(label)
 
     return atom_labels
 
@@ -214,9 +215,9 @@ def get_selection_atoms(traj_frag_molid, frame_idx, selection_id):
     """
     # evaltcl("set selection_id [atomselect %s \" (protein) and (%s) \" frame %s]" % (traj_frag_molid, selection_id, frame_idx))
     evaltcl("set selection_id [atomselect %s \" (%s) \" frame %s]" % (traj_frag_molid, selection_id, frame_idx))
-    protein_selection_list = get_atom_selection_labels("selection_id")
+    protein_selection_set = get_atom_selection_labels("selection_id")
     evaltcl('$selection_id delete')
-    return protein_selection_list
+    return protein_selection_set
 
 
 def get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
@@ -229,7 +230,7 @@ def get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
         List of atom labels for atoms in ASP or GLU that
         can form salt bridges
     """
-    anion_list = []
+    anion_set = set()
 
     if sele_id is None and sele_id2 is None:
         evaltcl("set ASP [atomselect %s \" "
@@ -250,12 +251,12 @@ def get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
         evaltcl("set GLU [atomselect %s \" "
                 "(resname GLU) and (name OE1 OE2) and (%s) \" frame %s]" % (traj_frag_molid, sele_union, frame_idx))
 
-    anion_list += get_atom_selection_labels("ASP")
-    anion_list += get_atom_selection_labels("GLU")
-
+    anion_set |= get_atom_selection_labels("ASP")
+    anion_set |= get_atom_selection_labels("GLU")
     evaltcl('$ASP delete')
     evaltcl('$GLU delete')
-    return anion_list
+
+    return anion_set
 
 
 def get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
@@ -268,7 +269,8 @@ def get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
         List of atom labels for atoms in LYS, ARG, HIS that
         can form salt bridges
     """
-    cation_list = []
+
+    cation_set = set()
 
     if sele_id is None and sele_id2 is None:
         evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) \" frame %s]" %
@@ -295,58 +297,58 @@ def get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
         evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s) \" "
                 "frame %s]" % (traj_frag_molid, sele_union, frame_idx))
 
-    cation_list += get_atom_selection_labels("LYS")
-    cation_list += get_atom_selection_labels("ARG")
-    cation_list += get_atom_selection_labels("HIS")
+    cation_set |= get_atom_selection_labels("LYS")
+    cation_set |= get_atom_selection_labels("ARG")
+    cation_set |= get_atom_selection_labels("HIS")
 
     evaltcl('$LYS delete')
     evaltcl('$ARG delete')
     evaltcl('$HIS delete')
 
-    return cation_list
+    return cation_set
 
 
-def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
-    """
-    Get list of aromatic atom triplets
+# def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
+#     """
+#     Get list of aromatic atom triplets
 
-    Returns
-    -------
-    aromatic_atom_triplet_list: list of tuples corresponding to three equally spaced points
-    on the 6-membered rings of TYR, TRP, or PHE residues.
-        [(A:PHE:72:CG:51049, A:PHE:72:CE1:51052, A:PHE:72:CE2:51058), ...]
-    """
-    aromatic_atom_list = []
-    if chain_id is None:
-        evaltcl("set PHE [atomselect %s \" (resname PHE) and (name CG CE1 CE2) \" frame %s]" %
-                (traj_frag_molid, frame_idx))
-        evaltcl("set TRP [atomselect %s \" (resname TRP) and (name CD2 CZ2 CZ3) \" frame %s]" %
-                (traj_frag_molid, frame_idx))
-        evaltcl("set TYR [atomselect %s \" (resname TYR) and (name CG CE1 CE2) \" frame %s]" %
-                (traj_frag_molid, frame_idx))
-    else:
-        evaltcl("set PHE [atomselect %s \" (resname PHE) and (name CG CE1 CE2) and (chain %s)\" frame %s]" %
-                (traj_frag_molid, frame_idx, chain_id))
-        evaltcl("set TRP [atomselect %s \" (resname TRP) and (name CD2 CZ2 CZ3) and (chain %s)\" frame %s]" %
-                (traj_frag_molid, frame_idx, chain_id))
-        evaltcl("set TYR [atomselect %s \" (resname TYR) and (name CG CE1 CE2) and (chain %s)\" frame %s]" %
-                (traj_frag_molid, frame_idx, chain_id))
+#     Returns
+#     -------
+#     aromatic_atom_triplet_list: list of tuples corresponding to three equally spaced points
+#     on the 6-membered rings of TYR, TRP, or PHE residues.
+#         [(A:PHE:72:CG:51049, A:PHE:72:CE1:51052, A:PHE:72:CE2:51058), ...]
+#     """
+#     aromatic_atom_list = []
+#     if chain_id is None:
+#         evaltcl("set PHE [atomselect %s \" (resname PHE) and (name CG CE1 CE2) \" frame %s]" %
+#                 (traj_frag_molid, frame_idx))
+#         evaltcl("set TRP [atomselect %s \" (resname TRP) and (name CD2 CZ2 CZ3) \" frame %s]" %
+#                 (traj_frag_molid, frame_idx))
+#         evaltcl("set TYR [atomselect %s \" (resname TYR) and (name CG CE1 CE2) \" frame %s]" %
+#                 (traj_frag_molid, frame_idx))
+#     else:
+#         evaltcl("set PHE [atomselect %s \" (resname PHE) and (name CG CE1 CE2) and (chain %s)\" frame %s]" %
+#                 (traj_frag_molid, frame_idx, chain_id))
+#         evaltcl("set TRP [atomselect %s \" (resname TRP) and (name CD2 CZ2 CZ3) and (chain %s)\" frame %s]" %
+#                 (traj_frag_molid, frame_idx, chain_id))
+#         evaltcl("set TYR [atomselect %s \" (resname TYR) and (name CG CE1 CE2) and (chain %s)\" frame %s]" %
+#                 (traj_frag_molid, frame_idx, chain_id))
 
-    aromatic_atom_list += get_atom_selection_labels("PHE")
-    aromatic_atom_list += get_atom_selection_labels("TRP")
-    aromatic_atom_list += get_atom_selection_labels("TYR")
+#     aromatic_atom_list += get_atom_selection_labels("PHE")
+#     aromatic_atom_list += get_atom_selection_labels("TRP")
+#     aromatic_atom_list += get_atom_selection_labels("TYR")
 
-    evaltcl("$PHE delete")
-    evaltcl("$TRP delete")
-    evaltcl("$TYR delete")
+#     evaltcl("$PHE delete")
+#     evaltcl("$TRP delete")
+#     evaltcl("$TYR delete")
 
-    aromatic_atom_triplet_list = []
+#     aromatic_atom_triplet_list = []
 
-    # Generate triplets of the three equidistant atoms on an aromatic ring
-    for i in range(0, len(aromatic_atom_list), 3):
-        aromatic_atom_triplet_list.append(aromatic_atom_list[i:i+3])
+#     # Generate triplets of the three equidistant atoms on an aromatic ring
+#     for i in range(0, len(aromatic_atom_list), 3):
+#         aromatic_atom_triplet_list.append(aromatic_atom_list[i:i+3])
 
-    return aromatic_atom_triplet_list
+#     return aromatic_atom_triplet_list
 
 
 def convert_to_single_atom_aromatic_string(aromatic_atom_label):

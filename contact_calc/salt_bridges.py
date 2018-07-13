@@ -63,9 +63,9 @@ def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2):
         List of atom labels for atoms in LYS, ARG, HIS that
         can form salt bridges
     """
-    anion_list = get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2)
-    cation_list = get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2)
-    return anion_list, cation_list
+    anion_set = get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2)
+    cation_set = get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2)
+    return anion_set, cation_set
 
 
 def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, sele1_atoms, sele2_atoms,
@@ -95,11 +95,11 @@ def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, sele1_at
     salt_bridges: list of tuples, [(frame_index, itype, atom1_label, atom2_label), ...]
         itype = "sb"
     """
-    anion_list, cation_list = prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2)
+    anion_set, cation_set = prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2)
 
     salt_bridges = []
-    for anion_atom in anion_list:
-        for cation_atom in cation_list:
+    for anion_atom in anion_set:
+        for cation_atom in cation_set:
             # Process dual selection output if user provides two selection queries
             if sele1_atoms is not None and sele2_atoms is not None:
                 if filter_dual_selection_salt_bridges(sele1_atoms, sele2_atoms, anion_atom, cation_atom):

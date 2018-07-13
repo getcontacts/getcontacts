@@ -92,7 +92,10 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label):
             % (traj_frag_molid, chain, resname, resid, residue_to_atom_names[resname], frame_idx))
     aromatic_atom_triplet = get_atom_selection_labels("aromatic_atoms")
     evaltcl('$aromatic_atoms delete')
-    return aromatic_atom_triplet
+    
+    # Need aromatic_atom_triplet as list 
+    return list(aromatic_atom_triplet)
+
 
 
 def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, itype,
