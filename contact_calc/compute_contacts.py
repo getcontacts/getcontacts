@@ -149,7 +149,7 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
 
 
 def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values, stride,
-                              solvent_resn, sele_id, sele_id2, ligand, index_to_label):
+                              solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, index_to_label):
     """ 
     Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
 
@@ -179,6 +179,10 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
         Compute contacts on subset of atom selection based on VMD query
     sele_id2: string, default = None
         If second VMD query is specified, then compute contacts between atom selection 1 and 2 
+    sele1_atoms: list 
+        List of atom label indices for all atoms in selection 1
+    sele2_atoms: list 
+        List of atom label indices for all atoms in selection 2
     ligand: list of string, default = None
         Include ligand resname if computing contacts between ligand and binding pocket residues
     index_to_label: dict 
@@ -194,14 +198,6 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
     tic = datetime.datetime.now()
     traj_frag_molid = load_traj(top, traj, beg_frame, end_frame, stride)
     fragment_contacts = []
-
-    # Handles dual selection
-    sele1_atoms, sele2_atoms = None, None 
-    if sele_id != None and sele_id2 != None:
-        # sele1_atoms = get_selection_atoms(traj_frag_molid, 0, sele_id)
-        # sele2_atoms = get_selection_atoms(traj_frag_molid, 0, sele_id2)
-        sele1_atoms = get_selection_indices(traj_frag_molid, 0, sele_id)
-        sele2_atoms = get_selection_indices(traj_frag_molid, 0, sele_id2)
 
     # Compute contacts for each frame
     num_frag_frames = molecule.numframes(traj_frag_molid)
@@ -321,6 +317,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
     ligand: list of string, default = None
         Include ligand resname if computing contacts between ligand and binding pocket residues
     """
+
     contact_types = []
     for itype in itypes:
         if itype == "hb":
@@ -332,6 +329,14 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
 
     index_to_label = gen_index_to_atom_label(top, traj)
     sim_length = simulation_length(top, traj)
+
+
+    # Handles dual selection
+    sele1_atoms, sele2_atoms = None, None 
+    if sele_id != None and sele_id2 != None:
+        trajid = load_traj(top, traj, 0, 1, 1)
+        sele1_atoms = get_selection_indices(trajid, 0, sele_id)
+        sele2_atoms = get_selection_indices(trajid, 0, sele_id2)
 
     beg = max(min(beg, sim_length-1), 0)
     end = min(max(end, beg), sim_length - 1)
@@ -347,7 +352,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         end_frame = beg_frame + (TRAJ_FRAG_SIZE * stride) - 1
         # print(frag_idx, beg_frame, end_frame, stride)
         inputqueue.put((frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values,
-                        stride, solvent_resn, sele_id, sele_id2, ligand, index_to_label))
+                        stride, solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, index_to_label))
 
     # Set up result queue for workers to transfer results to the consumer
     resultsqueue = Queue()
