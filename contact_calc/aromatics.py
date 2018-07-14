@@ -28,44 +28,6 @@ __all__ = ['compute_pi_stacking', 'compute_t_stacking']
 ############################################################################
 
 
-# def filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_atom_labels, aromatic2_atom_labels):
-#     """
-#     Filter out aromatic interactions that are not between selection 1 and selection 2
-
-#     Parameters
-#     ----------
-#     sele1_atoms: list 
-#         List of atom label strings for all atoms in selection 1
-#     sele2_atoms: list 
-#         List of atom label strings for all atoms in selection 2
-#     aromatic1_atom_labels: tuple 
-#         Triplet of atom labels for aromatic 1 
-#     aromatic2_atom_labels: tuple 
-#         Triplet of atom labels for aromatic 2
-
-#     Returns
-#     -------
-#     filter_bool: bool 
-#         True to filter out interaction
-
-#     """
-
-#     dual_sel1 = ((aromatic1_atom_labels[0] in sele1_atoms) or
-#                  (aromatic1_atom_labels[1] in sele1_atoms) or
-#                  (aromatic1_atom_labels[2] in sele1_atoms)) and \
-#                 ((aromatic2_atom_labels[0] in sele2_atoms) or
-#                  (aromatic2_atom_labels[1] in sele2_atoms) or
-#                  (aromatic2_atom_labels[2] in sele2_atoms))
-#     dual_sel2 = ((aromatic1_atom_labels[0] in sele2_atoms) or
-#                  (aromatic1_atom_labels[1] in sele2_atoms) or
-#                  (aromatic1_atom_labels[2] in sele2_atoms)) and \
-#                 ((aromatic2_atom_labels[0] in sele1_atoms) or
-#                  (aromatic2_atom_labels[1] in sele1_atoms) or
-#                  (aromatic2_atom_labels[2] in sele1_atoms))
-#     if dual_sel1 or dual_sel2:
-#         return False
-#     return True
-
 def filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_index, aromatic2_index):
     """
     Filter out aromatic interactions that are not between selection 1 and selection 2
@@ -89,9 +51,13 @@ def filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_index, ar
     """
 
     dual_sel1 = (aromatic1_index in sele1_atoms) and (aromatic2_index in sele2_atoms)
-    dual_sel2 = (aromatic1_index in sele2_atoms) and (aromatic2_index in sele1_atoms)
-    if dual_sel1 or dual_sel2:
+    if(dual_sel1):
         return False
+
+    dual_sel2 = (aromatic1_index in sele2_atoms) and (aromatic2_index in sele1_atoms)
+    if(dual_sel2):
+        return False
+
     return True
 
 def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label, index_to_label):

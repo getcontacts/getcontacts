@@ -32,45 +32,34 @@ SOFT_DISTANCE_CUTOFF = 10.0  # Angstroms
 ##############################################################################
 
 
-# def filter_dual_selection_pi_cation(sele1_atoms, sele2_atoms, cation_atom_label,
-#                                     arom_atom1_label, arom_atom2_label, arom_atom3_label):
-#     """
-#     Filter out pi-cation interactions that are not between selection 1 and selection 2
-
-#     Parameters
-#     ----------
-#     sele1_atoms: list 
-#         List of atom label strings for all atoms in selection 1
-#     sele2_atoms: list 
-#         List of atom label strings for all atoms in selection 2
-#     cation_atom_label: string
-#         Atom label for cation
-#     arom_atom1_label, arom_atom2_label, arom_atom3_label: string 
-#         Atom labels for aromatic ring
-
-#     Returns
-#     -------
-#     filter_bool: bool 
-#         True to filter out interaction
-
-#     """
-#     cation1_arom2 = (cation_atom_label in sele1_atoms) and \
-#                     ((arom_atom1_label in sele2_atoms) or
-#                      (arom_atom2_label in sele2_atoms) or
-#                      (arom_atom3_label in sele2_atoms))
-#     cation2_arom1 = (cation_atom_label in sele2_atoms) and \
-#                     ((arom_atom1_label in sele1_atoms) or
-#                      (arom_atom2_label in sele1_atoms) or
-#                      (arom_atom3_label in sele1_atoms))
-#     if cation1_arom2 or cation2_arom1:
-#         return False  # dont filter
-#     return True
-
 def filter_dual_selection_pi_cation(sele1_atoms, sele2_atoms, cation_index, aromatic_index):
+    """
+    Filter out pi-cation interactions that are not between selection 1 and selection 2 
+
+    Parameters
+    ----------
+    sele1_atoms: list
+        List of atom label strings for all atoms in selection 1 
+    sele2_atoms: list
+        List of atom label strings for all atoms in selection 2 
+    cation_index: int
+        Atom index for cation
+    aromatic_index: int
+        Atom index for aromatic atom 
+
+    Returns
+    -------
+    filter_bool: bool
+        True to filter out interaction 
+    """
     dual_sel1 = (cation_index in sele1_atoms) and (aromatic_index in sele2_atoms)
-    dual_sel2 = (cation_index in sele2_atoms) and (aromatic_index in sele1_atoms)
-    if(dual_sel1 or dual_sel2):
+    if(dual_sel1):
         return False
+
+    dual_sel2 = (cation_index in sele2_atoms) and (aromatic_index in sele1_atoms)
+    if(dual_sel2):
+        return False
+
     return True
 
 

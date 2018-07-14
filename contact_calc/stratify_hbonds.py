@@ -70,9 +70,13 @@ def filter_dual_selection_hbond(sele1_atoms, sele2_atoms, atom1_label, atom2_lab
     atom2_index = int(atom2_label.split(":")[-1])
 
     dual_sel1 = (atom1_index in sele1_atoms) and (atom2_index in sele2_atoms)
-    dual_sel2 = (atom1_index in sele2_atoms) and (atom2_index in sele1_atoms)
-    if(dual_sel1 or dual_sel2):
+    if(dual_sel1):
         return False
+
+    dual_sel2 = (atom1_index in sele2_atoms) and (atom2_index in sele1_atoms)
+    if(dual_sel2):
+        return False
+        
     return True 
 
 

@@ -44,8 +44,11 @@ def filter_dual_selection_salt_bridges(sele1_atoms, sele2_atoms, anion_atom, cat
 
     """
     dual_sel1 = (anion_atom in sele1_atoms and cation_atom in sele2_atoms)
-    dual_sel2 = (anion_atom in sele2_atoms and cation_atom in sele1_atoms) 
-    if dual_sel1 or dual_sel2:
+    if(dual_sel1):
+        return False
+
+    dual_sel2 = (anion_atom in sele2_atoms and cation_atom in sele1_atoms)
+    if(dual_sel2):
         return False
     return True
 
