@@ -28,7 +28,45 @@ __all__ = ['compute_pi_stacking', 'compute_t_stacking']
 ############################################################################
 
 
-def filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_atom_labels, aromatic2_atom_labels):
+# def filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_atom_labels, aromatic2_atom_labels):
+#     """
+#     Filter out aromatic interactions that are not between selection 1 and selection 2
+
+#     Parameters
+#     ----------
+#     sele1_atoms: list 
+#         List of atom label strings for all atoms in selection 1
+#     sele2_atoms: list 
+#         List of atom label strings for all atoms in selection 2
+#     aromatic1_atom_labels: tuple 
+#         Triplet of atom labels for aromatic 1 
+#     aromatic2_atom_labels: tuple 
+#         Triplet of atom labels for aromatic 2
+
+#     Returns
+#     -------
+#     filter_bool: bool 
+#         True to filter out interaction
+
+#     """
+
+#     dual_sel1 = ((aromatic1_atom_labels[0] in sele1_atoms) or
+#                  (aromatic1_atom_labels[1] in sele1_atoms) or
+#                  (aromatic1_atom_labels[2] in sele1_atoms)) and \
+#                 ((aromatic2_atom_labels[0] in sele2_atoms) or
+#                  (aromatic2_atom_labels[1] in sele2_atoms) or
+#                  (aromatic2_atom_labels[2] in sele2_atoms))
+#     dual_sel2 = ((aromatic1_atom_labels[0] in sele2_atoms) or
+#                  (aromatic1_atom_labels[1] in sele2_atoms) or
+#                  (aromatic1_atom_labels[2] in sele2_atoms)) and \
+#                 ((aromatic2_atom_labels[0] in sele1_atoms) or
+#                  (aromatic2_atom_labels[1] in sele1_atoms) or
+#                  (aromatic2_atom_labels[2] in sele1_atoms))
+#     if dual_sel1 or dual_sel2:
+#         return False
+#     return True
+
+def filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_index, aromatic2_index):
     """
     Filter out aromatic interactions that are not between selection 1 and selection 2
 
@@ -38,10 +76,10 @@ def filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_atom_labe
         List of atom label strings for all atoms in selection 1
     sele2_atoms: list 
         List of atom label strings for all atoms in selection 2
-    aromatic1_atom_labels: tuple 
-        Triplet of atom labels for aromatic 1 
-    aromatic2_atom_labels: tuple 
-        Triplet of atom labels for aromatic 2
+    aromatic1_index: int
+        Aromatic atom index 1
+    aromatic2_index: int
+        Aromatic atom index 2
 
     Returns
     -------
@@ -50,24 +88,13 @@ def filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_atom_labe
 
     """
 
-    dual_sel1 = ((aromatic1_atom_labels[0] in sele1_atoms) or
-                 (aromatic1_atom_labels[1] in sele1_atoms) or
-                 (aromatic1_atom_labels[2] in sele1_atoms)) and \
-                ((aromatic2_atom_labels[0] in sele2_atoms) or
-                 (aromatic2_atom_labels[1] in sele2_atoms) or
-                 (aromatic2_atom_labels[2] in sele2_atoms))
-    dual_sel2 = ((aromatic1_atom_labels[0] in sele2_atoms) or
-                 (aromatic1_atom_labels[1] in sele2_atoms) or
-                 (aromatic1_atom_labels[2] in sele2_atoms)) and \
-                ((aromatic2_atom_labels[0] in sele1_atoms) or
-                 (aromatic2_atom_labels[1] in sele1_atoms) or
-                 (aromatic2_atom_labels[2] in sele1_atoms))
+    dual_sel1 = (aromatic1_index in sele1_atoms) and (aromatic2_index in sele2_atoms)
+    dual_sel2 = (aromatic1_index in sele2_atoms) and (aromatic2_index in sele1_atoms)
     if dual_sel1 or dual_sel2:
         return False
     return True
 
-
-def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label):
+def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label, index_to_label):
     """
     Given an aromatic residue label return triplet of atoms on the ring
 
@@ -79,10 +106,13 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label):
         Frame number to query
     aromatic_residue_label: string
         ie "A:PHE:222"
+    index_to_label: dict
+        Maps VMD atom index to label "chain:resname:resid:name:index"
+        {11205: "A:ASP:114:CA:11205, ...}
 
     Returns
     -------
-    aromatic_atom_triplet: list of strings
+    aromatic_atom_triplet_labels: list of strings
         ie ["A:PHE:329:CE1:55228", "A:PHE:329:CE2:55234", "A:PHE:329:CG:55225"]
     """
 
@@ -90,11 +120,13 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label):
     chain, resname, resid = aromatic_residue_label.split(":")
     evaltcl("set aromatic_atoms [atomselect %s \"(chain %s) and (resname %s) and (resid '%s') and (name %s)\" frame %s]"
             % (traj_frag_molid, chain, resname, resid, residue_to_atom_names[resname], frame_idx))
-    aromatic_atom_triplet = get_atom_selection_labels("aromatic_atoms")
+    # aromatic_atom_triplet = get_atom_selection_labels("aromatic_atoms")
+    aromatic_atom_triplet_indices = get_atom_selection_indices("aromatic_atoms")
     evaltcl('$aromatic_atoms delete')
-    
+
     # Need aromatic_atom_triplet as list 
-    return list(aromatic_atom_triplet)
+    aromatic_atom_triplet_labels = [index_to_label[atom_index] for atom_index in aromatic_atom_triplet_indices]
+    return aromatic_atom_triplet_labels
 
 
 
@@ -167,6 +199,12 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
     res_pairs = set()
     residue_to_atom_labels = {}  # map from aromatic residues that passed soft cutoff to their three atom labels
     for aromatic1_index, aromatic2_index in contact_index_pairs:
+
+        # Perform dual selection with integer indices
+        if sele1_atoms is not None and sele2_atoms is not None:
+            if filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_index, aromatic2_index):
+                continue 
+
         aromatic1_label = index_to_label[aromatic1_index]
         aromatic2_label = index_to_label[aromatic2_index]
 
@@ -178,9 +216,9 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
 
         # print(aromatic1_label, aromatic2_label)
         if aromatic1_res not in residue_to_atom_labels:
-            residue_to_atom_labels[aromatic1_res] = get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic1_res)
+            residue_to_atom_labels[aromatic1_res] = get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic1_res, index_to_label)
         if aromatic2_res not in residue_to_atom_labels:
-            residue_to_atom_labels[aromatic2_res] = get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic2_res)
+            residue_to_atom_labels[aromatic2_res] = get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic2_res, index_to_label)
 
         k1 = (aromatic1_res, aromatic2_res)
         k2 = (aromatic2_res, aromatic1_res)
@@ -196,11 +234,6 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
         # Ignore interactions between residues with missing atoms
         if len(aromatic1_atom_labels) != 3 or len(aromatic2_atom_labels) != 3:
             continue
-
-        # If dual selection then perform filter 
-        if sele1_atoms is not None and sele2_atoms is not None:
-            if filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_atom_labels, aromatic2_atom_labels):
-                continue 
 
         # Distance between two aromatic centers must be below DISTANCE_CUTOFF
         arom1_atom1_coord = get_coord(traj_frag_molid, frame_idx, aromatic1_atom_labels[0])

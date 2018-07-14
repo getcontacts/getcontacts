@@ -118,19 +118,32 @@ def simulation_length(top, traj):
     return (num_frags - 1) * 100 + last_frag_frames
 
 
-def get_atom_selection_labels(selection_id):
+# def get_atom_selection_labels(selection_id):
+#     """
+#     Returns set of atom labels for each atom in selection_id
+#     """
+#     chains, resnames, resids, names, indices = get_atom_selection_properties(selection_id)
+#     atom_labels = set()
+#     for idx in range(len(chains)):
+#         chain, resname, resid, name, index = chains[idx], resnames[idx], resids[idx], names[idx], indices[idx]
+#         label = "%s:%s:%s:%s:%s" % (chain, resname, resid, name, index)
+#         atom_labels.add(label)
+
+#     return atom_labels
+
+def get_atom_selection_indices(selection_id):
     """
-    Returns list of atom labels for each atom in selection_id
+    *** Major optimization to be implemented ***
+    GetContacts should perform all VMD based computation with just atom indices until needing to convert to labels with index_to_label
     """
     chains, resnames, resids, names, indices = get_atom_selection_properties(selection_id)
-    atom_labels = set()
+    atom_indices = set()
     for idx in range(len(chains)):
-        chain, resname, resid, name, index = chains[idx], resnames[idx], resids[idx], names[idx], indices[idx]
-        label = "%s:%s:%s:%s:%s" % (chain, resname, resid, name, index)
-        atom_labels.add(label)
+        index = int(indices[idx])
+        atom_indices.add(index)
 
-    return atom_labels
-
+    return atom_indices
+    
 
 def get_atom_selection_properties(selection_id):
     """
@@ -204,21 +217,35 @@ def gen_index_to_atom_label(top, traj):
     return index_to_label
 
 
-def get_selection_atoms(traj_frag_molid, frame_idx, selection_id):
+# def get_selection_atoms(traj_frag_molid, frame_idx, selection_id):
+#     """
+#     Get list of atoms in protein within VMD selection query 
+
+#     Returns
+#     -------
+#     protein_selection_list: list of strings 
+#         List of atom labels for atoms in protein selection 
+#     """
+#     # evaltcl("set selection_id [atomselect %s \" (protein) and (%s) \" frame %s]" % (traj_frag_molid, selection_id, frame_idx))
+#     evaltcl("set selection_id [atomselect %s \" (%s) \" frame %s]" % (traj_frag_molid, selection_id, frame_idx))
+#     protein_selection_set = get_atom_selection_labels("selection_id")
+#     evaltcl('$selection_id delete')
+#     return protein_selection_set
+
+def get_selection_indices(traj_frag_molid, frame_idx, selection_id):
     """
     Get list of atoms in protein within VMD selection query 
 
     Returns
     -------
-    protein_selection_list: list of strings 
-        List of atom labels for atoms in protein selection 
+    protein_selection_indices: set of int
+        Set of atom indices for atoms in protein selection 
     """
     # evaltcl("set selection_id [atomselect %s \" (protein) and (%s) \" frame %s]" % (traj_frag_molid, selection_id, frame_idx))
     evaltcl("set selection_id [atomselect %s \" (%s) \" frame %s]" % (traj_frag_molid, selection_id, frame_idx))
-    protein_selection_set = get_atom_selection_labels("selection_id")
+    protein_selection_indices = get_atom_selection_indices("selection_id")
     evaltcl('$selection_id delete')
-    return protein_selection_set
-
+    return protein_selection_indices
 
 def get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
     """
@@ -251,8 +278,10 @@ def get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
         evaltcl("set GLU [atomselect %s \" "
                 "(resname GLU) and (name OE1 OE2) and (%s) \" frame %s]" % (traj_frag_molid, sele_union, frame_idx))
 
-    anion_set |= get_atom_selection_labels("ASP")
-    anion_set |= get_atom_selection_labels("GLU")
+    # anion_set |= get_atom_selection_labels("ASP")
+    # anion_set |= get_atom_selection_labels("GLU")
+    anion_set |= get_atom_selection_indices("ASP")
+    anion_set |= get_atom_selection_indices("GLU")
     evaltcl('$ASP delete')
     evaltcl('$GLU delete')
 
@@ -297,9 +326,13 @@ def get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
         evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s) \" "
                 "frame %s]" % (traj_frag_molid, sele_union, frame_idx))
 
-    cation_set |= get_atom_selection_labels("LYS")
-    cation_set |= get_atom_selection_labels("ARG")
-    cation_set |= get_atom_selection_labels("HIS")
+    # cation_set |= get_atom_selection_labels("LYS")
+    # cation_set |= get_atom_selection_labels("ARG")
+    # cation_set |= get_atom_selection_labels("HIS")
+
+    cation_set |= get_atom_selection_indices("LYS")
+    cation_set |= get_atom_selection_indices("ARG")
+    cation_set |= get_atom_selection_indices("HIS")
 
     evaltcl('$LYS delete')
     evaltcl('$ARG delete')
@@ -409,7 +442,33 @@ def calc_water_to_residues_map(water_hbonds, solvent_resn):
     return frame_idx, water_to_residues, solvent_bridges
 
 
-def compute_distance(molid, frame_idx, atom1_label, atom2_label):
+# def compute_distance(molid, frame_idx, atom1_label, atom2_label):
+#     """
+#     Compute distance between two atoms in a specified frame of simulation
+
+#     Parameters
+#     ----------
+#     molid: int
+#         Denotes trajectory id in VMD
+#     frame_idx: int
+#         Frame of simulation in trajectory fragment
+#     atom1_label: string
+#         Atom label (ie "A:GLU:323:OE2:55124")
+#     atom2_label: string
+#         Atom label (ie "A:ARG:239:NH1:53746")
+
+#     Returns
+#     -------
+#     distance: float
+#     """
+#     # atom_index1 = atom1_label.split(":")[-1]
+#     # atom_index2 = atom2_label.split(":")[-1]
+#     atom_index1 = atom1_label[atom1_label.rfind(":")+1:]
+#     atom_index2 = atom2_label[atom2_label.rfind(":")+1:]
+#     distance = float(evaltcl("measure bond {%s %s} molid %s frame %s" % (atom_index1, atom_index2, molid, frame_idx)))
+#     return distance
+
+def compute_distance(molid, frame_idx, atom1_index, atom2_index):
     """
     Compute distance between two atoms in a specified frame of simulation
 
@@ -419,22 +478,17 @@ def compute_distance(molid, frame_idx, atom1_label, atom2_label):
         Denotes trajectory id in VMD
     frame_idx: int
         Frame of simulation in trajectory fragment
-    atom1_label: string
-        Atom label (ie "A:GLU:323:OE2:55124")
+    atom1_index: int
+        Atom index 1
     atom2_label: string
-        Atom label (ie "A:ARG:239:NH1:53746")
+        Atom index 2
 
     Returns
     -------
     distance: float
     """
-    # atom_index1 = atom1_label.split(":")[-1]
-    # atom_index2 = atom2_label.split(":")[-1]
-    atom_index1 = atom1_label[atom1_label.rfind(":")+1:]
-    atom_index2 = atom2_label[atom2_label.rfind(":")+1:]
-    distance = float(evaltcl("measure bond {%s %s} molid %s frame %s" % (atom_index1, atom_index2, molid, frame_idx)))
+    distance = float(evaltcl("measure bond {%s %s} molid %s frame %s" % (atom1_index, atom2_index, molid, frame_idx)))
     return distance
-
 
 def compute_angle(molid, frame_idx, atom1, atom2, atom3):
     """

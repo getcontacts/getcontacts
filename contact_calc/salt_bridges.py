@@ -68,7 +68,7 @@ def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2):
     return anion_set, cation_set
 
 
-def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, sele1_atoms, sele2_atoms,
+def compute_salt_bridges(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms,
                          SALT_BRIDGE_CUTOFF_DISTANCE=4.0):
     """
     Compute salt bridges in a frame of simulation
@@ -79,14 +79,17 @@ def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, sele1_at
         Identifier to simulation fragment in VMD
     frame_idx: int
         Frame number to query
+    index_to_label: dict 
+        Maps VMD atom index to label "chain:resname:resid:name:index"
+        {11205: "A:ASP:114:CA:11205, ...}
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele_id2: string, default = None
         If second VMD query is specified, then compute contacts between atom selection 1 and 2
     sele1_atoms: list 
-        List of atom label strings for all atoms in selection 1
+        List of atom label indices for all atoms in selection 1
     sele2_atoms: list 
-        List of atom label strings for all atoms in selection 2
+        List of atom label indices for all atoms in selection 2
     SALT_BRIDGE_CUTOFF_DISTANCE: float, default = 4.0 angstroms
         cutoff for distance between anion and cation atoms
 
@@ -104,8 +107,11 @@ def compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, sele1_at
             if sele1_atoms is not None and sele2_atoms is not None:
                 if filter_dual_selection_salt_bridges(sele1_atoms, sele2_atoms, anion_atom, cation_atom):
                     continue
+                    
             dist = compute_distance(traj_frag_molid, frame_idx, anion_atom, cation_atom)
             if dist < SALT_BRIDGE_CUTOFF_DISTANCE:
-                salt_bridges.append([frame_idx, "sb", anion_atom, cation_atom])
+                anion_label = index_to_label[anion_atom]
+                cation_label = index_to_label[cation_atom]
+                salt_bridges.append([frame_idx, "sb", anion_label, cation_label])
 
     return salt_bridges

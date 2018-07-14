@@ -84,9 +84,9 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     sele_id2: string, default = None
         If second VMD query is specified, then compute contacts between atom selection 1 and 2 
     sele1_atoms: list 
-        List of atom label strings for all atoms in selection 1
+        List of atom label indices for all atoms in selection 1
     sele2_atoms: list 
-        List of atom label strings for all atoms in selection 2
+        List of atom label indices for all atoms in selection 2
     chain_id: string, default = None
         Specify chain of protein to perform computation on 
     ligand: list of string, default = None
@@ -128,7 +128,7 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
 
     frame_contacts = []
     if "sb" in ITYPES:
-        frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, sele_id, sele_id2, sele1_atoms, sele2_atoms, SALT_BRIDGE_CUTOFF_DISTANCE)
+        frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, SALT_BRIDGE_CUTOFF_DISTANCE)
     if "pc" in ITYPES:
         frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, PI_CATION_CUTOFF_DISTANCE, PI_CATION_CUTOFF_ANGLE)
     if "ps" in ITYPES:
@@ -198,8 +198,10 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
     # Handles dual selection
     sele1_atoms, sele2_atoms = None, None 
     if sele_id != None and sele_id2 != None:
-        sele1_atoms = get_selection_atoms(traj_frag_molid, 0, sele_id)
-        sele2_atoms = get_selection_atoms(traj_frag_molid, 0, sele_id2)
+        # sele1_atoms = get_selection_atoms(traj_frag_molid, 0, sele_id)
+        # sele2_atoms = get_selection_atoms(traj_frag_molid, 0, sele_id2)
+        sele1_atoms = get_selection_indices(traj_frag_molid, 0, sele_id)
+        sele2_atoms = get_selection_indices(traj_frag_molid, 0, sele_id2)
 
     # Compute contacts for each frame
     num_frag_frames = molecule.numframes(traj_frag_molid)
