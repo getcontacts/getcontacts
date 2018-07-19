@@ -28,40 +28,20 @@ from .hbonds import *
 from .salt_bridges import *
 from .pi_cation import *
 from .vanderwaals import *
+from .hydrophobics import compute_hydrophobics
 
 ##############################################################################
 # Global Variables
 ##############################################################################
 TRAJ_FRAG_SIZE = 100
-full_name_dirs = {'hbbb': 'hydrogen_bonds/backbone_backbone_hydrogen_bonds',
-                  'hbsb': 'hydrogen_bonds/sidechain_backbone_hydrogen_bonds',
-                  'hbss': 'hydrogen_bonds/sidechain_sidechain_hydrogen_bonds',
-                  'vdw': 'van_der_Waals',
-                  'sb': 'salt_bridges',
-                  'ts': 't_stacking',
-                  'ps': 'pi_stacking',
-                  'pc': 'pi_cation',
-                  'wb': 'hydrogen_bonds/water_mediated_hydrogen_bonds',
-                  'wb2': 'hydrogen_bonds/extended_water_mediated_hydrogen_bonds',
-                  'lhb': 'ligand_hydrogen_bonds/hydrogen_bonds',
-                  'hlb': 'ligand_hydrogen_bonds/backbone_hydrogen_bonds',
-                  'hls': 'ligand_hydrogen_bonds/sidechain_hydrogen_bonds',
-                  'lwb': 'ligand_hydrogen_bonds/water_mediated_hydrogen_bonds',
-                  'lwb2': 'ligand_hydrogen_bonds/extended_water_mediated_hydrogen_bonds',
-                  }
 
 ##############################################################################
 # Functions
 ##############################################################################
 
-# Note: Trying to write directly to output and doing postprocessing after
-# May save a lot of memory instead of having massive arrays, but there is
-# also the IO time (which would happen anyways). Figure out best output
-# format and most efficient way to write to disk.
 
-
-def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms,
-                           ligand, index_to_label):
+def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele_id, sele_id2,
+                           sele1_atoms, sele2_atoms, ligand, index_to_label):
     """
     Computes each of the specified non-covalent interaction type for a single frame
 
@@ -100,10 +80,8 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     frame_contacts: list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
 
     """
-    # tic = datetime.datetime.now()
-    # print("testing sele = %s; sele2 = %s" % (sele_id, sele_id2))
 
-    # Extract geometric criterion
+    # Extract geometric criteria
     SALT_BRIDGE_CUTOFF_DISTANCE = geom_criterion_values['SALT_BRIDGE_CUTOFF_DISTANCE']
     PI_CATION_CUTOFF_DISTANCE = geom_criterion_values['PI_CATION_CUTOFF_DISTANCE']
     PI_CATION_CUTOFF_ANGLE = geom_criterion_values['PI_CATION_CUTOFF_ANGLE']
@@ -119,36 +97,40 @@ def compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, ITYPES, geom_cr
     VDW_EPSILON = geom_criterion_values['VDW_EPSILON']
     VDW_RES_DIFF = geom_criterion_values['VDW_RES_DIFF']
 
-    if(ligand != [] and ('hb' in ITYPES and 'lhb' not in ITYPES)):
-        print("[*** Warning ***] Ligand is specified with hb itype. Will include hbonds involving ligand in output.\n")
-        ITYPES += ['lhb']
-    if(ligand == [] and 'lhb' in ITYPES):
-        print("[*** Warning ***] Must specify --ligand argument to compute lhb interactions.\n")
-        ITYPES.remove('lhb')
-
     frame_contacts = []
     if "sb" in ITYPES:
-        frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, SALT_BRIDGE_CUTOFF_DISTANCE)
+        frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
+                                               sele1_atoms, sele2_atoms, SALT_BRIDGE_CUTOFF_DISTANCE)
     if "pc" in ITYPES:
-        frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, PI_CATION_CUTOFF_DISTANCE, PI_CATION_CUTOFF_ANGLE)
+        frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
+                                            sele1_atoms, sele2_atoms, PI_CATION_CUTOFF_DISTANCE, PI_CATION_CUTOFF_ANGLE)
     if "ps" in ITYPES:
-        frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, PI_STACK_CUTOFF_DISTANCE, PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
+        frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
+                                              sele1_atoms, sele2_atoms, PI_STACK_CUTOFF_DISTANCE,
+                                              PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
     if "ts" in ITYPES:
-        frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
+        frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
+                                             sele1_atoms, sele2_atoms, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE,
+                                             T_STACK_PSI_ANGLE)
     if "vdw" in ITYPES:
-        frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, VDW_EPSILON, VDW_RES_DIFF)
+        frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
+                                              sele1_atoms, sele2_atoms, ligand, VDW_EPSILON, VDW_RES_DIFF)
     if "hb" in ITYPES:
-        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, None, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE, HBOND_RES_DIFF)
+        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn,
+                                                 sele_id, sele_id2, sele1_atoms, sele2_atoms, None,
+                                                 HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE, HBOND_RES_DIFF)
     if "lhb" in ITYPES:
-        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
+        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn,
+                                                 sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand,
+                                                 HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
+    if "hp" in ITYPES:
+        frame_contacts += compute_hydrophobics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, ligand,
+                                               VDW_EPSILON, VDW_RES_DIFF)
 
-    # toc = datetime.datetime.now()
-    # print("Finished computing contacts for frame %d (frag %d) in %s s" %
-    #       (frag_idx*100+frame_idx, frag_idx, (toc-tic).total_seconds()))
     return frame_contacts
 
 
-def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values, stride,
+def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values, stride,
                               solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, index_to_label):
     """ 
     Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
@@ -165,8 +147,6 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
         Topology in .pdb or .mae format
     traj: str
         Trajectory in .nc or .dcd format
-    output: str
-        Path to file where results should be written
     itypes: list
         Denotes the list of non-covalent interaction types to compute contacts for 
     geom_criterion_values: dict
@@ -203,7 +183,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
     num_frag_frames = molecule.numframes(traj_frag_molid)
     for frame_idx in range(num_frag_frames):
         # if frame_idx > 1: break
-        fragment_contacts += compute_frame_contacts(traj_frag_molid, frag_idx, frame_idx, itypes, geom_criterion_values,
+        fragment_contacts += compute_frame_contacts(traj_frag_molid, frame_idx, itypes, geom_criterion_values,
                                                     solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, index_to_label)
 
     # Delete trajectory fragment to clear memory
@@ -241,46 +221,6 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, output,
 
 def compute_fragment_contacts_helper(args):
     return compute_fragment_contacts(*args)
-
-
-# def stitch_fragment_contacts(itype, OUTPUT_DIR, frag_contact_files, frag_idx_to_length):
-#     """
-#     Stitch together multiple fragments of non-covalent contacts into
-#     single file and delete individual fragment files.
-#
-#     Parameters
-#     ----------
-#     itype: Type of non-covalent contact
-#     OUTPUT_DIR: string
-#         Absolute path to output directory
-#     frag_contact_files: list of strings
-#         List of paths to fragment contact files
-#     frag_idx_to_length: dict from int to int
-#         Map the fragment index to length of fragment
-#     """
-#     print("Stitching %s ..." % (itype))
-#     # stitched_filename = OUTPUT_DIR + "/" + itype + ".txt"
-#     # stitched_filename = OUTPUT_DIR + full_name_dirs[contact_type] + '/' + 'raw_frame_output.txt'
-#     stitched_filename = OUTPUT_DIR + full_name_dirs[itype] + '/' + itype + '.txt'
-#     fo = open(stitched_filename, 'w')
-#
-#     num_frames = 0
-#     for frag_contact_file in frag_contact_files:
-#         frag_idx = int(frag_contact_file.split("/")[-1].strip(".txt").split("_")[2])
-#         ffrag = open(frag_contact_file, 'r')
-#         for line in ffrag:
-#             linfo = line.split("\t")
-#             frame_idx = int(linfo[1])
-#             new_frame_idx = num_frames + frame_idx - 1
-#             output_string = str(new_frame_idx) + "\t" + "\t".join(linfo[2:])
-#             fo.write(output_string)
-#         num_frames += frag_idx_to_length[frag_idx]
-#         ffrag.close()
-#         os.remove(frag_contact_file)
-#
-#     fo.close()
-#
-#     return stitched_filename
 
 
 def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
@@ -330,10 +270,9 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
     index_to_label = gen_index_to_atom_label(top, traj)
     sim_length = simulation_length(top, traj)
 
-
     # Handles dual selection
     sele1_atoms, sele2_atoms = None, None 
-    if sele_id != None and sele_id2 != None:
+    if sele_id is not None and sele_id2 is not None:
         trajid = load_traj(top, traj, 0, 1, 1)
         sele1_atoms = get_selection_indices(trajid, 0, sele_id)
         sele2_atoms = get_selection_indices(trajid, 0, sele_id2)
@@ -351,7 +290,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
     for frag_idx, beg_frame in enumerate(range(beg, end + 1, TRAJ_FRAG_SIZE * stride)):
         end_frame = beg_frame + (TRAJ_FRAG_SIZE * stride) - 1
         # print(frag_idx, beg_frame, end_frame, stride)
-        inputqueue.put((frag_idx, beg_frame, end_frame, top, traj, output, itypes, geom_criterion_values,
+        inputqueue.put((frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values,
                         stride, solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, index_to_label))
 
     # Set up result queue for workers to transfer results to the consumer

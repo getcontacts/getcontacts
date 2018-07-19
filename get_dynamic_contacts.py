@@ -26,6 +26,7 @@ stacking and pi-cation interactions involving an aromatic ring will be denoted b
 CG atom.
 
 Interaction types are denoted by the following abbreviations:
+  · hp - hydrophobics
   · sb - salt bridges
   · pc - pi-cation
   · ps - pi-stacking
@@ -115,11 +116,11 @@ def main(argv=None):
     geom_criterion_values = process_geometric_criterion_args(args)
 
     # If user mistakenly includes only sele2
-    if(sele == None and sele2 != None):
+    if sele is None and sele2 is not None:
         sele, sele2 = sele2, sele
 
     # Check interaction types
-    all_itypes = ["sb", "pc", "ps", "ts", "vdw", "hb", "lhb"]
+    all_itypes = ["hp", "sb", "pc", "ps", "ts", "vdw", "hb", "lhb"]
     if "all" in args.itypes:
         itypes = all_itypes
     else:
@@ -128,6 +129,13 @@ def main(argv=None):
                 parser.error(itype + " is not a valid interaction type")
 
         itypes = args.itypes
+
+    # Check that ligands are correctly specified
+    if ligand and 'hb' in itypes and 'lhb' not in itypes:
+        print("[*** Warning ***] --ligand and 'hb' is specified but not 'lhb'. Will include ligand hbonds in output.\n")
+        itypes += ['lhb']
+    if not ligand and 'lhb' in itypes:
+        print("[*** Warning ***] 'lhb' interactions indicated, but no --ligand residue names are indicated.\n")
 
     # Begin computation
     tic = datetime.datetime.now()

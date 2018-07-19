@@ -480,7 +480,7 @@ def compute_distance(molid, frame_idx, atom1_index, atom2_index):
         Frame of simulation in trajectory fragment
     atom1_index: int
         Atom index 1
-    atom2_label: string
+    atom2_index: int
         Atom index 2
 
     Returns

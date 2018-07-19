@@ -95,7 +95,6 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label, ind
     return aromatic_atom_triplet_labels
 
 
-
 def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, itype,
                       SOFT_DISTANCE_CUTOFF, DISTANCE_CUTOFF, ANGLE_CUTOFF, PSI_ANGLE_CUTOFF):
     """
