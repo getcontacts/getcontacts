@@ -39,14 +39,13 @@ def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_label, sele_id1, s
         itype = "hp"
     """
 
-    aa_sel = "(((resname ALA CYS PHE GLY ILE LEU MET PRO VAL TRP) and mass 12) or " \
-             "((resname CYS MET) and mass 32 to 33))"  # Sulphurs
-    lig_sel = "" if not ligands else "or ((resname " + (" ".join(ligands)) + ") and mass 12) "
+    lig_sel = "" if ligands is None else " ".join(ligands)
+    aa_sel = "((resname ALA CYS PHE GLY ILE LEU MET PRO VAL TRP " + lig_sel + ") and (element C S))"
     sel1 = "" if sele_id1 is None else " and (" + sele_id1 + ")"
     sel2 = "" if sele_id2 is None else " and (" + sele_id2 + ")"
 
-    evaltcl("set hp_atoms1 [atomselect %s \"%s%s%s\" frame %s]" % (traj_frag_molid, aa_sel, lig_sel, sel1, frame_idx))
-    evaltcl("set hp_atoms2 [atomselect %s \"%s%s%s\" frame %s]" % (traj_frag_molid, aa_sel, lig_sel, sel2, frame_idx))
+    evaltcl("set hp_atoms1 [atomselect %s \"%s%s\" frame %s]" % (traj_frag_molid, aa_sel, sel1, frame_idx))
+    evaltcl("set hp_atoms2 [atomselect %s \"%s%s\" frame %s]" % (traj_frag_molid, aa_sel, sel2, frame_idx))
     contacts = evaltcl("measure contacts %s $hp_atoms1 $hp_atoms2" % (VDW_EPSILON + 2 * ATOM_RADIUS['S']))
     evaltcl("$hp_atoms1 delete")
     evaltcl("$hp_atoms2 delete")
