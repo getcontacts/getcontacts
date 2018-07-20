@@ -167,6 +167,9 @@ def main(argv=None):
         write_pymol_distances(compare_flare, args.pymol_output)
         print("Wrote pymol file to "+args.pymol_output)
 
+    for f in args.input_frequencies:
+        f.close()
+
 
 if __name__ == '__main__':
     main()

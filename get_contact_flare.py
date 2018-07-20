@@ -90,6 +90,9 @@ def main(argv=None):
     contacts, num_frames = parse_contacts(args.input, itypes)
     labels = parse_residuelabels(args.flarelabels)
     graph = create_flare(contacts, labels)  # create_graph(contacts, labels)
+    args.input.close()
+    if args.flarelabels is not None:
+        args.flarelabels.close()
 
     # Write output
     if args.output:

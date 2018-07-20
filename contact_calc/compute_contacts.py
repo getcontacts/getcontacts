@@ -314,6 +314,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         w.join()
     resultsqueue.put("DONE")
     consumer.join()
+    output_fd.close()
 
 
 def contact_worker(inputqueue, resultsqueue):

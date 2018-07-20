@@ -112,22 +112,27 @@ def main(argv=None):
     input_files = args.input_files
     itypes = args.itypes
     # labels = parse_labelfile(args.label_file) if args.label_file else None
-    labels, colors = parse_residuelabels(args.label_file) if args.label_file else (None, None)
+    labels, colors = (None, None)
+    if args.label_file is not None:
+        labels, colors = parse_residuelabels(args.label_file)
+        args.label_file.close()
 
     counts = []
     for input_file in input_files:
         contacts, num_frames = parse_contacts(input_file, itypes)
+        input_file.close()
         residue_contacts = res_contacts(contacts)
         residue_contacts = relabel(residue_contacts, labels)
         counts.append((num_frames, gen_counts(residue_contacts)))
 
-    # counts = [gen_counts(input_file, itypes, labels) for input_file in input_files]
     total_frames, frequencies = gen_frequencies(counts)
 
     output_file.write('#\ttotal_frames:%d\tinteraction_types:%s\n' % (total_frames, ','.join(itypes)))
     output_file.write('#\tColumns:\tresidue_1,\tresidue_2\tframe_count\tcontact_frequency\n')
     for (res1, res2), (count, frequency) in frequencies.items():
         output_file.write('\t'.join([res1, res2, "%.3f" % frequency]) + "\n")
+
+    output_file.close()
 
 
 if __name__ == '__main__':

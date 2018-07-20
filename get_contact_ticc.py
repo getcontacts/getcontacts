@@ -191,6 +191,7 @@ def main(argv=None):
 
     print("Reading atomic contacts from " + args.input_contacts.name)
     atomic_contacts, num_frames = parse_contacts(args.input_contacts)
+    args.input_contacts.close()
 
     print("Converting atomic contacts to residue contacts")
     residue_contacts = res_contacts(atomic_contacts)
@@ -224,7 +225,6 @@ def main(argv=None):
                 for (res1, res2), (count, frequency) in frequencies.items():
                     output_file.write('\t'.join([res1, res2, "%.3f" % frequency]) + "\n")
 
-    # print(segmentation[0][2])
 
 
 if __name__ == "__main__":
