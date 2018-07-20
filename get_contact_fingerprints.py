@@ -64,6 +64,7 @@ def plot_frequencies(freq_table, col_labels, out_file, cluster_columns):
 
     import seaborn as sns; 
     sns.set(color_codes=True)
+    sns.set(font_scale=1.5)
 
     freq_matrix = np.array([freq_table[(r1, r2)] for (r1, r2) in freq_table])
     row_labels = [r1 + " - " + r2 for (r1, r2) in freq_table]
@@ -78,12 +79,14 @@ def plot_frequencies(freq_table, col_labels, out_file, cluster_columns):
     # Create clustermap
     fingerprints = sns.clustermap(pdframe,
                                   figsize=figsize,
-                                  annot=True,
+                                  annot=False,
                                   col_cluster=cluster_columns,
-                                  cmap='Blues')
+                                  linewidths=0.5,
+                                  linecolor='black',
+                                  cmap='Greens')
 
     # Remove color bar
-    fingerprints.cax.set_visible(False)
+    # fingerprints.cax.set_visible(False)
 
     import matplotlib.pyplot as plt
     plt.setp(fingerprints.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
