@@ -170,5 +170,5 @@ def main(argv=None):
 if __name__ == '__main__':
     main()
 
-__author__ = 'Augustine Chemparathy ... <email>'
+__author__ = 'Augustine Chemparathy <agchempa@gmail.com>'
 __license__ = "Apache License 2.0"
