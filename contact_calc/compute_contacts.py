@@ -114,7 +114,7 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, geom_criterion_va
                                              T_STACK_PSI_ANGLE)
     if "vdw" in ITYPES:
         frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
-                                              sele1_atoms, sele2_atoms, ligand, VDW_EPSILON, VDW_RES_DIFF)
+                                              ligand, VDW_EPSILON, VDW_RES_DIFF)
     if "hb" in ITYPES:
         frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn,
                                                  sele_id, sele_id2, sele1_atoms, sele2_atoms, None,

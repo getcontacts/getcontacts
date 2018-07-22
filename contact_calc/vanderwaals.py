@@ -39,41 +39,8 @@ ATOM_RADIUS = {'H': 1.20,
 # Functions
 ##############################################################################
 
-
-def filter_dual_selection_vdw(sele1_atoms, sele2_atoms, atom1_index, atom2_index):
-    """
-    Filter out van der waals interactions that are not between selection 1 and selection 2
-
-    Parameters
-    ----------
-    sele1_atoms: list 
-        List of atom label strings for all atoms in selection 1
-    sele2_atoms: list 
-        List of atom label strings for all atoms in selection 2
-    atom1_index: int
-        Index for atom1 participating in vdw interaction
-    atom2_index: int
-        Index for atom2 participating in vdw interaction
-
-    Returns
-    -------
-    filter_bool: bool 
-        True to filter out interaction
-    """
-
-    dual_sel1 = (atom1_index in sele1_atoms) and (atom2_index in sele2_atoms)
-    if(dual_sel1):
-        return False
-
-    dual_sel2 = (atom1_index in sele2_atoms) and (atom2_index in sele1_atoms)
-    if(dual_sel2):
-        return False
-
-    return True
-
-
 def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
-                        sele1_atoms, sele2_atoms, ligands, VDW_EPSILON, VDW_RES_DIFF):
+                        ligands, VDW_EPSILON, VDW_RES_DIFF):
     """
     Compute all vanderwaals interactions in a frame of simulation
 
@@ -106,36 +73,25 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sel
     vanderwaals: list of tuples, [(frame_idx, itype, atom1_label, atom2_label), ...]
         itype = "vdw"
     """
-    if sele_id is None and sele_id2 is None:
-        custom_sele = ""
-    elif sele_id is not None and sele_id2 is None:
-        custom_sele = "and (%s) " % sele_id
-    elif sele_id is not None and sele_id2 is not None:
-        sele_union = "(%s) or (%s)" % (sele_id, sele_id2)
-        custom_sele = "and (%s) " % sele_union
-    # custom_sele = "" if sele_id is None else "and (" + sele_id + ") "
+    
+    sel1 = "" if sele_id is None else "and (%s) " % (sele_id)
+    sel2 = "" if sele_id2 is None else "and (%s) " % (sele_id2)
     custom_lig = "" if not ligands else "or (resname " + (" ".join(ligands)) + ") "
+    evaltcl("set vdw_atoms1 [atomselect %s \" noh and ( protein %s) %s\" frame %s]" %
+            (traj_frag_molid, custom_lig, sel1, frame_idx))
+    evaltcl("set vdw_atoms2 [atomselect %s \" noh and ( protein %s) %s\" frame %s]" %
+            (traj_frag_molid, custom_lig, sel2, frame_idx))
 
-    evaltcl("set full_protein [atomselect %s \" noh and ( protein %s) %s\" frame %s]" %
-            (traj_frag_molid, custom_lig, custom_sele, frame_idx))
-
-    # if sele_id is None:
-    #     evaltcl("set full_protein [atomselect %s \" noh and protein \" frame %s]" %
-    #             (traj_frag_molid, frame_idx))
-    # else:
-    #     evaltcl("set full_protein [atomselect %s \" noh and protein and (%s) \" frame %s]" %
-    #             (traj_frag_molid, sele_id, frame_idx))
-
-    contacts = evaltcl("measure contacts %s $full_protein" % SOFT_VDW_CUTOFF)
+    if(sel2 == ""):
+        contacts = evaltcl("measure contacts %s $vdw_atoms1" % (SOFT_VDW_CUTOFF))
+    else:  
+        contacts = evaltcl("measure contacts %s $vdw_atoms1 $vdw_atoms2" % (SOFT_VDW_CUTOFF))
     contact_index_pairs = parse_contacts(contacts)
-    evaltcl('$full_protein delete')
-
+    evaltcl("$vdw_atoms1 delete")
+    evaltcl("$vdw_atoms2 delete")
+    
     vanderwaals = []
     for atom1_index, atom2_index in contact_index_pairs:
-        # Perform dual selection with atom indices
-        if sele1_atoms is not None and sele2_atoms is not None:
-            if filter_dual_selection_vdw(sele1_atoms, sele2_atoms, atom1_index, atom2_index):
-                continue
 
         # Convert to atom label
         atom1_label, atom2_label = index_to_label[atom1_index], index_to_label[atom2_index]
