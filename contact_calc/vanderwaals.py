@@ -28,16 +28,59 @@ __all__ = ["compute_vanderwaals"]
 
 ALPHA_CARBON_DIST_CUTOFF = 10.0  # Angstroms
 SOFT_VDW_CUTOFF = 5.0  # Angstroms
+
+# http://periodictable.com/Properties/A/VanDerWaalsRadius.v.html
 ATOM_RADIUS = {'H': 1.20,
                'C': 1.70,
                'N': 1.55,
                'O': 1.52,
                'S': 1.80,
-               'P': 1.80}
+               'P': 1.80, 
+               'K': 2.75, 
+               'NA': 2.27,
+               'MG': 1.73,
+               'LI': 1.82, 
+               'F': 1.47,
+               'CL': 1.75}
 
 ##############################################################################
 # Functions
 ##############################################################################
+
+def infer_element(atom_name):
+    """
+    Infer the element of an atom based on atom name 
+
+    Parameters
+    ----------
+    atom_name: string 
+        Atom name as specified in topology
+
+    Returns
+    -------
+    element: string
+        Inferred element identity from the atom name
+    """
+
+    # Single letter atom_name identifies element
+    if(len(atom_name) == 1):
+        return atom_name
+
+    # Otherwise default element is carbon
+    element = "C" 
+
+    # Consider both single and double letter element names
+    cand_elem1 = atom_name[0:1]
+    cand_elem2 = atom_name[0:2]
+
+    # If single letter matches element dictionary
+    if(cand_elem1 in ATOM_RADIUS and cand_elem2 not in ATOM_RADIUS):
+        element = cand_elem1
+    if(cand_elem2 in ATOM_RADIUS):
+        element = cand_elem2
+
+    return element
+
 
 def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
                         ligands, VDW_EPSILON, VDW_RES_DIFF):
@@ -108,16 +151,13 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sel
         if chain1 == chain2 and abs(resi1-resi2) < VDW_RES_DIFF:
             continue
 
-        element1 = atom1_label_split[3][0]
-        element2 = atom2_label_split[3][0]
-
-        if element1 not in ATOM_RADIUS:
-            element1 = 'C'
-        if element2 not in ATOM_RADIUS:
-            element2 = 'C'
-
         # Perform distance cutoff with atom indices
         distance = compute_distance(traj_frag_molid, frame_idx, atom1_index, atom2_index)
+
+        # Infer element 
+        element1 = infer_element(atom1_label_split[3])
+        element2 = infer_element(atom2_label_split[3])
+
         vanderwaal_cutoff = ATOM_RADIUS[element1] + ATOM_RADIUS[element2] + VDW_EPSILON
         if distance < vanderwaal_cutoff:
             vanderwaals.append([frame_idx, "vdw", atom1_label, atom2_label])
