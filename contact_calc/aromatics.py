@@ -60,7 +60,42 @@ def filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_index, ar
 
     return True
 
-def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label, index_to_label):
+
+# def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label, index_to_atom):
+#     """
+#     Given an aromatic residue label return triplet of atoms on the ring
+#
+#     Parameters
+#     ----------
+#     traj_frag_molid: int
+#         Identifier to simulation fragment in VMD
+#     frame_idx: int
+#         Frame number to query
+#     aromatic_residue_label: string
+#         ie "A:PHE:222"
+#     index_to_atom: dict
+#         Maps VMD atom index to Atom
+#
+#     Returns
+#     -------
+#     aromatic_atom_triplet_labels: list of strings
+#         ie ["A:PHE:329:CE1:55228", "A:PHE:329:CE2:55234", "A:PHE:329:CG:55225"]
+#     """
+#
+#     residue_to_atom_names = {"PHE": "CG CE1 CE2", "TRP": "CD2 CZ2 CZ3", "TYR": "CG CE1 CE2"}
+#     chain, resname, resid = aromatic_residue_label.split(":")
+#     evaltcl("set aromatic_atoms [atomselect %s \"(chain %s) and (resname %s) and (resid '%s') and (name %s)\" frame %s]"
+#             % (traj_frag_molid, chain, resname, resid, residue_to_atom_names[resname], frame_idx))
+#     # aromatic_atom_triplet = get_atom_selection_labels("aromatic_atoms")
+#     aromatic_atom_triplet_indices = get_atom_selection_indices("aromatic_atoms")
+#     evaltcl('$aromatic_atoms delete')
+#
+#     # Need aromatic_atom_triplet as list
+#     aromatic_atom_triplet_labels = [index_to_atom[atom_index].get_label() for atom_index in aromatic_atom_triplet_indices]
+#     return aromatic_atom_triplet_labels
+
+
+def get_aromatic_triplet(traj_frag_molid, frame_idx, aatom, index_to_atom):
     """
     Given an aromatic residue label return triplet of atoms on the ring
 
@@ -70,11 +105,10 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label, ind
         Identifier to simulation fragment in VMD
     frame_idx: int
         Frame number to query
-    aromatic_residue_label: string
-        ie "A:PHE:222"
-    index_to_label: dict
-        Maps VMD atom index to label "chain:resname:resid:name:index"
-        {11205: "A:ASP:114:CA:11205, ...}
+    aatom: Atom
+        Aromatic atom
+    index_to_atom: dict
+        Maps VMD atom index to Atom
 
     Returns
     -------
@@ -83,7 +117,7 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label, ind
     """
 
     residue_to_atom_names = {"PHE": "CG CE1 CE2", "TRP": "CD2 CZ2 CZ3", "TYR": "CG CE1 CE2"}
-    chain, resname, resid = aromatic_residue_label.split(":")
+    chain, resname, resid = aatom.chain, aatom.resname, aatom.resid
     evaltcl("set aromatic_atoms [atomselect %s \"(chain %s) and (resname %s) and (resid '%s') and (name %s)\" frame %s]"
             % (traj_frag_molid, chain, resname, resid, residue_to_atom_names[resname], frame_idx))
     # aromatic_atom_triplet = get_atom_selection_labels("aromatic_atoms")
@@ -91,11 +125,11 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label, ind
     evaltcl('$aromatic_atoms delete')
 
     # Need aromatic_atom_triplet as list 
-    aromatic_atom_triplet_labels = [index_to_label[atom_index] for atom_index in aromatic_atom_triplet_indices]
+    aromatic_atom_triplet_labels = [index_to_atom[atom_index].get_label() for atom_index in aromatic_atom_triplet_indices]
     return aromatic_atom_triplet_labels
 
 
-def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms, itype,
+def compute_aromatics(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2, sele1_atoms, sele2_atoms, itype,
                       SOFT_DISTANCE_CUTOFF, DISTANCE_CUTOFF, ANGLE_CUTOFF, PSI_ANGLE_CUTOFF):
     """
     Compute aromatic interactions in a frame of simulation
@@ -106,9 +140,8 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
         Identifier to simulation fragment in VMD
     frame_idx: int
         Frame number to query
-    index_to_label: dict
-        Maps VMD atom index to label "chain:resname:resid:name:index"
-        {11205: "A:ASP:114:CA:11205, ...}
+    index_to_atom: dict
+        Maps VMD atom index to Atom
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele_id2: string, default = None
@@ -170,8 +203,8 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
             if filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_index, aromatic2_index):
                 continue 
 
-        aromatic1_label = index_to_label[aromatic1_index]
-        aromatic2_label = index_to_label[aromatic2_index]
+        aromatic1_label = index_to_atom[aromatic1_index].get_label()
+        aromatic2_label = index_to_atom[aromatic2_index].get_label()
 
         # Check if the two atoms belong to same aromatic group
         aromatic1_res = ":".join(aromatic1_label.split(":")[0:3])
@@ -181,9 +214,11 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
 
         # print(aromatic1_label, aromatic2_label)
         if aromatic1_res not in residue_to_atom_labels:
-            residue_to_atom_labels[aromatic1_res] = get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic1_res, index_to_label)
+            # residue_to_atom_labels[aromatic1_res] = get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic1_res, index_to_atom)
+            residue_to_atom_labels[aromatic1_res] = get_aromatic_triplet(traj_frag_molid, frame_idx, index_to_atom[aromatic1_index], index_to_atom)
         if aromatic2_res not in residue_to_atom_labels:
-            residue_to_atom_labels[aromatic2_res] = get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic2_res, index_to_label)
+            # residue_to_atom_labels[aromatic2_res] = get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic2_res, index_to_atom)
+            residue_to_atom_labels[aromatic2_res] = get_aromatic_triplet(traj_frag_molid, frame_idx, index_to_atom[aromatic2_index], index_to_atom)
 
         k1 = (aromatic1_res, aromatic2_res)
         k2 = (aromatic2_res, aromatic1_res)
@@ -252,7 +287,7 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
     return aromatics
 
 
-def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms,
+def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2, sele1_atoms, sele2_atoms,
                         PI_STACK_CUTOFF_DISTANCE=7.0, PI_STACK_CUTOFF_ANGLE=30, PI_STACK_PSI_ANGLE=45):
     """
     Compute pi-stacking interactions in a frame of simulation
@@ -263,9 +298,8 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sel
         Identifier to simulation fragment in VMD
     frame_idx: int
         Frame number to query
-    index_to_label: dict
-        Maps VMD atom index to label "chain:resname:resid:name:index"
-        {11205: "A:ASP:114:CA:11205, ...}
+    index_to_atom: dict
+        Maps VMD atom index to Atom
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele_id2: string, default = None
@@ -290,7 +324,7 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sel
     """
 
     PI_STACK_SOFT_DISTANCE_CUTOFF = 10.0  # angstroms
-    pi_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label,
+    pi_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_atom,
                                     sele_id, sele_id2,
                                     sele1_atoms, sele2_atoms, "ps",
                                     PI_STACK_SOFT_DISTANCE_CUTOFF, PI_STACK_CUTOFF_DISTANCE,
@@ -298,7 +332,7 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sel
     return pi_stacking
 
 
-def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms,
+def compute_t_stacking(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2, sele1_atoms, sele2_atoms,
                        T_STACK_CUTOFF_DISTANCE=5.0, T_STACK_CUTOFF_ANGLE=30, T_STACK_PSI_ANGLE=45):
     """
     Compute t-stacking interactions in a frame of simulation
@@ -309,9 +343,8 @@ def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele
         Identifier to simulation fragment in VMD
     frame_idx: int
         Frame number to query
-    index_to_label: dict
-        Maps VMD atom index to label "chain:resname:resid:name:index"
-        {11205: "A:ASP:114:CA:11205, ...}
+    index_to_atom: dict
+        Maps VMD atom index to Atom
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele_id2: string, default = None
@@ -337,7 +370,7 @@ def compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele
     """
 
     T_STACK_SOFT_DISTANCE_CUTOFF = 6.0  # angstroms
-    t_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_label,
+    t_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_atom,
                                    sele_id, sele_id2,
                                    sele1_atoms, sele2_atoms, "ts",
                                    T_STACK_SOFT_DISTANCE_CUTOFF, T_STACK_CUTOFF_DISTANCE,

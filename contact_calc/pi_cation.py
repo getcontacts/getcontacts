@@ -63,7 +63,7 @@ def filter_dual_selection_pi_cation(sele1_atoms, sele2_atoms, cation_index, arom
     return True
 
 
-def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms,
+def compute_pi_cation(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2, sele1_atoms, sele2_atoms,
                       PI_CATION_CUTOFF_DISTANCE=6.0, PI_CATION_CUTOFF_ANGLE=60):
     """
     Compute pi-cation interactions in a frame of simulation
@@ -74,9 +74,8 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
         Identifier to simulation fragment in VMD
     frame_idx: int
         Frame number to query
-    index_to_label: dict
-        Maps VMD atom index to label "chain:resname:resid:name:index"
-        {11205: "A:ASP:114:CA:11205, ...}
+    index_to_atom: dict
+        Maps VMD atom index to Atom
     sele_id: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele_id2: string, default = None
@@ -151,8 +150,8 @@ def compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_
             if filter_dual_selection_pi_cation(sele1_atoms, sele2_atoms, cation_index, aromatic_index):
                 continue
 
-        cation_label = index_to_label[cation_index]
-        aromatic_label = index_to_label[aromatic_index]
+        cation_label = index_to_atom[cation_index].get_label()
+        aromatic_label = index_to_atom[aromatic_index].get_label()
         pi_cation_aromatic_res_key = cation_label + ":" + ":".join(aromatic_label.split(":")[0:3])
         if pi_cation_aromatic_res_key not in pi_cation_aromatic_grouping:
             pi_cation_aromatic_grouping[pi_cation_aromatic_res_key] = set()

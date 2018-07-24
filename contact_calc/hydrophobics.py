@@ -8,7 +8,7 @@ ATOM_RADIUS = {'C': 1.70,
                'S': 1.80}
 
 
-def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_label, sele_id1, sele_id2, ligands,
+def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele_id1, sele_id2, ligands,
                          VDW_EPSILON, VDW_RES_DIFF):
     """
     Compute hydrophobic interactions in a frame of simulation
@@ -19,9 +19,8 @@ def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_label, sele_id1, s
         Identifier to simulation fragment in VMD
     frame_idx: int
         Frame number to query
-    index_to_label: dict
-        Maps VMD atom index to label "chain:resname:resid:name:index"
-        {11205: "A:ASP:114:CA:11205, ...}
+    index_to_atom: dict
+        Maps VMD atom index to Atom
     sele_id1: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele_id2: string, default = None
@@ -54,32 +53,17 @@ def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_label, sele_id1, s
     contact_index_pairs = parse_contacts(contacts)
     for atom1_index, atom2_index in contact_index_pairs:
         # Convert to atom label
-        atom1_label, atom2_label = index_to_label[atom1_index], index_to_label[atom2_index]
+        atom1, atom2 = index_to_atom[atom1_index], index_to_atom[atom2_index]
 
-        # Another optimization is only convert to labels after passing initial checks.
-        atom1_label_split = atom1_label.split(":")
-        atom2_label_split = atom2_label.split(":")
-
-        chain1 = atom1_label_split[0]
-        chain2 = atom2_label_split[0]
-        resi1 = int(atom1_label_split[2])
-        resi2 = int(atom2_label_split[2])
-        if chain1 == chain2 and abs(resi1-resi2) < VDW_RES_DIFF:
+        if atom1.chain == atom2.chain and abs(atom1.resid - atom2.resid) < VDW_RES_DIFF:
             continue
-
-        element1 = atom1_label_split[3][0]
-        element2 = atom2_label_split[3][0]
-
-        if element1 not in ATOM_RADIUS:
-            element1 = 'C'
-        if element2 not in ATOM_RADIUS:
-            element2 = 'C'
 
         # Perform distance cutoff with atom indices
         distance = compute_distance(traj_frag_molid, frame_idx, atom1_index, atom2_index)
-        vanderwaal_cutoff = ATOM_RADIUS[element1] + ATOM_RADIUS[element2] + VDW_EPSILON
+        # vanderwaal_cutoff = ATOM_RADIUS[element1] + ATOM_RADIUS[element2] + VDW_EPSILON
+        vanderwaal_cutoff = atom1.vdwradius + atom2.vdwradius + VDW_EPSILON
         if distance < vanderwaal_cutoff:
-            ret.append([frame_idx, "hp", atom1_label, atom2_label])
+            ret.append([frame_idx, "hp", atom1.get_label(), atom2.get_label()])
 
     return ret
 

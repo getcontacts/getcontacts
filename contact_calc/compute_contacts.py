@@ -41,7 +41,7 @@ TRAJ_FRAG_SIZE = 100
 
 
 def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele_id, sele_id2,
-                           sele1_atoms, sele2_atoms, ligand, index_to_label):
+                           sele1_atoms, sele2_atoms, ligand, index_to_atom):
     """
     Computes each of the specified non-covalent interaction type for a single frame
 
@@ -71,9 +71,8 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, geom_criterion_va
         Specify chain of protein to perform computation on 
     ligand: list of string, default = None
         Include ligand resname if computing contacts between ligand and binding pocket residues
-    index_to_label: dict 
-        Maps VMD atom index to label "chain:resname:resid:name:index"
-        {11205: "A:ASP:114:CA:11205, ...}
+    index_to_atom: dict
+        Maps VMD atom index to Atom
 
     Returns
     -------
@@ -99,39 +98,39 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, geom_criterion_va
 
     frame_contacts = []
     if "sb" in ITYPES:
-        frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
+        frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2,
                                                sele1_atoms, sele2_atoms, SALT_BRIDGE_CUTOFF_DISTANCE)
     if "pc" in ITYPES:
-        frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
+        frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2,
                                             sele1_atoms, sele2_atoms, PI_CATION_CUTOFF_DISTANCE, PI_CATION_CUTOFF_ANGLE)
     if "ps" in ITYPES:
-        frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
+        frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2,
                                               sele1_atoms, sele2_atoms, PI_STACK_CUTOFF_DISTANCE,
                                               PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
     if "ts" in ITYPES:
-        frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
+        frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2,
                                              sele1_atoms, sele2_atoms, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE,
                                              T_STACK_PSI_ANGLE)
     if "vdw" in ITYPES:
-        frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
+        frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2,
                                               ligand, VDW_EPSILON, VDW_RES_DIFF)
     if "hb" in ITYPES:
-        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn,
+        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_atom, solvent_resn,
                                                  sele_id, sele_id2, sele1_atoms, sele2_atoms, None,
                                                  HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE, HBOND_RES_DIFF)
     if "lhb" in ITYPES:
-        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn,
+        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_atom, solvent_resn,
                                                  sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand,
                                                  HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
     if "hp" in ITYPES:
-        frame_contacts += compute_hydrophobics(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, ligand,
+        frame_contacts += compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2, ligand,
                                                VDW_EPSILON, VDW_RES_DIFF)
 
     return frame_contacts
 
 
 def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values, stride,
-                              solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, index_to_label):
+                              solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, index_to_atom):
     """ 
     Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
 
@@ -165,9 +164,8 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes,
         List of atom label indices for all atoms in selection 2
     ligand: list of string, default = None
         Include ligand resname if computing contacts between ligand and binding pocket residues
-    index_to_label: dict 
-        Maps VMD atom index to label "chain:resname:resid:name:index"
-        {11205: "A:ASP:114:CA:11205, ...}
+    index_to_atom: dict
+        Maps VMD atom index to Atom
 
     Return
     ------
@@ -184,7 +182,8 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes,
     for frame_idx in range(num_frag_frames):
         # if frame_idx > 1: break
         fragment_contacts += compute_frame_contacts(traj_frag_molid, frame_idx, itypes, geom_criterion_values,
-                                                    solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, index_to_label)
+                                                    solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand,
+                                                    index_to_atom)
 
     # Delete trajectory fragment to clear memory
     molecule.delete(traj_frag_molid)
@@ -219,9 +218,9 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes,
     return fragment_contacts
 
 
-def compute_fragment_contacts_helper(args):
-    return compute_fragment_contacts(*args)
-
+# def compute_fragment_contacts_helper(args):
+#     return compute_fragment_contacts(*args)
+#
 
 def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
                      beg, end, stride, solvent_resn, sele_id, sele_id2, ligand):
@@ -267,7 +266,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         else:
             contact_types += [itype]
 
-    index_to_label = gen_index_to_atom_label(top, traj)
+    index_to_atom = gen_index_to_atom(top, traj)
     sim_length = simulation_length(top, traj)
 
     # Handles dual selection
@@ -291,7 +290,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         end_frame = beg_frame + (TRAJ_FRAG_SIZE * stride) - 1
         # print(frag_idx, beg_frame, end_frame, stride)
         inputqueue.put((frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values,
-                        stride, solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, index_to_label))
+                        stride, solvent_resn, sele_id, sele_id2, sele1_atoms, sele2_atoms, ligand, index_to_atom))
 
     # Set up result queue for workers to transfer results to the consumer
     resultsqueue = Queue()
@@ -300,21 +299,30 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
     num_workers = max(1, cores)
     for _ in range(num_workers):
         inputqueue.put("DONE")  # Stops each worker process
-    workers = [Process(target=contact_worker, args=(inputqueue, resultsqueue)) for _ in range(num_workers)]
-    for w in workers:
-        w.start()
 
-    # Set up and start consumer process which takes contact results and saves them to output
-    output_fd = open(output, "w")
-    consumer = Process(target=contact_consumer, args=(resultsqueue, output_fd, itypes, beg, end, stride))
-    consumer.start()
+    if num_workers == 1:  # Run everything in series (in addition to being slow it will consume memory)
+        contact_worker(inputqueue, resultsqueue)
+        resultsqueue.put("DONE")
+        output_fd = open(output, "w")
+        contact_consumer(resultsqueue, output_fd, itypes, beg, end, stride)
+        output_fd.close()
 
-    # Wait for everyone to finish
-    for w in workers:
-        w.join()
-    resultsqueue.put("DONE")
-    consumer.join()
-    output_fd.close()
+    else:
+        workers = [Process(target=contact_worker, args=(inputqueue, resultsqueue)) for _ in range(num_workers)]
+        for w in workers:
+            w.start()
+
+        # Set up and start consumer process which takes contact results and saves them to output
+        output_fd = open(output, "w")
+        consumer = Process(target=contact_consumer, args=(resultsqueue, output_fd, itypes, beg, end, stride))
+        consumer.start()
+
+        # Wait for everyone to finish
+        for w in workers:
+            w.join()
+        resultsqueue.put("DONE")
+        consumer.join()
+        output_fd.close()
 
 
 def contact_worker(inputqueue, resultsqueue):

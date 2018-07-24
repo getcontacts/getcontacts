@@ -71,7 +71,7 @@ def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2):
     return anion_set, cation_set
 
 
-def compute_salt_bridges(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2, sele1_atoms, sele2_atoms,
+def compute_salt_bridges(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2, sele1_atoms, sele2_atoms,
                          SALT_BRIDGE_CUTOFF_DISTANCE=4.0):
     """
     Compute salt bridges in a frame of simulation
@@ -82,7 +82,7 @@ def compute_salt_bridges(traj_frag_molid, frame_idx, index_to_label, sele_id, se
         Identifier to simulation fragment in VMD
     frame_idx: int
         Frame number to query
-    index_to_label: dict 
+    index_to_atom: dict
         Maps VMD atom index to label "chain:resname:resid:name:index"
         {11205: "A:ASP:114:CA:11205, ...}
     sele_id: string, default = None
@@ -113,8 +113,8 @@ def compute_salt_bridges(traj_frag_molid, frame_idx, index_to_label, sele_id, se
                     
             dist = compute_distance(traj_frag_molid, frame_idx, anion_atom, cation_atom)
             if dist < SALT_BRIDGE_CUTOFF_DISTANCE:
-                anion_label = index_to_label[anion_atom]
-                cation_label = index_to_label[cation_atom]
+                anion_label = index_to_atom[anion_atom].get_label()
+                cation_label = index_to_atom[cation_atom].get_label()
                 salt_bridges.append([frame_idx, "sb", anion_label, cation_label])
 
     return salt_bridges

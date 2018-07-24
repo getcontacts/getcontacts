@@ -26,6 +26,10 @@ import sys
 import os
 from contextlib import contextmanager
 from numpy.linalg import norm
+from .atom import Atom
+
+int_pattern = re.compile(r'\d+')
+float_pattern = re.compile(r'-?\d+\.\d+')
 
 
 def atoi(text):
@@ -136,13 +140,26 @@ def get_atom_selection_indices(selection_id):
     *** Major optimization to be implemented ***
     GetContacts should perform all VMD based computation with just atom indices until needing to convert to labels with index_to_label
     """
-    chains, resnames, resids, names, indices = get_atom_selection_properties(selection_id)
-    atom_indices = set()
-    for idx in range(len(chains)):
-        index = int(indices[idx])
-        atom_indices.add(index)
 
-    return atom_indices
+    return set(map(int, int_pattern.findall(evaltcl("$" + selection_id + " get index"))))
+
+    # Old old
+    # chains, resnames, resids, names, elements, indices = get_atom_selection_properties(selection_id)
+
+    # Old
+    # indices = list(map(str, evaltcl("$%s get index" % selection_id).split(" ")))
+    # if indices == ['']:
+    #     indices = []
+    #
+    # return set([int(idx) for idx in indices])
+
+    # # Old old
+    # atom_indices = set()
+    # for idx in range(len(indices)):
+    #     index = int(indices[idx])
+    #     atom_indices.add(index)
+    #
+    # return atom_indices
     
 
 def get_atom_selection_properties(selection_id):
@@ -173,13 +190,14 @@ def get_atom_selection_properties(selection_id):
     resnames = list(map(str, evaltcl("$%s get resname" % selection_id).split(" ")))
     resids = list(map(str, evaltcl("$%s get resid" % selection_id).split(" ")))
     names = list(map(str, evaltcl("$%s get name" % selection_id).split(" ")))
+    elements = list(map(str, evaltcl("$%s get element" % selection_id).split(" ")))
     indices = list(map(str, evaltcl("$%s get index" % selection_id).split(" ")))
     if chains == [''] or resnames == [''] or resids == [''] or names == [''] or indices == ['']:
-        return [], [], [], [], []
-    return chains, resnames, resids, names, indices
+        return [], [], [], [], [], []
+    return chains, resnames, resids, names, elements, indices
 
 
-def gen_index_to_atom_label(top, traj):
+def gen_index_to_atom(top, traj):
     """
     Read in first frame of simulation and generate mapping from VMD index to atom labels
 
@@ -190,31 +208,32 @@ def gen_index_to_atom_label(top, traj):
 
     Returns
     -------
-    index_to_label: dict mapping int to string
-        Maps VMD atom index to label "chain:resname:resid:name:index"
-        {11205: "A:ASP:114:CA:11205, ...}
+    index_to_atom: dict
+        Maps VMD atom index to Atom
 
     """
     # Select all atoms from first frame of trajectory
     trajid = load_traj(top, traj, 1, 2, 1)
     all_atom_sel = "set all_atoms [atomselect %s \" all \" frame %s]" % (trajid, 0)
     evaltcl(all_atom_sel)
-    chains, resnames, resids, names, indices = get_atom_selection_properties("all_atoms")
+    chains, resnames, resids, names, elements, indices = get_atom_selection_properties("all_atoms")
     evaltcl('$all_atoms delete')
 
     # Generate mapping
-    index_to_label = {}
+    index_to_atom = {}
     for idx, index in enumerate(indices):
         chain = chains[idx]
         resname = resnames[idx]
         resid = resids[idx]
         name = names[idx]
-        atom_label = "%s:%s:%s:%s:%s" % (chain, resname, resid, name, index)
+        element = elements[idx]
+        # atom_label = "%s:%s:%s:%s:%s" % (chain, resname, resid, name, index)
         index_key = int(index)
-        index_to_label[index_key] = atom_label
+        # index_to_atom[index_key] = atom_label
+        index_to_atom[index_key] = Atom(int(index_key), chain, resname, int(resid), name, element)
 
     molecule.delete(trajid)
-    return index_to_label
+    return index_to_atom
 
 
 # def get_selection_atoms(traj_frag_molid, frame_idx, selection_id):
@@ -246,6 +265,7 @@ def get_selection_indices(traj_frag_molid, frame_idx, selection_id):
     protein_selection_indices = get_atom_selection_indices("selection_id")
     evaltcl('$selection_id delete')
     return protein_selection_indices
+
 
 def get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
     """
@@ -646,6 +666,44 @@ def get_atom_label(traj_frag_molid, frame_idx, index):
     return atom_label
 
 
+# def parse_contacts(contact_string):
+#     """
+#     Parameters
+#     ----------
+#     contact_string: string
+#         Output from measure contacts function {indices} {indices}
+#
+#     Returns
+#     -------
+#     contact_index_pairs: list of tuples
+#         List of index int pairs
+#     """
+#     contact_index_pairs = []
+#
+#     # Handle case where only one pair of atoms form contacts
+#     if "} {" not in contact_string:
+#         # print("CASE1: "+contact_string)
+#         atom1_index, atom2_index = map(int, contact_string.split(" "))
+#         contact_index_pairs.append((atom1_index, atom2_index))
+#     else:
+#         # print("CASE2: "+contact_string)
+#         contacts_list = contact_string.split("} {")
+#         atom1_list_str = contacts_list[0].strip("{}")
+#         atom2_list_str = contacts_list[1].strip("{}")
+#         if atom1_list_str == "" or atom2_list_str == "":
+#             return []
+#
+#         atom1_list = list(map(int, atom1_list_str.split(" ")))
+#         atom2_list = list(map(int, atom2_list_str.split(" ")))
+#
+#         for idx in range(len(atom1_list)):
+#             atom1_index = atom1_list[idx]
+#             atom2_index = atom2_list[idx]
+#             contact_index_pairs.append((atom1_index, atom2_index))
+#
+#     return contact_index_pairs
+
+
 def parse_contacts(contact_string):
     """
     Parameters
@@ -658,28 +716,9 @@ def parse_contacts(contact_string):
     contact_index_pairs: list of tuples
         List of index int pairs
     """
-    contact_index_pairs = []
-
-    # Handle case where only one pair of atoms form contacts
-    if "} {" not in contact_string:
-        atom1_index, atom2_index = map(int, contact_string.split(" "))
-        contact_index_pairs.append((atom1_index, atom2_index))
-    else:
-        contacts_list = contact_string.split("} {")
-        atom1_list_str = contacts_list[0].strip("{}")
-        atom2_list_str = contacts_list[1].strip("{}")
-        if atom1_list_str == "" or atom2_list_str == "":
-            return []
-
-        atom1_list = list(map(int, atom1_list_str.split(" ")))
-        atom2_list = list(map(int, atom2_list_str.split(" ")))
-
-        for idx in range(len(atom1_list)):
-            atom1_index = atom1_list[idx]
-            atom2_index = atom2_list[idx]
-            contact_index_pairs.append((atom1_index, atom2_index))
-
-    return contact_index_pairs
+    atom_indices = [int(index) for index in int_pattern.findall(contact_string)]
+    half = len(atom_indices) // 2
+    return zip(atom_indices[0:half], atom_indices[half:])
 
 
 # Geometry Tools
@@ -702,6 +741,7 @@ def get_coord(traj_frag_molid, frame_idx, atom_label):
     """
     index = atom_label.split(":")[-1]
     evaltcl("set sel [atomselect %s \" index %s \" frame %s]" % (traj_frag_molid, index, frame_idx))
+    # coord = np.array(list(map(float, float_pattern.findall(evaltcl("$sel get {x y z}")))))
     x = float(evaltcl("$sel get x"))
     y = float(evaltcl("$sel get y"))
     z = float(evaltcl("$sel get z"))

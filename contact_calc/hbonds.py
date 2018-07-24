@@ -146,7 +146,7 @@ def calc_donor_acceptor_pairs(traj_frag_molid, frame_idx, solvent_resn, sele_id,
     return donors, acceptors
 
 
-def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_resn,
+def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_atom, solvent_resn,
                            sele_id, sele_id2,
                            sele1_atoms, sele2_atoms, ligand=None,
                            HBOND_CUTOFF_DISTANCE=3.5, HBOND_CUTOFF_ANGLE=70, HBOND_RES_DIFF=0):
@@ -159,6 +159,8 @@ def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_r
         Specifies which trajectory fragment in VMD to perform computations upon
     frame_idx: int
         Specify frame index with respect to the smaller trajectory fragment
+    index_to_atom: dict
+        Maps VMD atom index to Atom
     solvent_resn: string, default = TIP3
         Denotes the resname of solvent in simulation
     sele_id: string, default = None
@@ -171,13 +173,13 @@ def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_r
         List of atom label strings for all atoms in selection 2
     ligand: list of string
         Residue names of ligands
-    HBOND_CUTOFF_DISTANCE: float, default = 3.5 Angstroms
-    HBOND_CUTOFF_ANGLE: float, default = 70 degrees
-    HBOND_RES_DIFF: int, default = 0 for simulation, 1 for structures
+    HBOND_CUTOFF_DISTANCE: float
+    HBOND_CUTOFF_ANGLE: float
+    HBOND_RES_DIFF: int
 
     Return
     ------
-    hbonds: list of tuples, [(frame_idx, atom1_label, atom2_label, itype), ...]
+    list of tuples, [(frame_idx, atom1_label, atom2_label, itype), ...]
     """
     itype = "hb"
     if ligand:
@@ -193,8 +195,8 @@ def compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_label, solvent_r
     hbonds = []
     for idx, donor in enumerate(donors):
         acceptor = acceptors[idx]
-        donor_label, acceptor_label = index_to_label[donor], index_to_label[acceptor]
-        hbonds.append([frame_idx, donor_label, acceptor_label, itype])
+        donor, acceptor = index_to_atom[donor], index_to_atom[acceptor]
+        hbonds.append([frame_idx, donor.get_label(), acceptor.get_label(), itype])
 
     # Perform post processing on hbonds list to stratify into different subtypes
     if itype == "hb":
