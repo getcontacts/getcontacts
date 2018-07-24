@@ -30,29 +30,44 @@ ALPHA_CARBON_DIST_CUTOFF = 10.0  # Angstroms
 SOFT_VDW_CUTOFF = 5.0  # Angstroms
 
 # http://periodictable.com/Properties/A/VanDerWaalsRadius.v.html
+# https://www.webelements.com/iron/atom_sizes.html (for metals)
 ATOM_RADIUS = {'H': 1.20,
                'C': 1.70,
                'N': 1.55,
                'O': 1.52,
-               'S': 1.80,
-               'P': 1.80, 
-               'K': 2.75, 
+               'F': 1.47,
+               'LI': 1.82,
                'NA': 2.27,
                'MG': 1.73,
-               'LI': 1.82, 
-               'F': 1.47,
-               'CL': 1.75}
+               'AL': 1.84,
+               'P': 1.80,
+               'S': 1.80,
+               'CL': 1.75,
+               'K': 2.75,
+               'CA': 2.31,
+               'CR': 2.45,
+               'MN': 2.05,
+               'FE': 2.44,
+               'CO': 2.40,
+               'NI': 2.40,
+               'CU': 2.38,
+               'ZN': 2.39,
+               'BR': 1.85, 
+               'I': 1.98
+               }
 
 ##############################################################################
 # Functions
 ##############################################################################
 
-def infer_element(atom_name):
+def infer_element(resname, atom_name):
     """
     Infer the element of an atom based on atom name 
 
     Parameters
     ----------
+    resname: string
+        Residue name as specified in topology
     atom_name: string 
         Atom name as specified in topology
 
@@ -66,20 +81,22 @@ def infer_element(atom_name):
     if(len(atom_name) == 1):
         return atom_name
 
-    # Otherwise default element is carbon
-    element = "C" 
-
     # Consider both single and double letter element names
     cand_elem1 = atom_name[0:1]
     cand_elem2 = atom_name[0:2]
 
     # If single letter matches element dictionary
     if(cand_elem1 in ATOM_RADIUS and cand_elem2 not in ATOM_RADIUS):
-        element = cand_elem1
+        return cand_elem1
     if(cand_elem2 in ATOM_RADIUS):
-        element = cand_elem2
+        # Special ambiguous case where CA can be either calcium or alpha carbon
+        if(cand_elem2 == "CA"):
+            if(resname[0:2] != "CA"):
+                return "C"
+        return cand_elem2
 
-    return element
+    # Otherwise default element is carbon
+    return "C"
 
 
 def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sele_id2,
@@ -146,6 +163,8 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sel
 
         chain1 = atom1_label_split[0]
         chain2 = atom2_label_split[0]
+        resname1 = atom1_label_split[1]
+        resname2 = atom2_label_split[1]
         resi1 = int(atom1_label_split[2])
         resi2 = int(atom2_label_split[2])
         if chain1 == chain2 and abs(resi1-resi2) < VDW_RES_DIFF:
@@ -154,9 +173,11 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_label, sele_id, sel
         # Perform distance cutoff with atom indices
         distance = compute_distance(traj_frag_molid, frame_idx, atom1_index, atom2_index)
 
-        # Infer element 
-        element1 = infer_element(atom1_label_split[3])
-        element2 = infer_element(atom2_label_split[3])
+        # Infer element
+        atom_name1 = atom1_label_split[3]
+        atom_name2 = atom2_label_split[3]
+        element1 = infer_element(resname1, atom_name1)
+        element2 = infer_element(resname2, atom_name2)
 
         vanderwaal_cutoff = ATOM_RADIUS[element1] + ATOM_RADIUS[element2] + VDW_EPSILON
         if distance < vanderwaal_cutoff:
