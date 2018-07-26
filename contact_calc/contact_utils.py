@@ -462,6 +462,50 @@ def calc_water_to_residues_map(water_hbonds, solvent_resn):
     return frame_idx, water_to_residues, solvent_bridges
 
 
+def configure_solv(top, traj, solvent_resn):
+    """
+    Detects the solvent residue name and creates a corresponding VMD selection macro called 'solv'. Will print a warning
+    if no solvent molecule could be located.
+
+    Parameters
+    ----------
+    top: Topology
+        In .pdb or .mae format
+    traj: Trajectory
+        In .nc or .dcd format
+    solvent_resn: str
+        The command-line residue name for solvent. If empty or None, attempt to determine solvent resname
+
+    Returns
+    -------
+    str
+        If `solvent_resn` is specified it will be returned as is. If not the residue name of the auto-detected solvent
+        is returned
+    """
+    # Set up custom water selection
+    if solvent_resn:
+        evaltcl("atomselect macro solv \" resname " + solvent_resn + " \"")
+        return solvent_resn
+    else:
+        solv_resnames = set("H2O HH0 OHH HOH OH2 SOL WAT TIP TIP2 TIP3 TIP4 T3P".split())
+        traj_frag_molid = load_traj(top, traj, 0, 1, 1)
+        evaltcl("set all_atoms [atomselect %s \" all \"]" % traj_frag_molid)
+        all_resn = set(evaltcl("$all_atoms get resname").split())
+        solv_resnames = solv_resnames & all_resn
+        evaltcl("$all_atoms delete")
+        molecule.delete(traj_frag_molid)
+
+        if not solv_resnames:
+            print("Couldn't identify any water residue names. Consider specifying manually using --solv")
+            evaltcl("atomselect macro solv \" none \"")
+            return ""
+        else:
+            solvent_resn = " ".join(solv_resnames)
+            print("Identified the following residue names as waters: " + solvent_resn)
+            evaltcl("atomselect macro solv \" (resname " + solvent_resn + ") \"")
+            return solvent_resn
+
+
 # def compute_distance(molid, frame_idx, atom1_label, atom2_label):
 #     """
 #     Compute distance between two atoms in a specified frame of simulation
