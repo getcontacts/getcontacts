@@ -34,8 +34,8 @@ class TestGetContactTicc(unittest.TestCase):
         for output_file in ticc_output:
             self.assertTrue(os.path.exists(output_file))
 
-        # for output_file in ticc_output:
-        #     os.remove(output_file)
+        for output_file in ticc_output:
+            os.remove(output_file)
         os.remove(contact_file)
 
 
