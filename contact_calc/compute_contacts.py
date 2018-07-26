@@ -266,7 +266,29 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         else:
             contact_types += [itype]
 
+    # Set up custom water selection
+    if solvent_resn:
+        evaltcl("atomselect macro solv \" resname " + solvent_resn + " \"")
+    else:
+        solv_resnames = set("H2O HH0 OHH HOH OH2 SOL WAT TIP TIP2 TIP3 TIP4 T3P".split())
+        traj_frag_molid = load_traj(top, traj, 0, 1, 1)
+        evaltcl("set all_atoms [atomselect %s \" all \"]" % traj_frag_molid)
+        all_resn = set(evaltcl("$all_atoms get resname").split())
+        solv_resnames = solv_resnames & all_resn
+        evaltcl("$all_atoms delete")
+        molecule.delete(traj_frag_molid)
+
+        if not solv_resnames:
+            print("Couldn't identify any water residue names. Consider specifying manually using --solv")
+            evaltcl("atomselect macro solv \" none \"")
+        else:
+            solvent_resn = " ".join(solv_resnames)
+            print("Identified the following residue names as waters: " + solvent_resn)
+            evaltcl("atomselect macro solv \" (resname " + solvent_resn + ") \"")
+
+    # index_to_label = gen_index_to_atom_label(top, traj)
     index_to_atom = gen_index_to_atom(top, traj)
+
     sim_length = simulation_length(top, traj)
 
     # Handles dual selection

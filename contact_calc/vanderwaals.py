@@ -73,9 +73,9 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele
     sel1 = "" if sele_id is None else "and (%s) " % (sele_id)
     sel2 = "" if sele_id2 is None else "and (%s) " % (sele_id2)
     custom_lig = "" if not ligands else "or (resname " + (" ".join(ligands)) + ") "
-    evaltcl("set vdw_atoms1 [atomselect %s \" noh and ( protein or (hetero and not water and not lipid) %s) %s\" "
+    evaltcl("set vdw_atoms1 [atomselect %s \" noh and ( protein or (hetero and not solv and not lipid) %s) %s\" "
             "frame %s]" % (traj_frag_molid, custom_lig, sel1, frame_idx))
-    evaltcl("set vdw_atoms2 [atomselect %s \" noh and ( protein or (hetero and not water and not lipid) %s) %s\" "
+    evaltcl("set vdw_atoms2 [atomselect %s \" noh and ( protein or (hetero and not solv and not lipid) %s) %s\" "
             "frame %s]" % (traj_frag_molid, custom_lig, sel2, frame_idx))
 
     if sel2 == "":

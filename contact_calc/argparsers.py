@@ -52,8 +52,8 @@ def build_getcontact_parser(program_description, trajectory):
     optional_group = parser.add_argument_group("Optional arguments")
     optional_group.add_argument("-h", "--help", action="help", default=argparse.SUPPRESS,
                                 help="show this help message and exit.")
-    optional_group.add_argument("--solv", type=str, metavar="SOLVNAME", default="TIP3",
-                                help="resname of solvent molecule")
+    optional_group.add_argument("--solv", type=str, metavar="SOLVNAME", default="",
+                                help="resname(s) of solvent molecule")
     optional_group.add_argument("--sele", type=str, metavar="VMDSEL", default=None,
                                 help="atom selection 1 query in VMD")
     optional_group.add_argument("--sele2", type=str, metavar="VMDSEL", default=None,
@@ -101,7 +101,7 @@ def build_getcontact_parser(program_description, trajectory):
                                       "vector between the two aromatic centroids [default = 45 degrees]")
     geometric_group.add_argument("--hbond_cutoff_dist", type=float, metavar="FLOAT", default=3.5,
                                  help="cutoff for distance between donor and acceptor atoms [default = 3.5 angstroms]")
-    if(trajectory):
+    if trajectory:
         geometric_group.add_argument("--hbond_cutoff_ang", type=float, metavar="FLOAT", default=70,
                                  help="cutoff for angle between donor hydrogen acceptor [default = 70 degrees]")
         geometric_group.add_argument("--hbond_res_diff", type=int, metavar="INT", default=0,
