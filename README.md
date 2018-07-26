@@ -154,7 +154,7 @@ Optional Arguments:
         [default = "protein"]
     --sele2 STRING
         Second VMD selection query to compute contacts between two regions of the protein
-        [defaukt = None]
+        [default = None]
     --solv STRING 
         Solvent identifier in simulation [default = "TIP3"]
 
