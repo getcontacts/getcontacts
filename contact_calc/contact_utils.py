@@ -465,7 +465,7 @@ def calc_water_to_residues_map(water_hbonds, solvent_resn):
 def configure_solv(top, traj, solvent_resn):
     """
     Detects the solvent residue name and creates a corresponding VMD selection macro called 'solv'. Will print a warning
-    if no solvent molecule could be located.
+    if no solvent molecule could be located and returns 'HOH'.
 
     Parameters
     ----------
@@ -498,7 +498,7 @@ def configure_solv(top, traj, solvent_resn):
         if not solv_resnames:
             print("Couldn't identify any water residue names. Consider specifying manually using --solv")
             evaltcl("atomselect macro solv \" none \"")
-            return ""
+            return "HOH"
         else:
             solvent_resn = " ".join(solv_resnames)
             print("Identified the following residue names as waters: " + solvent_resn)
