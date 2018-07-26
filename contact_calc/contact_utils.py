@@ -247,6 +247,7 @@ def get_selection_indices(traj_frag_molid, frame_idx, selection_id):
     evaltcl('$selection_id delete')
     return protein_selection_indices
 
+
 def get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
     """
     Get list of anion atoms that can form salt bridges
