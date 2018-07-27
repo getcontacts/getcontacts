@@ -480,6 +480,7 @@ def compute_distance(molid, frame_idx, atom1_index, atom2_index):
     distance = float(evaltcl("measure bond {%s %s} molid %s frame %s" % (atom1_index, atom2_index, molid, frame_idx)))
     return distance
 
+
 def compute_angle(molid, frame_idx, atom1, atom2, atom3):
     """
     Compute distance between two atoms in a specified frame of simulation

@@ -106,8 +106,7 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, geom_criteria, so
         frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2,
                                              sele1_atoms, sele2_atoms, geom_criteria)
     if "vdw" in ITYPES:
-        frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2,
-                                              VDW_EPSILON, VDW_RES_DIFF)
+        frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, geom_criteria)
     if "hb" in ITYPES:
         frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_atom, solvent_resn,
                                                  sele1, sele2, sele1_atoms, sele2_atoms, None,
