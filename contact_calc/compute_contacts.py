@@ -40,25 +40,25 @@ TRAJ_FRAG_SIZE = 100
 ##############################################################################
 
 
-def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, geom_criteria, solvent_resn, sele1, sele2,
+def compute_frame_contacts(molid, frame, ITYPES, geom_criteria, solvent_resn, ligand_resn, sele1, sele2,
                            sele1_atoms, sele2_atoms, index_to_atom):
     """
     Computes each of the specified non-covalent interaction type for a single frame
 
     Parameters
     ----------
-    traj_frag_molid: int
+    molid: int
         Identifier to simulation fragment in VMD
     frag_idx: int
         Trajectory fragment index for worker to keep track of
-    frame_idx: int
+    frame: int
         Frame number to query
     ITYPES: list
         Denotes the list of non-covalent interaction types to compute contacts for 
     geom_criteria: dict
         Dictionary containing the cutoff values for all geometric criteria
-    solvent_resn: string, default = TIP3
-        Denotes the resname of solvent in simulation
+    solvent_resn: set
+        Resname(s) of solvent in simulation
     sele1: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele2: string, default = None
@@ -96,34 +96,29 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, geom_criteria, so
 
     frame_contacts = []
     if "sb" in ITYPES:
-        frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, geom_criteria)
+        frame_contacts += compute_salt_bridges(molid, frame, index_to_atom, sele1, sele2, geom_criteria)
     if "pc" in ITYPES:
-        frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, geom_criteria)
+        frame_contacts += compute_pi_cation(molid, frame, index_to_atom, sele1, sele2, geom_criteria)
     if "ps" in ITYPES:
-        frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2,
+        frame_contacts += compute_pi_stacking(molid, frame, index_to_atom, sele1, sele2,
                                               sele1_atoms, sele2_atoms, geom_criteria)
     if "ts" in ITYPES:
-        frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2,
+        frame_contacts += compute_t_stacking(molid, frame, index_to_atom, sele1, sele2,
                                              sele1_atoms, sele2_atoms, geom_criteria)
     if "vdw" in ITYPES:
-        frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, geom_criteria)
+        frame_contacts += compute_vanderwaals(molid, frame, index_to_atom, sele1, sele2, geom_criteria)
     if "hb" in ITYPES:
-        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_atom, solvent_resn,
-                                                 sele1, sele2, sele1_atoms, sele2_atoms, None,
-                                                 HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE, HBOND_RES_DIFF)
-    if "lhb" in ITYPES:
-        frame_contacts += compute_hydrogen_bonds(traj_frag_molid, frame_idx, index_to_atom, solvent_resn,
-                                                 sele1, sele2, sele1_atoms, sele2_atoms,
-                                                 HBOND_CUTOFF_DISTANCE, HBOND_CUTOFF_ANGLE)
+        frame_contacts += compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_resn,
+                                                 sele1, sele2, geom_criteria)
     if "hp" in ITYPES:
-        frame_contacts += compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2,
+        frame_contacts += compute_hydrophobics(molid, frame, index_to_atom, sele1, sele2,
                                                VDW_EPSILON, VDW_RES_DIFF)
 
     return frame_contacts
 
 
 def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values, stride,
-                              solvent_resn, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom):
+                              solvent_resn, ligand_resn, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom):
     """ 
     Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
 
@@ -145,8 +140,8 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes,
         Dictionary containing the cutoff values for all geometric criteria
     stride: int, default = 1
         Frequency to skip frames in trajectory
-    solvent_resn: string, default = TIP3
-        Denotes the resname of solvent in simulation
+    solvent_resn: set
+        Resname(s) of solvent in simulation
     sele1: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele2: string, default = None
@@ -173,7 +168,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes,
     for frame_idx in range(num_frag_frames):
         # if frame_idx > 1: break
         fragment_contacts += compute_frame_contacts(traj_frag_molid, frame_idx, itypes, geom_criterion_values,
-                                                    solvent_resn, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom)
+                                                    solvent_resn, ligand_resn, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom)
 
     # Delete trajectory fragment to clear memory
     molecule.delete(traj_frag_molid)
@@ -240,7 +235,8 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
     index_to_atom = gen_index_to_atom(top, traj)
     sim_length = simulation_length(top, traj)
     solvent_resn = configure_solv(top, traj, solvent_resn)
-    configure_lipid(lipid_resn)
+    configure_lipid(top, traj, lipid_resn)
+    ligand_resn = configure_ligand(top, traj, sele1, sele2)
 
     trajid = load_traj(top, traj, 0, 1, 1)
     sele1_atoms = get_selection_indices(trajid, 0, sele1)
@@ -261,7 +257,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         end_frame = beg_frame + (TRAJ_FRAG_SIZE * stride) - 1
         # print(frag_idx, beg_frame, end_frame, stride)
         inputqueue.put((frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values,
-                        stride, solvent_resn, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom))
+                        stride, solvent_resn, ligand_resn, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom))
 
     # Set up result queue for workers to transfer results to the consumer
     resultsqueue = Queue()

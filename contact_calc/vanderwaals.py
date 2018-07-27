@@ -23,9 +23,11 @@ SOFT_VDW_CUTOFF = 0
 
 def update_soft_cutoff(traj_frag_molid, index_to_atom, sele1, sele2, epsilon):
     global SOFT_VDW_CUTOFF
-    all_ids = get_selection_indices(traj_frag_molid, 0, "(%s) or (%s)" % (sele1, sele2))
-    max_vdw = max([index_to_atom[i].vdwradius for i in all_ids])
-    SOFT_VDW_CUTOFF = max_vdw * 2 + epsilon
+    ids1 = get_selection_indices(traj_frag_molid, 0, "%s" % sele1)
+    ids2 = get_selection_indices(traj_frag_molid, 0, "%s" % sele2)
+    max_vdw1 = max([index_to_atom[i].vdwradius for i in ids1])
+    max_vdw2 = max([index_to_atom[i].vdwradius for i in ids2])
+    SOFT_VDW_CUTOFF = max_vdw1 + max_vdw2 + epsilon
 
 
 def compute_vanderwaals(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_criteria):
@@ -59,17 +61,14 @@ def compute_vanderwaals(traj_frag_molid, frame, index_to_atom, sele1, sele2, geo
 
     evaltcl("set vdw_atoms1 [atomselect %s \" noh and (%s)\" frame %s]" % (traj_frag_molid, sele1, frame))
     evaltcl("set vdw_atoms2 [atomselect %s \" noh and (%s)\" frame %s]" % (traj_frag_molid, sele2, frame))
-
-    contacts = evaltcl("measure contacts %s $vdw_atoms1 $vdw_atoms2" % SOFT_VDW_CUTOFF)
-
-    contact_index_pairs = parse_contacts(contacts)
+    contact_pairs = parse_contacts(evaltcl("measure contacts %s $vdw_atoms1 $vdw_atoms2" % SOFT_VDW_CUTOFF))
     evaltcl("$vdw_atoms1 delete")
     evaltcl("$vdw_atoms2 delete")
-    
-    vanderwaals = []
-    for atom1_index, atom2_index in contact_index_pairs:
 
-        # Convert to atom label
+    vanderwaals = []
+    for atom1_index, atom2_index in contact_pairs:
+
+        # Convert to atom
         atom1, atom2 = index_to_atom[atom1_index], index_to_atom[atom2_index]
 
         if atom1.chain == atom2.chain and abs(atom1.resid - atom2.resid) < res_diff:
@@ -78,7 +77,6 @@ def compute_vanderwaals(traj_frag_molid, frame, index_to_atom, sele1, sele2, geo
         # Perform distance cutoff with atom indices
         distance = compute_distance(traj_frag_molid, frame, atom1_index, atom2_index)
 
-        # vanderwaal_cutoff = ATOM_RADIUS[element1] + ATOM_RADIUS[element2] + VDW_EPSILON
         vanderwaal_cutoff = atom1.vdwradius + atom2.vdwradius + epsilon
         if distance < vanderwaal_cutoff:
             vanderwaals.append([frame, "vdw", atom1.get_label(), atom2.get_label()])

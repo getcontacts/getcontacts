@@ -391,28 +391,28 @@ def configure_solv(top, traj, solvent_resn):
     # Set up custom water selection
     if solvent_resn:
         evaltcl("atomselect macro solv \" resname " + solvent_resn + " \"")
-        return solvent_resn
+        return set(solvent_resn.split())
     else:
         solv_resnames = set("H2O HH0 OHH HOH OH2 SOL WAT TIP TIP2 TIP3 TIP4 T3P".split())
         traj_frag_molid = load_traj(top, traj, 0, 1, 1)
-        evaltcl("set all_atoms [atomselect %s \" all \"]" % traj_frag_molid)
+        evaltcl("set all_atoms [atomselect %s \" all \" frame 0]" % traj_frag_molid)
         all_resn = set(evaltcl("$all_atoms get resname").split())
         solv_resnames = solv_resnames & all_resn
         evaltcl("$all_atoms delete")
         molecule.delete(traj_frag_molid)
 
         if not solv_resnames:
-            print("Couldn't identify any water residue names. Consider specifying manually using --solv")
+            print("No waters detected (manually specify using --solv)")
             evaltcl("atomselect macro solv \" none \"")
-            return "HOH"
+            return set(["HOH"])
         else:
             solvent_resn = " ".join(solv_resnames)
             print("Identified the following residue names as waters: " + solvent_resn)
             evaltcl("atomselect macro solv \" (resname " + solvent_resn + ") \"")
-            return solvent_resn
+            return solv_resnames
 
 
-def configure_lipid(lipid_resn):
+def configure_lipid(top, traj, lipid_resn):
     """
     Detects the lipid residue name and creates a corresponding VMD selection macro called 'lipid'.
 
@@ -427,9 +427,59 @@ def configure_lipid(lipid_resn):
     """
     if lipid_resn:
         evaltcl("atomselect macro lipid \" resname " + lipid_resn + " \"")
-    # else:
-    #     # If we need to expand default definition of lipids uncomment this block and add to this list
-    #     evaltcl("atomselect macro lipid \" (resname DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE) \"")
+        return set(lipid_resn.split())
+    else:
+        # If we need to expand default definition of lipids uncomment this line and add to this list
+        # evaltcl("atomselect macro lipid \" (resname DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE) \"")
+        # return set("DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE".split())
+
+        lipid_resnames = set("DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE".split())
+        molid = load_traj(top, traj, 0, 1, 1)
+        evaltcl("set all_atoms [atomselect %s \" all \" frame 0]" % molid)
+        all_resn = set(evaltcl("$all_atoms get resname").split())
+        lipid_resnames = lipid_resnames & all_resn
+        evaltcl("$all_atoms delete")
+        molecule.delete(molid)
+
+        if not lipid_resnames:
+            print("No lipids detected (manually specify using --lipids)")
+        else:
+            lipid_resn = " ".join(lipid_resnames)
+            print("Identified the following residue names as lipids: " + lipid_resn)
+            evaltcl("atomselect macro lipid \" (resname " + lipid_resn + ") \"")
+        return lipid_resnames
+
+
+def configure_ligand(top, traj, sele1, sele2):
+    """
+    Detects the lipid residue name and creates a corresponding VMD selection macro called 'lipid'.
+
+    Parameters
+    ----------
+    top: Topology
+        In .pdb or .mae format
+    traj: Trajectory
+        In .nc or .dcd format
+    sele1: str
+        Selection 1
+    sele2: str
+        Selection 2
+    """
+    molid = load_traj(top, traj, 0, 1, 1)
+    evaltcl("set restatoms [atomselect %s \" (%s or %s) and not (lipid or solv or protein or nucleic) \" frame 0]" %
+            (molid, sele1, sele2))
+    ligand_resnames = set(evaltcl("$restatoms get resname").split())
+    evaltcl("$restatoms delete")
+    molecule.delete(molid)
+
+    if not ligand_resnames:
+        print("No ligands detected (manually specify using --sele or --sele2)")
+    else:
+        ligand_resn = " ".join(ligand_resnames)
+        print("Identified the following residue names as ligands: " + ligand_resn)
+        evaltcl("atomselect macro ligand \" (resname " + ligand_resn + ") \"")
+
+    return ligand_resnames
 
 
 # def compute_distance(molid, frame_idx, atom1_label, atom2_label):
