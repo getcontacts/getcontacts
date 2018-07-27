@@ -47,24 +47,23 @@ Interaction types are denoted by the following abbreviations:
 
 Examples:
 
-Compute salt bridges and hydrogen bonds for residues 100 to 160:
+Compute salt bridges and hydrogen bonds for residues 100 to 160 and a ligand:
     get_dynamic_contacts.py --topology TOP.pdb \\
                             --trajectory TRAJ.nc \\
                             --output output.tsv \\
                             --cores 12 \\
                             --solv IP3 \\
-                            --sele "chain A and resid 100 to 160" \\
-                            --ligand EJ4 \\
+                            --sele "(chain A and resid 100 to 160) or resname EJ4" \\
                             --itypes sb hb lhb
 
-Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
+Pi-cation, pi-stacking, and vanderwaals contacts of an entire trajectory:
     get_dynamic_contacts.py --topology TOP.psf \\
                             --trajectory TRAJ.dcd \\
                             --output output.tsv \\
                             --cores 6 \\
                             --itypes pc ps vdw
 
-Salt bridges and hydrogen bonds in the entire protein with modified distance cutoffs:
+Salt bridges and hydrogen bonds in the entire trajectory with modified distance cutoffs:
     get_dynamic_contacts.py --topology TOP.mae \\
                             --trajectory TRAJ.dcd \\
                             --output output.tsv \\

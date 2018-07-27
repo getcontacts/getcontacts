@@ -47,12 +47,11 @@ Interaction types are denoted by the following abbreviations:
 
 Examples:
 
-Compute salt bridges and hydrogen bonds for residues 100 to 160:
+Compute salt bridges and hydrogen bonds for residues 100 to 160 and a ligand:
     get_static_contacts.py --structure struc.pdb \\
                            --output output.tsv \\
                            --solv IP3 \\
-                           --sele "chain A and resid 100 to 160" \\
-                           --ligand EJ4 \\
+                           --sele "(chain A and resid 100 to 160) or resname EJ4" \\
                            --itypes sb hb lhb
 
 Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
@@ -73,7 +72,7 @@ from contact_calc.compute_contacts import *
 
 
 def process_geometric_criterion_args(args):
-    geom_criterion_values = {
+    return {
         "SALT_BRIDGE_CUTOFF_DISTANCE": args.sb_cutoff_dist,
         "PI_CATION_CUTOFF_DISTANCE": args.pc_cutoff_dist,
         "PI_CATION_CUTOFF_ANGLE": args.pc_cutoff_ang,
@@ -101,18 +100,18 @@ def main(argv=None):
     traj = args.structure
     output = args.output
     cores = 1
-    ligand = args.ligand
     solv = args.solv
-    sele = args.sele
+    lipids = args.lipids
+    sele1 = args.sele
     sele2 = args.sele2
     beg = 0
     end = 0
     stride = 1
-    geom_criterion_values = process_geometric_criterion_args(args)
+    geom_criteria = process_geometric_criterion_args(args)
 
-    # If user mistakenly includes only sele2
-    if sele is None and sele2 is not None:
-        sele, sele2 = sele2, sele
+    # If sele2 is None set it to sele1
+    if sele2 is None:
+        sele2 = sele1
 
     # Check interaction types
     all_itypes = ["hp", "sb", "pc", "ps", "ts", "vdw", "hb", "lhb"]
@@ -125,28 +124,18 @@ def main(argv=None):
 
         itypes = args.itypes
 
-    # Check that ligands are correctly specified
-    if ligand and 'hb' in itypes and 'lhb' not in itypes:
-        print("[*** Warning ***] --ligand and 'hb' is specified but not 'lhb'. Will include ligand hbonds in output.\n")
-        itypes += ['lhb']
-    if not ligand and 'lhb' in itypes:
-        print("[*** Warning ***] 'lhb' interactions indicated, but no --ligand residue names are indicated.\n")
-
     # Begin computation
     tic = datetime.datetime.now()
-    compute_contacts(top, traj, output, itypes, geom_criterion_values, cores, beg, end, stride, solv, sele, sele2, ligand)
+    compute_contacts(top, traj, output, itypes, geom_criteria, cores, beg, end, stride, solv, lipids, sele1, sele2)
     toc = datetime.datetime.now()
     print("\nTotal computation time: " + str((toc-tic).total_seconds()) + " seconds")
 
     print("topology=%s" % top)
     print("trajectory=%s" % traj)
     print("output=%s" % output)
-    print("cores=%s" % cores)
-    print("ligand=%s" % ",".join(ligand))
     print("solv=%s" % solv)
-    print("sele=%s" % sele)
+    print("sele=%s" % sele1)
     print("sele2=%s" % sele2)
-    print("stride=%s" % stride)
 
 
 if __name__ == "__main__":

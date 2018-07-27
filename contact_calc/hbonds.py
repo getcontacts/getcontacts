@@ -14,10 +14,6 @@
 # limitations under the License.                                           #
 ############################################################################
 
-##############################################################################
-# Imports
-##############################################################################
-
 from collections import defaultdict
 from itertools import product
 from vmd import *
@@ -25,51 +21,9 @@ from .contact_utils import *
 
 __all__ = ['compute_hydrogen_bonds']
 
-WATER_SHELL_RAD = 3.5
+WATER_SHELL_RAD = 3.5  # Experimentally determined to be a low value that doesn't preclude any bridges
 
 int_pattern = re.compile(r'\d+')
-
-
-def extract_donor_acceptor(hbond_string):
-    """
-    Extract donors and acceptors from a vmd hbond output
-
-    Parameters
-    ----------
-    hbond_string: str
-        The output of vmds `measure hbonds` command; three lists indicating indices of donors, acceptors and hydrogens
-        respectively. For example: "{106 91} {91 55} {107 92}"
-
-    Returns
-    -------
-    set of (int, int)
-        Set of donor and acceptor indices. For example: `set([(106, 91), (91, 55)])`
-    """
-    atom_indices = [int(index) for index in int_pattern.findall(hbond_string)]
-    third = len(atom_indices) // 3
-    return set(zip(atom_indices[0:third], atom_indices[third:third*2]))
-
-
-def filter_dual_selection(sele1_atoms, sele2_atoms, idx1, idx2):
-    """
-    Filter interactions between selection 1 and selection 2
-
-    Parameters
-    ----------
-    sele1_atoms: list
-        List of atom label strings for all atoms in selection 1
-    sele2_atoms: list
-        List of atom label strings for all atoms in selection 2
-    idx1: int
-        Atom index for cation
-    idx2: int
-        Atom index for aromatic atom
-    Returns
-    -------
-    bool
-        True if interaction should be included
-    """
-    return ((idx1 in sele1_atoms) and (idx2 in sele2_atoms)) or ((idx1 in sele2_atoms) and (idx2 in sele1_atoms))
 
 
 def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_resn, sele1, sele2,
@@ -129,6 +83,7 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
     evaltcl("$shell delete")
 
     hbonds = []
+
     # Stratify hbonds within sele1 and sele2
     for d_idx, a_idx in sel_sel:
         d_atom = index_to_atom[d_idx]
@@ -183,8 +138,11 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
         if a_solv:
             water_dict[a_idx].add(d_idx)
 
+    # Iterate over waters with hbonds and stratify water mediated interactions
     for w_idx in water_dict:
         w_atom = index_to_atom[w_idx]
+
+        # Iterate over all pairs of neighbors to w_atom
         for n1, n2 in product(water_dict[w_idx], repeat=2):
             n1_atom = index_to_atom[n1]
             n2_atom = index_to_atom[n2]
@@ -192,6 +150,7 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
             n1_solv = n1_atom.resname in solvent_resn
             n2_solv = n2_atom.resname in solvent_resn
 
+            # If n1 and n2 are both waters, ignore the pair
             if n1_solv and n2_solv:
                 continue
 
@@ -202,12 +161,12 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
 
             n1_lig = n1_atom.resname in ligand_resn
 
+            # If n1 is not water but n2 is, check for extended water-bridges between n1 and neighbors of n2
             if n2_solv:
-                # Check for water bridges between n1 and any neighbor of n2
                 for n2_n in water_dict[n2]:
                     n2_n_atom = index_to_atom[n2_n]
                     if n2_n_atom.resname not in solvent_resn:
-                        # The neighbor of n2 is a water, so check for potential extended water bridges
+                        # This neighbor of n2 is not a water, so check for extended bridge from n1
                         if not filter_dual_selection(sele1_atoms, sele2_atoms, n1, n2_n):
                             continue
                         if n1_atom.chain == n2_n_atom.chain and abs(n1_atom.resid - n2_n_atom.resid) < res_diff:
@@ -221,6 +180,7 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
 
                         hbonds.append([frame, hb_type, n1_atom.get_label(), n2_n_atom.get_label(), w_atom.get_label(), n2_atom.get_label()])
             else:
+                # Both n1 and n2 are non solvent, so check for a regular water-bridge
                 if not filter_dual_selection(sele1_atoms, sele2_atoms, n1, n2):
                     continue
                 if n1_atom.chain == n2_atom.chain and abs(n1_atom.resid - n2_atom.resid) < res_diff:
@@ -236,3 +196,46 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
                 hbonds.append([frame, hb_type, n1_atom.get_label(), n2_atom.get_label(), w_atom.get_label()])
 
     return hbonds
+
+
+def extract_donor_acceptor(hbond_string):
+    """
+    Extract donors and acceptors from a vmd hbond output
+
+    Parameters
+    ----------
+    hbond_string: str
+        The output of vmds `measure hbonds` command; three lists indicating indices of donors, acceptors and hydrogens
+        respectively. For example: "{106 91} {91 55} {107 92}"
+
+    Returns
+    -------
+    set of (int, int)
+        Set of donor and acceptor indices. For example: `set([(106, 91), (91, 55)])`
+    """
+    atom_indices = [int(index) for index in int_pattern.findall(hbond_string)]
+    third = len(atom_indices) // 3
+    return set(zip(atom_indices[0:third], atom_indices[third:third*2]))
+
+
+def filter_dual_selection(sele1_atoms, sele2_atoms, idx1, idx2):
+    """
+    Filter interactions between selection 1 and selection 2
+
+    Parameters
+    ----------
+    sele1_atoms: list
+        List of atom label strings for all atoms in selection 1
+    sele2_atoms: list
+        List of atom label strings for all atoms in selection 2
+    idx1: int
+        Atom index for cation
+    idx2: int
+        Atom index for aromatic atom
+    Returns
+    -------
+    bool
+        True if interaction should be included
+    """
+    return ((idx1 in sele1_atoms) and (idx2 in sele2_atoms)) or ((idx1 in sele2_atoms) and (idx2 in sele1_atoms))
+
