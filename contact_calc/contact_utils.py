@@ -267,7 +267,6 @@ def get_selection_indices(traj_frag_molid, frame_idx, selection_id):
     return protein_selection_indices
 
 
-
 # def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
 #     """
 #     Get list of aromatic atom triplets

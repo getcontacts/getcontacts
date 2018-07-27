@@ -23,6 +23,13 @@ from .contact_utils import *
 
 __all__ = ['compute_pi_stacking', 'compute_t_stacking']
 
+PI_STACK_SOFT_DISTANCE_CUTOFF = 10.0  # angstroms
+T_STACK_SOFT_DISTANCE_CUTOFF = 6.0  # angstroms
+
+aromatic_phe = "((resname PHE) and (name CG CE1 CE2))"
+aromatic_trp = "((resname TRP) and (name CD2 CZ2 CZ3))"
+aromatic_tyr = "((resname TYR) and (name CG CE1 CE2))"
+
 ############################################################################
 # Functions
 ############################################################################
@@ -50,49 +57,13 @@ def filter_dual_selection_aromatic(sele1_atoms, sele2_atoms, aromatic1_index, ar
 
     """
 
-    dual_sel1 = (aromatic1_index in sele1_atoms) and (aromatic2_index in sele2_atoms)
-    if(dual_sel1):
+    if (aromatic1_index in sele1_atoms) and (aromatic2_index in sele2_atoms):
         return False
 
-    dual_sel2 = (aromatic1_index in sele2_atoms) and (aromatic2_index in sele1_atoms)
-    if(dual_sel2):
+    if (aromatic1_index in sele2_atoms) and (aromatic2_index in sele1_atoms):
         return False
 
     return True
-
-
-# def get_aromatic_triplet(traj_frag_molid, frame_idx, aromatic_residue_label, index_to_atom):
-#     """
-#     Given an aromatic residue label return triplet of atoms on the ring
-#
-#     Parameters
-#     ----------
-#     traj_frag_molid: int
-#         Identifier to simulation fragment in VMD
-#     frame_idx: int
-#         Frame number to query
-#     aromatic_residue_label: string
-#         ie "A:PHE:222"
-#     index_to_atom: dict
-#         Maps VMD atom index to Atom
-#
-#     Returns
-#     -------
-#     aromatic_atom_triplet_labels: list of strings
-#         ie ["A:PHE:329:CE1:55228", "A:PHE:329:CE2:55234", "A:PHE:329:CG:55225"]
-#     """
-#
-#     residue_to_atom_names = {"PHE": "CG CE1 CE2", "TRP": "CD2 CZ2 CZ3", "TYR": "CG CE1 CE2"}
-#     chain, resname, resid = aromatic_residue_label.split(":")
-#     evaltcl("set aromatic_atoms [atomselect %s \"(chain %s) and (resname %s) and (resid '%s') and (name %s)\" frame %s]"
-#             % (traj_frag_molid, chain, resname, resid, residue_to_atom_names[resname], frame_idx))
-#     # aromatic_atom_triplet = get_atom_selection_labels("aromatic_atoms")
-#     aromatic_atom_triplet_indices = get_atom_selection_indices("aromatic_atoms")
-#     evaltcl('$aromatic_atoms delete')
-#
-#     # Need aromatic_atom_triplet as list
-#     aromatic_atom_triplet_labels = [index_to_atom[atom_index].get_label() for atom_index in aromatic_atom_triplet_indices]
-#     return aromatic_atom_triplet_labels
 
 
 def get_aromatic_triplet(traj_frag_molid, frame_idx, aatom, index_to_atom):
@@ -120,7 +91,6 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aatom, index_to_atom):
     chain, resname, resid = aatom.chain, aatom.resname, aatom.resid
     evaltcl("set aromatic_atoms [atomselect %s \"(chain %s) and (resname %s) and (resid '%s') and (name %s)\" frame %s]"
             % (traj_frag_molid, chain, resname, resid, residue_to_atom_names[resname], frame_idx))
-    # aromatic_atom_triplet = get_atom_selection_labels("aromatic_atoms")
     aromatic_atom_triplet_indices = get_atom_selection_indices("aromatic_atoms")
     evaltcl('$aromatic_atoms delete')
 
@@ -129,8 +99,8 @@ def get_aromatic_triplet(traj_frag_molid, frame_idx, aatom, index_to_atom):
     return aromatic_atom_triplet_labels
 
 
-def compute_aromatics(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2, sele1_atoms, sele2_atoms, itype,
-                      SOFT_DISTANCE_CUTOFF, DISTANCE_CUTOFF, ANGLE_CUTOFF, PSI_ANGLE_CUTOFF):
+def compute_aromatics(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, sele1_atoms, sele2_atoms, itype,
+                      soft_distance_cutoff, distance_cutoff, angle_cutoff, psi_angle_cutoff):
     """
     Compute aromatic interactions in a frame of simulation
 
@@ -142,9 +112,9 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_i
         Frame number to query
     index_to_atom: dict
         Maps VMD atom index to Atom
-    sele_id: string, default = None
+    sele1: string, default = None
         Compute contacts on subset of atom selection based on VMD query
-    sele_id2: string, default = None
+    sele2: string, default = None
         If second VMD query is specified, then compute contacts between atom selection 1 and 2 
     sele1_atoms: list 
         List of atom label strings for all atoms in selection 1
@@ -152,13 +122,13 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_i
         List of atom label strings for all atoms in selection 2
     itype: string
         Specify which type of aromatics ("ps" or "ts") to compute
-    SOFT_DISTANCE_CUTOFF: float
+    soft_distance_cutoff: float
         Soft distance cutoff to find candidate aromatic pairs
-    DISTANCE_CUTOFF: float
+    distance_cutoff: float
         Cutoff distance between aromatic centers
-    ANGLE_CUTOFF: float
+    angle_cutoff: float
         Cutoff angle for the angle between normal vectors of aromatic planes
-    PSI_ANGLE_CUTOFF: float
+    psi_angle_cutoff: float
         Cutoff angle for how aligned two aromatic planes are
 
     Returns
@@ -169,27 +139,15 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_i
 
     aromatics = []
 
-    if sele_id is None and sele_id2 is None:
-        aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" " \
-                            "((resname PHE) and (name CG CE1 CE2)) or " \
-                            "((resname TRP) and (name CD2 CZ2 CZ3)) or " \
-                            "((resname TYR) and (name CG CE1 CE2)) \" frame %s]" % (traj_frag_molid, frame_idx)
-    elif sele_id is not None and sele_id2 is None:
-        aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" " \
-                            "((resname PHE) and (name CG CE1 CE2) and (%s)) or " \
-                            "((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or " \
-                            "((resname TYR) and (name CG CE1 CE2) and (%s)) \" frame %s]" % \
-                            (traj_frag_molid, sele_id, sele_id, sele_id, frame_idx)
-    elif sele_id is not None and sele_id2 is not None:
-        sele_union = "(%s) or (%s)" % (sele_id, sele_id2)
-        aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" " \
-                            "((resname PHE) and (name CG CE1 CE2) and (%s)) or " \
-                            "((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or " \
-                            "((resname TYR) and (name CG CE1 CE2) and (%s)) \" frame %s]" % \
-                            (traj_frag_molid, sele_union, sele_union, sele_union, frame_idx)
+    sele_union = "(%s) or (%s)" % (sele1, sele2)
+    aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" " \
+                        "((resname PHE) and (name CG CE1 CE2) and (%s)) or " \
+                        "((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or " \
+                        "((resname TYR) and (name CG CE1 CE2) and (%s)) \" frame %s]" % \
+                        (traj_frag_molid, sele_union, sele_union, sele_union, frame_idx)
 
     evaltcl(aromatic_atom_sel)
-    contacts = evaltcl("measure contacts %s $aromatic_atoms" % (SOFT_DISTANCE_CUTOFF))
+    contacts = evaltcl("measure contacts %s $aromatic_atoms" % soft_distance_cutoff)
     evaltcl("$aromatic_atoms delete")
 
     # Calculate set of distinct aromatic candidate pairs that may have pi-stacking
@@ -247,7 +205,7 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_i
         aromatic1_centroid = calc_geom_centroid(arom1_atom1_coord, arom1_atom2_coord, arom1_atom3_coord)
         aromatic2_centroid = calc_geom_centroid(arom2_atom1_coord, arom2_atom2_coord, arom2_atom3_coord)
         aromatic_centers_distance = calc_geom_distance(aromatic1_centroid, aromatic2_centroid)
-        if aromatic_centers_distance > DISTANCE_CUTOFF:
+        if aromatic_centers_distance > distance_cutoff:
             continue
 
         # print(aromatic1_atom_labels, aromatic2_atom_labels)
@@ -258,19 +216,19 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_i
         if itype == "ps":
             aromatic_plane_alignment_angle = min(math.fabs(aromatic_plane_alignment_angle - 0),
                                                  math.fabs(aromatic_plane_alignment_angle - 180))
-            if aromatic_plane_alignment_angle > ANGLE_CUTOFF:
+            if aromatic_plane_alignment_angle > angle_cutoff:
                 continue
         elif itype == "ts":
             aromatic_plane_perpendicular_angle = \
                 math.fabs(calc_angle_between_vectors(aromatic1_normal_vector, aromatic2_normal_vector) - 90)
-            if aromatic_plane_perpendicular_angle > ANGLE_CUTOFF:
+            if aromatic_plane_perpendicular_angle > angle_cutoff:
                 continue
         # print(aromatic1_atom_labels, aromatic2_atom_labels)
         # Psi Angle cutoff
         psi_angle1 = calc_geom_psi_angle(aromatic1_centroid, aromatic2_centroid, aromatic1_normal_vector)
         psi_angle2 = calc_geom_psi_angle(aromatic2_centroid, aromatic1_centroid, aromatic2_normal_vector)
         psi_angle = min(psi_angle1, psi_angle2)
-        if psi_angle > PSI_ANGLE_CUTOFF:
+        if psi_angle > psi_angle_cutoff:
             continue
 
         # print(aromatic1_atom_labels, aromatic2_atom_labels)
@@ -287,8 +245,8 @@ def compute_aromatics(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_i
     return aromatics
 
 
-def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2, sele1_atoms, sele2_atoms,
-                        PI_STACK_CUTOFF_DISTANCE=7.0, PI_STACK_CUTOFF_ANGLE=30, PI_STACK_PSI_ANGLE=45):
+def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, sele1_atoms, sele2_atoms,
+                        geom_criteria):
     """
     Compute pi-stacking interactions in a frame of simulation
 
@@ -300,40 +258,35 @@ def compute_pi_stacking(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele
         Frame number to query
     index_to_atom: dict
         Maps VMD atom index to Atom
-    sele_id: string, default = None
+    sele1: string, default = None
         Compute contacts on subset of atom selection based on VMD query
-    sele_id2: string, default = None
+    sele2: string, default = None
         If second VMD query is specified, then compute contacts between atom selection 1 and 2
     sele1_atoms: list 
         List of atom label strings for all atoms in selection 1
     sele2_atoms: list 
         List of atom label strings for all atoms in selection 2
-    PI_STACK_CUTOFF_DISTANCE: float, default = 7.0 angstroms
-        cutoff for distance between centroids of two aromatic rings
-    PI_STACK_CUTOFF_ANGLE: float, default = 30 degrees
-        cutoff for angle between the normal vectors projecting
-        from each aromatic plane.
-    PI_STACK_PSI_ANGLE: float, default = 45 degrees
-        cutoff for angle between normal vector projecting from
-        aromatic plane 1 and vector between the two aromatic centroids
+    geom_criteria: dict
+        Container for geometric criteria
 
     Returns
     -------
     pi_stacking = list of tuples, [(frame_index, itype, atom1_label, atom2_label), ...]
         itype = "ps"
     """
-
-    PI_STACK_SOFT_DISTANCE_CUTOFF = 10.0  # angstroms
+    cutoff_distance = geom_criteria['PI_STACK_CUTOFF_DISTANCE']
+    cutoff_angle = geom_criteria['PI_STACK_CUTOFF_ANGLE']
+    psi_angle = geom_criteria['PI_STACK_PSI_ANGLE']
     pi_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_atom,
-                                    sele_id, sele_id2,
+                                    sele1, sele2,
                                     sele1_atoms, sele2_atoms, "ps",
-                                    PI_STACK_SOFT_DISTANCE_CUTOFF, PI_STACK_CUTOFF_DISTANCE,
-                                    PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
+                                    PI_STACK_SOFT_DISTANCE_CUTOFF, cutoff_distance,
+                                    cutoff_angle, psi_angle)
     return pi_stacking
 
 
-def compute_t_stacking(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2, sele1_atoms, sele2_atoms,
-                       T_STACK_CUTOFF_DISTANCE=5.0, T_STACK_CUTOFF_ANGLE=30, T_STACK_PSI_ANGLE=45):
+def compute_t_stacking(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, sele1_atoms, sele2_atoms,
+                       geom_criteria):
     """
     Compute t-stacking interactions in a frame of simulation
 
@@ -345,36 +298,31 @@ def compute_t_stacking(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_
         Frame number to query
     index_to_atom: dict
         Maps VMD atom index to Atom
-    sele_id: string, default = None
+    sele1: string, default = None
         Compute contacts on subset of atom selection based on VMD query
-    sele_id2: string, default = None
+    sele2: string, default = None
         If second VMD query is specified, then compute contacts between atom selection 1 and 2
     sele1_atoms: list 
         List of atom label strings for all atoms in selection 1
     sele2_atoms: list 
         List of atom label strings for all atoms in selection 2
-    T_STACK_CUTOFF_DISTANCE: float, default = 5.0 angstroms
-        cutoff for distance between centroids of two aromatic rings
-    T_STACK_CUTOFF_ANGLE: float, default = 30 degrees
-        cutoff for angle between the normal vectors projecting
-        from each aromatic plane minus 90 degrees
-    T_STACK_PSI_ANGLE: float, default = 45 degrees
-        cutoff for angle between normal vector projecting from
-        aromatic plane 1 and vector between the two aromatic
-        centroids
+    geom_criteria: dict
+        Container for geometric criteria
 
     Returns
     -------
     t_stacking = list of tuples, [(frame_index, itype, atom1_label, atom2_label), ...]
         itype = "ts"
     """
+    cutoff_distance = geom_criteria['T_STACK_CUTOFF_DISTANCE']
+    cutoff_angle = geom_criteria['T_STACK_CUTOFF_ANGLE']
+    psi_angle = geom_criteria['T_STACK_PSI_ANGLE']
 
-    T_STACK_SOFT_DISTANCE_CUTOFF = 6.0  # angstroms
     t_stacking = compute_aromatics(traj_frag_molid, frame_idx, index_to_atom,
-                                   sele_id, sele_id2,
+                                   sele1, sele2,
                                    sele1_atoms, sele2_atoms, "ts",
-                                   T_STACK_SOFT_DISTANCE_CUTOFF, T_STACK_CUTOFF_DISTANCE,
-                                   T_STACK_CUTOFF_ANGLE, T_STACK_PSI_ANGLE)
+                                   T_STACK_SOFT_DISTANCE_CUTOFF, cutoff_distance,
+                                   cutoff_angle, psi_angle)
     return t_stacking
 
 

@@ -45,10 +45,6 @@ def compute_pi_cation(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_
         Compute contacts on subset of atom selection based on VMD query
     sele2: string, default = None
         If second VMD query is specified, then compute contacts between atom selection 1 and 2
-    sele1_atoms: list 
-        List of atom label strings for all atoms in selection 1
-    sele2_atoms: list 
-        List of atom label strings for all atoms in selection 2
     geom_criteria: dict
         Container for geometric criteria
 
@@ -57,54 +53,8 @@ def compute_pi_cation(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_
     pi_cations = list of tuples, [(frame_index, itype, atom1_label, atom2_label), ...]
         itype = "pc"
     """
-
-
-    # if sele_id is None and sele_id2 is None:
-    #     cation_atom_sel = "set cation_atoms [atomselect %s \" " \
-    #                       "((resname LYS) and (name NZ)) or " \
-    #                       "((resname ARG) and (name NH1 NH2)) or " \
-    #                       "((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2)) \" frame %s]" % \
-    #                       (traj_frag_molid, frame_idx)
-    #     aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" " \
-    #                         "((resname PHE) and (name CG CE1 CE2)) or " \
-    #                         "((resname TRP) and (name CD2 CZ2 CZ3)) or " \
-    #                         "((resname TYR) and (name CG CE1 CE2)) \" frame %s]" % (traj_frag_molid, frame_idx)
-    # elif sele_id is not None and sele_id2 is None:
-    #     cation_atom_sel = "set cation_atoms [atomselect %s \" " \
-    #                       "((resname LYS) and (name NZ) and (%s)) or " \
-    #                       "((resname ARG) and (name NH1 NH2) and (%s)) or " \
-    #                       "((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s))\" frame %s]" % \
-    #                       (traj_frag_molid, sele_id, sele_id, sele_id, frame_idx)
-    #     aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" " \
-    #                         "((resname PHE) and (name CG CE1 CE2) and (%s)) or " \
-    #                         "((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or " \
-    #                         "((resname TYR) and (name CG CE1 CE2) and (%s))\" frame %s]" % \
-    #                         (traj_frag_molid, sele_id, sele_id, sele_id, frame_idx)
-    # elif sele_id is not None and sele_id2 is not None:
-    #     sele_union = "(%s) or (%s)" % (sele_id, sele_id2)
-    #     cation_atom_sel = "set cation_atoms [atomselect %s \" " \
-    #                       "((resname LYS) and (name NZ) and (%s)) or " \
-    #                       "((resname ARG) and (name NH1 NH2) and (%s)) or " \
-    #                       "((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s))\" frame %s]" % \
-    #                       (traj_frag_molid, sele_union, sele_union, sele_union, frame_idx)
-    #     aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" " \
-    #                         "((resname PHE) and (name CG CE1 CE2) and (%s)) or " \
-    #                         "((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or " \
-    #                         "((resname TYR) and (name CG CE1 CE2) and (%s))\" frame %s]" % \
-    #                         (traj_frag_molid, sele_union, sele_union, sele_union, frame_idx)
-    #
-    # evaltcl(cation_atom_sel)
-    # evaltcl(aromatic_atom_sel)
-    # contacts = evaltcl("measure contacts %s $cation_atoas $aromatic_atoms" % SOFT_DISTANCE_CUTOFF)
-    # evaltcl("$cation_atoms delete")
-    # evaltcl("$aromatic_atoms delete")
-    #
-    # # Evaluate geometric criterion if all three points of an aromatic
-    # # residue are sufficiently close to a cation atom
-    # contact_index_pairs = parse_contacts(contacts)
-
-    PI_CATION_CUTOFF_DISTANCE = geom_criteria['PI_CATION_CUTOFF_DISTANCE']
-    PI_CATION_CUTOFF_ANGLE = geom_criteria['PI_CATION_CUTOFF_ANGLE']
+    cutoff_distance = geom_criteria['PI_CATION_CUTOFF_DISTANCE']
+    cutoff_angle = geom_criteria['PI_CATION_CUTOFF_ANGLE']
 
     s1_aroms = "(%s or %s or %s) and %s" % (aromatic_phe, aromatic_trp, aromatic_tyr, sele1)
     s2_aroms = "(%s or %s or %s) and %s" % (aromatic_phe, aromatic_trp, aromatic_tyr, sele2)
@@ -156,7 +106,7 @@ def compute_pi_cation(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_
         # Perform distance criterion
         aromatic_centroid = calc_geom_centroid(arom_atom1_coord, arom_atom2_coord, arom_atom3_coord)
         cation_to_centroid_distance = calc_geom_distance(cation_coord, aromatic_centroid)
-        if cation_to_centroid_distance > PI_CATION_CUTOFF_DISTANCE:
+        if cation_to_centroid_distance > cutoff_distance:
             continue
 
         # Perform angle criterion
@@ -164,16 +114,11 @@ def compute_pi_cation(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_
         aromatic_center_to_cation_vec = points_to_vector(aromatic_centroid, cation_coord)
         cation_norm_offset_angle = calc_angle_between_vectors(aromatic_plane_norm_vec, aromatic_center_to_cation_vec)
         cation_norm_offset_angle = min(math.fabs(cation_norm_offset_angle - 0), math.fabs(cation_norm_offset_angle - 180))
-        if cation_norm_offset_angle > PI_CATION_CUTOFF_ANGLE:
+        if cation_norm_offset_angle > cutoff_angle:
             continue
 
         # Append just the CG atom of the aromatic ring
         single_arom_atom_label = convert_to_single_atom_aromatic_string(arom_atom1_label)
         pi_cations.append([frame, "pc", cation_atom_label, single_arom_atom_label])
-
-        # Append three of the aromatic atoms
-        # pi_cations.append([frame_idx, "pc", cation_atom_label, arom_atom1_label])
-        # pi_cations.append([frame_idx, "pc", cation_atom_label, arom_atom2_label])
-        # pi_cations.append([frame_idx, "pc", cation_atom_label, arom_atom3_label])
 
     return pi_cations
