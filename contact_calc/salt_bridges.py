@@ -71,7 +71,7 @@ def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2):
     return anion_set, cation_set
 
 
-def compute_salt_bridges(traj_frag_molid, frame, index_to_atom, sele1, sele2, sele1_atoms, sele2_atoms, geom_criteria):
+def compute_salt_bridges(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_criteria):
     """
     Compute salt bridges in a frame of simulation
 
@@ -101,21 +101,6 @@ def compute_salt_bridges(traj_frag_molid, frame, index_to_atom, sele1, sele2, se
         itype = "sb"
     """
     cutoff_dist = geom_criteria['SALT_BRIDGE_CUTOFF_DISTANCE']
-    # anion_set, cation_set = prep_salt_bridge_computation(traj_frag_molid, frame, sele1, sele2)
-    #
-    # salt_bridges = []
-    # for anion_atom in anion_set:
-    #     for cation_atom in cation_set:
-    #         # Process dual selection output if user provides two selection queries
-    #         if sele1_atoms is not None and sele2_atoms is not None:
-    #             if filter_dual_selection_salt_bridges(sele1_atoms, sele2_atoms, anion_atom, cation_atom):
-    #                 continue
-    #
-    #         dist = compute_distance(traj_frag_molid, frame, anion_atom, cation_atom)
-    #         if dist < cutoff_dist:
-    #             anion_label = index_to_atom[anion_atom].get_label()
-    #             cation_label = index_to_atom[cation_atom].get_label()
-    #             salt_bridges.append([frame, "sb", anion_label, cation_label])
 
     acidic_asp = "((resname ASP) and (name OD1 OD2))"
     acidic_glu = "((resname GLU) and (name OE1 OE2))"
@@ -132,7 +117,6 @@ def compute_salt_bridges(traj_frag_molid, frame, index_to_atom, sele1, sele2, se
     evaltcl("set s2anions [atomselect %s \" %s \" frame %s]" % (traj_frag_molid, s2_anions, frame))
     evaltcl("set s1cations [atomselect %s \" %s \" frame %s]" % (traj_frag_molid, s1_cations, frame))
     evaltcl("set s2cations [atomselect %s \" %s \" frame %s]" % (traj_frag_molid, s2_cations, frame))
-    print(set(parse_contacts(evaltcl("measure contacts %f $s1anions $s2cations" % cutoff_dist))))
     contacts_12 = set(parse_contacts(evaltcl("measure contacts %f $s1anions $s2cations" % cutoff_dist)))
     contacts_21 = set(parse_contacts(evaltcl("measure contacts %f $s2anions $s1cations" % cutoff_dist)))
     evaltcl("$s1anions delete")

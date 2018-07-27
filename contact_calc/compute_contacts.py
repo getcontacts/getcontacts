@@ -40,7 +40,7 @@ TRAJ_FRAG_SIZE = 100
 ##############################################################################
 
 
-def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, geom_criterion_values, solvent_resn, sele1, sele2,
+def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, geom_criteria, solvent_resn, sele1, sele2,
                            sele1_atoms, sele2_atoms, index_to_atom):
     """
     Computes each of the specified non-covalent interaction type for a single frame
@@ -55,7 +55,7 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, geom_criterion_va
         Frame number to query
     ITYPES: list
         Denotes the list of non-covalent interaction types to compute contacts for 
-    geom_criterion_values: dict
+    geom_criteria: dict
         Dictionary containing the cutoff values for all geometric criteria
     solvent_resn: string, default = TIP3
         Denotes the resname of solvent in simulation
@@ -79,25 +79,24 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, geom_criterion_va
     """
 
     # Extract geometric criteria
-    SALT_BRIDGE_CUTOFF_DISTANCE = geom_criterion_values['SALT_BRIDGE_CUTOFF_DISTANCE']
-    PI_CATION_CUTOFF_DISTANCE = geom_criterion_values['PI_CATION_CUTOFF_DISTANCE']
-    PI_CATION_CUTOFF_ANGLE = geom_criterion_values['PI_CATION_CUTOFF_ANGLE']
-    PI_STACK_CUTOFF_DISTANCE = geom_criterion_values['PI_STACK_CUTOFF_DISTANCE']
-    PI_STACK_CUTOFF_ANGLE = geom_criterion_values['PI_STACK_CUTOFF_ANGLE']
-    PI_STACK_PSI_ANGLE = geom_criterion_values['PI_STACK_PSI_ANGLE']
-    T_STACK_CUTOFF_DISTANCE = geom_criterion_values['T_STACK_CUTOFF_DISTANCE']
-    T_STACK_CUTOFF_ANGLE = geom_criterion_values['T_STACK_CUTOFF_ANGLE']
-    T_STACK_PSI_ANGLE = geom_criterion_values['T_STACK_PSI_ANGLE']
-    HBOND_CUTOFF_DISTANCE = geom_criterion_values['HBOND_CUTOFF_DISTANCE']
-    HBOND_CUTOFF_ANGLE = geom_criterion_values['HBOND_CUTOFF_ANGLE']
-    HBOND_RES_DIFF = geom_criterion_values['HBOND_RES_DIFF']
-    VDW_EPSILON = geom_criterion_values['VDW_EPSILON']
-    VDW_RES_DIFF = geom_criterion_values['VDW_RES_DIFF']
+    SALT_BRIDGE_CUTOFF_DISTANCE = geom_criteria['SALT_BRIDGE_CUTOFF_DISTANCE']
+    PI_CATION_CUTOFF_DISTANCE = geom_criteria['PI_CATION_CUTOFF_DISTANCE']
+    PI_CATION_CUTOFF_ANGLE = geom_criteria['PI_CATION_CUTOFF_ANGLE']
+    PI_STACK_CUTOFF_DISTANCE = geom_criteria['PI_STACK_CUTOFF_DISTANCE']
+    PI_STACK_CUTOFF_ANGLE = geom_criteria['PI_STACK_CUTOFF_ANGLE']
+    PI_STACK_PSI_ANGLE = geom_criteria['PI_STACK_PSI_ANGLE']
+    T_STACK_CUTOFF_DISTANCE = geom_criteria['T_STACK_CUTOFF_DISTANCE']
+    T_STACK_CUTOFF_ANGLE = geom_criteria['T_STACK_CUTOFF_ANGLE']
+    T_STACK_PSI_ANGLE = geom_criteria['T_STACK_PSI_ANGLE']
+    HBOND_CUTOFF_DISTANCE = geom_criteria['HBOND_CUTOFF_DISTANCE']
+    HBOND_CUTOFF_ANGLE = geom_criteria['HBOND_CUTOFF_ANGLE']
+    HBOND_RES_DIFF = geom_criteria['HBOND_RES_DIFF']
+    VDW_EPSILON = geom_criteria['VDW_EPSILON']
+    VDW_RES_DIFF = geom_criteria['VDW_RES_DIFF']
 
     frame_contacts = []
     if "sb" in ITYPES:
-        frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2,
-                                               sele1_atoms, sele2_atoms, geom_criterion_values)
+        frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, geom_criteria)
     if "pc" in ITYPES:
         frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2,
                                             sele1_atoms, sele2_atoms, PI_CATION_CUTOFF_DISTANCE, PI_CATION_CUTOFF_ANGLE)
