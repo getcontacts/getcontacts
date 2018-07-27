@@ -101,12 +101,10 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, geom_criteria, so
         frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, geom_criteria)
     if "ps" in ITYPES:
         frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2,
-                                              sele1_atoms, sele2_atoms, PI_STACK_CUTOFF_DISTANCE,
-                                              PI_STACK_CUTOFF_ANGLE, PI_STACK_PSI_ANGLE)
+                                              sele1_atoms, sele2_atoms, geom_criteria)
     if "ts" in ITYPES:
         frame_contacts += compute_t_stacking(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2,
-                                             sele1_atoms, sele2_atoms, T_STACK_CUTOFF_DISTANCE, T_STACK_CUTOFF_ANGLE,
-                                             T_STACK_PSI_ANGLE)
+                                             sele1_atoms, sele2_atoms, geom_criteria)
     if "vdw" in ITYPES:
         frame_contacts += compute_vanderwaals(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2,
                                               VDW_EPSILON, VDW_RES_DIFF)
