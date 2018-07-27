@@ -32,7 +32,18 @@ int_pattern = re.compile(r'\d+')
 
 def extract_donor_acceptor(hbond_string):
     """
-    Extract donors and acceptors from a vmd hbond output, e.g. "{106 91} {91 55} {107 92}"
+    Extract donors and acceptors from a vmd hbond output
+
+    Parameters
+    ----------
+    hbond_string: str
+        The output of vmds `measure hbonds` command; three lists indicating indices of donors, acceptors and hydrogens
+        respectively. For example: "{106 91} {91 55} {107 92}"
+
+    Returns
+    -------
+    set of (int, int)
+        Set of donor and acceptor indices. For example: `set([(106, 91), (91, 55)])`
     """
     atom_indices = [int(index) for index in int_pattern.findall(hbond_string)]
     third = len(atom_indices) // 3
@@ -68,18 +79,24 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
 
     Parameters
     ----------
-    traj_frag_molid: int
+    molid: int
         Specifies which trajectory fragment in VMD to perform computations upon
     frame: int
         Specify frame index with respect to the smaller trajectory fragment
     index_to_atom: dict
         Maps VMD atom index to Atom
-    solvent_resn: string, default = TIP3
+    solvent_resn: string
         Denotes the resname of solvent in simulation
+    ligand_resn: string
+        Denotes the resname(s) of ligand(s) in simulation
     sele1: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele2: string, default = None
         If second VMD query is specified, then compute contacts between atom selection 1 and 2
+    sele1_atoms: set
+        Indices of atoms in selection 1
+    sele2_atoms: set
+        Indices of atoms in selection 2
     geom_criteria: dict
         Container for geometric criteria
 
@@ -92,11 +109,11 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
     res_diff = geom_criteria['HBOND_RES_DIFF']
 
     if sele1 == sele2:
-        evaltcl("set selunion [atomselect %s \"%s and not carbon\" frame %s]" % (molid, sele1, frame))
+        evaltcl("set selunion [atomselect %s \"%s and not (carbon or sulfur)\" frame %s]" % (molid, sele1, frame))
         evaltcl("set shell [atomselect %s \"(solv) and within %s of (%s)\" frame %s]" %
                 (molid, WATER_SHELL_RAD, sele1, frame))
     else:
-        evaltcl("set selunion [atomselect %s \"((%s) or (%s)) and not carbon\" frame %s]" % (molid, sele1, sele2, frame))
+        evaltcl("set selunion [atomselect %s \"((%s) or (%s)) and not (carbon or sulfur)\" frame %s]" % (molid, sele1, sele2, frame))
         evaltcl("set shell [atomselect %s \"(solv) and within %s of ((%s) or (%s))\" frame %s]" %
                 (molid, WATER_SHELL_RAD, sele1, sele2, frame))
 
@@ -112,7 +129,7 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
     evaltcl("$shell delete")
 
     hbonds = []
-    # Stratify hbonds within selections
+    # Stratify hbonds within sele1 and sele2
     for d_idx, a_idx in sel_sel:
         d_atom = index_to_atom[d_idx]
         a_atom = index_to_atom[a_idx]
@@ -186,9 +203,13 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
             n1_lig = n1_atom.resname in ligand_resn
 
             if n2_solv:
+                # Check for water bridges between n1 and any neighbor of n2
                 for n2_n in water_dict[n2]:
                     n2_n_atom = index_to_atom[n2_n]
                     if n2_n_atom.resname not in solvent_resn:
+                        # The neighbor of n2 is a water, so check for potential extended water bridges
+                        if not filter_dual_selection(sele1_atoms, sele2_atoms, n1, n2_n):
+                            continue
                         if n1_atom.chain == n2_n_atom.chain and abs(n1_atom.resid - n2_n_atom.resid) < res_diff:
                             continue
 
@@ -200,6 +221,8 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
 
                         hbonds.append([frame, hb_type, n1_atom.get_label(), n2_n_atom.get_label(), w_atom.get_label(), n2_atom.get_label()])
             else:
+                if not filter_dual_selection(sele1_atoms, sele2_atoms, n1, n2):
+                    continue
                 if n1_atom.chain == n2_atom.chain and abs(n1_atom.resid - n2_atom.resid) < res_diff:
                     continue
 

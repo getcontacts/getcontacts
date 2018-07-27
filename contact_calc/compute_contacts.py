@@ -40,7 +40,7 @@ TRAJ_FRAG_SIZE = 100
 ##############################################################################
 
 
-def compute_frame_contacts(molid, frame, ITYPES, geom_criteria, solvent_resn, ligand_resn, sele1, sele2,
+def compute_frame_contacts(molid, frame, itypes, geom_criteria, solvent_resn, ligand_resn, sele1, sele2,
                            sele1_atoms, sele2_atoms, index_to_atom):
     """
     Computes each of the specified non-covalent interaction type for a single frame
@@ -49,16 +49,16 @@ def compute_frame_contacts(molid, frame, ITYPES, geom_criteria, solvent_resn, li
     ----------
     molid: int
         Identifier to simulation fragment in VMD
-    frag_idx: int
-        Trajectory fragment index for worker to keep track of
     frame: int
         Frame number to query
-    ITYPES: list
+    itypes: list
         Denotes the list of non-covalent interaction types to compute contacts for 
     geom_criteria: dict
         Dictionary containing the cutoff values for all geometric criteria
     solvent_resn: set
         Resname(s) of solvent in simulation
+    ligand_resn: set
+        Resname(s) of ligands in simulation
     sele1: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele2: string, default = None
@@ -67,8 +67,6 @@ def compute_frame_contacts(molid, frame, ITYPES, geom_criteria, solvent_resn, li
         List of atom label indices for all atoms in selection 1
     sele2_atoms: list 
         List of atom label indices for all atoms in selection 2
-    chain_id: string, default = None
-        Specify chain of protein to perform computation on 
     index_to_atom: dict
         Maps VMD atom index to Atom
 
@@ -78,39 +76,23 @@ def compute_frame_contacts(molid, frame, ITYPES, geom_criteria, solvent_resn, li
 
     """
 
-    # Extract geometric criteria
-    SALT_BRIDGE_CUTOFF_DISTANCE = geom_criteria['SALT_BRIDGE_CUTOFF_DISTANCE']
-    PI_CATION_CUTOFF_DISTANCE = geom_criteria['PI_CATION_CUTOFF_DISTANCE']
-    PI_CATION_CUTOFF_ANGLE = geom_criteria['PI_CATION_CUTOFF_ANGLE']
-    PI_STACK_CUTOFF_DISTANCE = geom_criteria['PI_STACK_CUTOFF_DISTANCE']
-    PI_STACK_CUTOFF_ANGLE = geom_criteria['PI_STACK_CUTOFF_ANGLE']
-    PI_STACK_PSI_ANGLE = geom_criteria['PI_STACK_PSI_ANGLE']
-    T_STACK_CUTOFF_DISTANCE = geom_criteria['T_STACK_CUTOFF_DISTANCE']
-    T_STACK_CUTOFF_ANGLE = geom_criteria['T_STACK_CUTOFF_ANGLE']
-    T_STACK_PSI_ANGLE = geom_criteria['T_STACK_PSI_ANGLE']
-    HBOND_CUTOFF_DISTANCE = geom_criteria['HBOND_CUTOFF_DISTANCE']
-    HBOND_CUTOFF_ANGLE = geom_criteria['HBOND_CUTOFF_ANGLE']
-    HBOND_RES_DIFF = geom_criteria['HBOND_RES_DIFF']
-    VDW_EPSILON = geom_criteria['VDW_EPSILON']
-    VDW_RES_DIFF = geom_criteria['VDW_RES_DIFF']
-
     frame_contacts = []
-    if "sb" in ITYPES:
+    if "sb" in itypes:
         frame_contacts += compute_salt_bridges(molid, frame, index_to_atom, sele1, sele2, geom_criteria)
-    if "pc" in ITYPES:
+    if "pc" in itypes:
         frame_contacts += compute_pi_cation(molid, frame, index_to_atom, sele1, sele2, geom_criteria)
-    if "ps" in ITYPES:
+    if "ps" in itypes:
         frame_contacts += compute_pi_stacking(molid, frame, index_to_atom, sele1, sele2,
                                               sele1_atoms, sele2_atoms, geom_criteria)
-    if "ts" in ITYPES:
+    if "ts" in itypes:
         frame_contacts += compute_t_stacking(molid, frame, index_to_atom, sele1, sele2,
                                              sele1_atoms, sele2_atoms, geom_criteria)
-    if "vdw" in ITYPES:
+    if "vdw" in itypes:
         frame_contacts += compute_vanderwaals(molid, frame, index_to_atom, sele1, sele2, geom_criteria)
-    if "hb" in ITYPES:
+    if "hb" in itypes:
         frame_contacts += compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_resn,
                                                  sele1, sele2, sele1_atoms, sele2_atoms, geom_criteria)
-    if "hp" in ITYPES:
+    if "hp" in itypes:
         frame_contacts += compute_hydrophobics(molid, frame, index_to_atom, sele1, sele2, geom_criteria)
 
     return frame_contacts
