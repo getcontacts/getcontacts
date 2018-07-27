@@ -38,7 +38,7 @@ def build_getcontact_parser(program_description, trajectory):
 
     required_group.add_argument("--output", type=str, metavar="PATH", required=True,
                                 help="path to output file")
-    required_group.add_argument("--itypes", type=str, nargs="+", required=True, metavar="ITYPE",
+    required_group.add_argument("--itypes", type=str, nargs="+", required=True, metavar="STR",
                                 help="Compute only these interaction types. Valid choices are: \n"
                                      "· all, \n"
                                      "· sb (salt-bridges), \n"
@@ -46,20 +46,19 @@ def build_getcontact_parser(program_description, trajectory):
                                      "· ps (pi-stacking), \n"
                                      "· ts (t-stacking), \n"
                                      "· vdw (van der Waals), \n"
-                                     "· hb (hydrogen bonds)\n"
-                                     "· lhb (ligand hydrogen bonds)")
+                                     "· hb (hydrogen bonds)")
 
     optional_group = parser.add_argument_group("Optional arguments")
     optional_group.add_argument("-h", "--help", action="help", default=argparse.SUPPRESS,
                                 help="show this help message and exit.")
-    optional_group.add_argument("--solv", type=str, metavar="SOLVNAME", default="",
-                                help="resname(s) of solvent molecule")
-    optional_group.add_argument("--sele", type=str, metavar="VMDSEL", default=None,
-                                help="atom selection 1 query in VMD")
-    optional_group.add_argument("--sele2", type=str, metavar="VMDSEL", default=None,
-                                help="atom selection 2 query in VMD")
-    optional_group.add_argument("--ligand", type=str, metavar="LIGNAME", nargs="*", default=[],
-                                help="resname of ligand molecules")
+    optional_group.add_argument("--sele", type=str, metavar="STR", default="protein",
+                                help="VMD selection 1 [default = 'protein']")
+    optional_group.add_argument("--sele2", type=str, metavar="STR", default=None,
+                                help="VMD selection 2 [default = <same as --sele>]")
+    optional_group.add_argument("--solv", type=str, metavar="STR", default="",
+                                help="Resname(s) of solvent residue names [default = 'HOH TIP3 T3P ..']")
+    optional_group.add_argument("--lipids", type=str, metavar="STR", default="",
+                                help="Resname(s) of lipid residue names [default = 'DLPE DMPC POPC ..']")
 
     if trajectory:
         optional_group.add_argument("--cores", type=int, metavar="INT", default=6,

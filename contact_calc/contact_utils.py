@@ -284,13 +284,13 @@ def get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
                 "(resname ASP) and (name OD1 OD2) \" frame %s]" % (traj_frag_molid, frame_idx))
         evaltcl("set GLU [atomselect %s \" "
                 "(resname GLU) and (name OE1 OE2) \" frame %s]" % (traj_frag_molid, frame_idx))
-    
+
     elif sele_id is not None and sele_id2 is None:
         evaltcl("set ASP [atomselect %s \" "
                 "(resname ASP) and (name OD1 OD2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
         evaltcl("set GLU [atomselect %s \" "
                 "(resname GLU) and (name OE1 OE2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
-    
+
     elif sele_id is not None and sele_id2 is not None:
         sele_union = "(%s) or (%s)" % (sele_id, sele_id2)
         evaltcl("set ASP [atomselect %s \" "
@@ -504,6 +504,26 @@ def configure_solv(top, traj, solvent_resn):
             print("Identified the following residue names as waters: " + solvent_resn)
             evaltcl("atomselect macro solv \" (resname " + solvent_resn + ") \"")
             return solvent_resn
+
+
+def configure_lipid(lipid_resn):
+    """
+    Detects the lipid residue name and creates a corresponding VMD selection macro called 'lipid'.
+
+    Parameters
+    ----------
+    top: Topology
+        In .pdb or .mae format
+    traj: Trajectory
+        In .nc or .dcd format
+    lipid_resn: str
+        The command-line residue name for lipid. If empty or None, attempt to determine lipid resname
+    """
+    if lipid_resn:
+        evaltcl("atomselect macro lipid \" resname " + lipid_resn + " \"")
+    # else:
+    #     # If we need to expand default definition of lipids uncomment this block and add to this list
+    #     evaltcl("atomselect macro lipid \" (resname DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE) \"")
 
 
 # def compute_distance(molid, frame_idx, atom1_label, atom2_label):
