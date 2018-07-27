@@ -37,7 +37,7 @@ def extract_donor_acceptor(hbond_string):
     """
     atom_indices = [int(index) for index in int_pattern.findall(hbond_string)]
     third = len(atom_indices) // 3
-    return set(zip(atom_indices[0:third], atom_indices[third*2:]))
+    return set(zip(atom_indices[0:third], atom_indices[third:third*2]))
 
 
 def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_resn, sele1, sele2, geom_criteria):
@@ -69,8 +69,8 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
     cutoff_angle = geom_criteria['HBOND_CUTOFF_ANGLE']
     res_diff = geom_criteria['HBOND_RES_DIFF']
 
-    evaltcl("set sel1 [atomselect %s \"(%s)\" frame %s]" % (molid, sele1, frame))
-    evaltcl("set sel2 [atomselect %s \"(%s)\" frame %s]" % (molid, sele2, frame))
+    evaltcl("set sel1 [atomselect %s \"(%s and not carbon)\" frame %s]" % (molid, sele1, frame))
+    evaltcl("set sel2 [atomselect %s \"(%s and not carbon)\" frame %s]" % (molid, sele2, frame))
     evaltcl("set shell [atomselect %s \"solv and within %s of (%s or %s)\" frame %s]" %
             (molid, WATER_SHELL_RAD, sele1, sele2, frame))
 
