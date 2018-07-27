@@ -402,7 +402,7 @@ def configure_solv(top, traj, solvent_resn):
         molecule.delete(traj_frag_molid)
 
         if not solv_resnames:
-            print("No waters detected (manually specify using --solv)")
+            print("No waters detected (specify manually using --solv)")
             evaltcl("atomselect macro solv \" none \"")
             return set(["HOH"])
         else:
@@ -442,7 +442,7 @@ def configure_lipid(top, traj, lipid_resn):
         molecule.delete(molid)
 
         if not lipid_resnames:
-            print("No lipids detected (manually specify using --lipids)")
+            print("No lipids detected (specify manually using --lipids)")
         else:
             lipid_resn = " ".join(lipid_resnames)
             print("Identified the following residue names as lipids: " + lipid_resn)
@@ -473,7 +473,7 @@ def configure_ligand(top, traj, sele1, sele2):
     molecule.delete(molid)
 
     if not ligand_resnames:
-        print("No ligands detected (manually specify using e.g. --sele 'not (water or lipid)')")
+        print("No ligands detected (specify manually using e.g. --sele 'not (water or lipid)')")
     else:
         ligand_resn = " ".join(ligand_resnames)
         print("Identified the following residue names as ligands: " + ligand_resn)

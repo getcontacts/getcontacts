@@ -109,7 +109,7 @@ def compute_frame_contacts(molid, frame, ITYPES, geom_criteria, solvent_resn, li
         frame_contacts += compute_vanderwaals(molid, frame, index_to_atom, sele1, sele2, geom_criteria)
     if "hb" in ITYPES:
         frame_contacts += compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_resn,
-                                                 sele1, sele2, geom_criteria)
+                                                 sele1, sele2, sele1_atoms, sele2_atoms, geom_criteria)
     if "hp" in ITYPES:
         frame_contacts += compute_hydrophobics(molid, frame, index_to_atom, sele1, sele2,
                                                VDW_EPSILON, VDW_RES_DIFF)

@@ -40,7 +40,30 @@ def extract_donor_acceptor(hbond_string):
     return set(zip(atom_indices[0:third], atom_indices[third:third*2]))
 
 
-def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_resn, sele1, sele2, geom_criteria):
+def filter_dual_selection(sele1_atoms, sele2_atoms, idx1, idx2):
+    """
+    Filter interactions between selection 1 and selection 2
+
+    Parameters
+    ----------
+    sele1_atoms: list
+        List of atom label strings for all atoms in selection 1
+    sele2_atoms: list
+        List of atom label strings for all atoms in selection 2
+    idx1: int
+        Atom index for cation
+    idx2: int
+        Atom index for aromatic atom
+    Returns
+    -------
+    bool
+        True if interaction should be included
+    """
+    return ((idx1 in sele1_atoms) and (idx2 in sele2_atoms)) or ((idx1 in sele2_atoms) and (idx2 in sele1_atoms))
+
+
+def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_resn, sele1, sele2,
+                           sele1_atoms, sele2_atoms, geom_criteria):
     """
     Compute hydrogen bonds involving protein for a single frame of simulation
 
@@ -69,24 +92,29 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
     cutoff_angle = geom_criteria['HBOND_CUTOFF_ANGLE']
     res_diff = geom_criteria['HBOND_RES_DIFF']
 
-    evaltcl("set sel1 [atomselect %s \"(%s and not carbon)\" frame %s]" % (molid, sele1, frame))
-    evaltcl("set sel2 [atomselect %s \"(%s and not carbon)\" frame %s]" % (molid, sele2, frame))
-    evaltcl("set shell [atomselect %s \"solv and within %s of (%s or %s)\" frame %s]" %
-            (molid, WATER_SHELL_RAD, sele1, sele2, frame))
+    if sele1 == sele2:
+        evaltcl("set selunion [atomselect %s \"%s and not carbon\" frame %s]" % (molid, sele1, frame))
+        evaltcl("set shell [atomselect %s \"(solv) and within %s of (%s)\" frame %s]" %
+                (molid, WATER_SHELL_RAD, sele1, frame))
+    else:
+        evaltcl("set selunion [atomselect %s \"((%s) or (%s)) and not carbon\" frame %s]" % (molid, sele1, sele2, frame))
+        evaltcl("set shell [atomselect %s \"(solv) and within %s of ((%s) or (%s))\" frame %s]" %
+                (molid, WATER_SHELL_RAD, sele1, sele2, frame))
 
-    sel_sel = set([])
-    sel_sel |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $sel1 $sel2" % (cutoff_distance, cutoff_angle)))
-    sel_sel |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $sel2 $sel1" % (cutoff_distance, cutoff_angle)))
+    sel_sel = extract_donor_acceptor(evaltcl("measure hbonds %s %s $selunion" % (cutoff_distance, cutoff_angle)))
+    sel_sel = [(d, a) for (d, a) in sel_sel if filter_dual_selection(sele1_atoms, sele2_atoms, d, a)]
+    # sel_sel = set([])
+    # sel_sel |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $sel1 $sel2" % (cutoff_distance, cutoff_angle)))
+    # sel_sel |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $sel2 $sel1" % (cutoff_distance, cutoff_angle)))
 
     sel_solv = set([])
-    sel_solv |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $sel1 $shell" % (cutoff_distance, cutoff_angle)))
-    sel_solv |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $shell $sel1" % (cutoff_distance, cutoff_angle)))
-    sel_solv |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $sel2 $shell" % (cutoff_distance, cutoff_angle)))
-    sel_solv |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $shell $sel2" % (cutoff_distance, cutoff_angle)))
+    sel_solv |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $selunion $shell" % (cutoff_distance, cutoff_angle)))
+    sel_solv |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $shell $selunion" % (cutoff_distance, cutoff_angle)))
+    # sel_solv |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $sel2 $shell" % (cutoff_distance, cutoff_angle)))
+    # sel_solv |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $shell $sel2" % (cutoff_distance, cutoff_angle)))
 
     solv_solv = extract_donor_acceptor(evaltcl("measure hbonds %s %s $shell" % (cutoff_distance, cutoff_angle)))
-    evaltcl("$sel1 delete")
-    evaltcl("$sel2 delete")
+    evaltcl("$selunion delete")
     evaltcl("$shell delete")
 
     hbonds = []

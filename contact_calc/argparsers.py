@@ -102,10 +102,10 @@ def build_getcontact_parser(program_description, trajectory):
                                  help="cutoff for distance between donor and acceptor atoms [default = 3.5 angstroms]")
     if trajectory:
         geometric_group.add_argument("--hbond_cutoff_ang", type=float, metavar="FLOAT", default=70,
-                                 help="cutoff for angle between donor hydrogen acceptor [default = 70 degrees]")
-        geometric_group.add_argument("--hbond_res_diff", type=int, metavar="INT", default=0,
-                                 help="minimum residue distance for which to consider computing hbond interactions "
-                                      "[default = 0]")
+                                     help="cutoff for angle between donor hydrogen acceptor [default = 70 degrees]")
+        geometric_group.add_argument("--hbond_res_diff", type=int, metavar="INT", default=1,
+                                     help="minimum residue distance for which to consider computing hbond interactions "
+                                          "[default = 1]")
     else:
         geometric_group.add_argument("--hbond_cutoff_ang", type=float, metavar="FLOAT", default=180,
                                  help="cutoff for angle between donor hydrogen acceptor [default = 180 degrees]")
