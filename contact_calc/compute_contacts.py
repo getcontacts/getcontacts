@@ -98,8 +98,7 @@ def compute_frame_contacts(traj_frag_molid, frame_idx, ITYPES, geom_criteria, so
     if "sb" in ITYPES:
         frame_contacts += compute_salt_bridges(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, geom_criteria)
     if "pc" in ITYPES:
-        frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2,
-                                            sele1_atoms, sele2_atoms, PI_CATION_CUTOFF_DISTANCE, PI_CATION_CUTOFF_ANGLE)
+        frame_contacts += compute_pi_cation(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, geom_criteria)
     if "ps" in ITYPES:
         frame_contacts += compute_pi_stacking(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2,
                                               sele1_atoms, sele2_atoms, PI_STACK_CUTOFF_DISTANCE,

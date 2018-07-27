@@ -20,55 +20,13 @@
 
 from .contact_utils import *
 
-__all__ = ['prep_salt_bridge_computation', 'compute_salt_bridges']
+__all__ = ['compute_salt_bridges']
 
-##############################################################################
-# Functions
-##############################################################################
-
-
-def filter_dual_selection_salt_bridges(sele1_atoms, sele2_atoms, anion_atom, cation_atom):
-    """
-    Filter out salt bridge interaction that is not between selection 1 and selection 2
-
-    Parameters
-    ----------
-    sele1_atoms: list 
-        List of atom label strings for all atoms in selection 1
-    sele2_atoms: list 
-        List of atom label strings for all atoms in selection 2
-    anion_atom: string 
-        Atom label for anion
-    cation_atom: string 
-        Atom label for cation
-
-    """
-    dual_sel1 = (anion_atom in sele1_atoms and cation_atom in sele2_atoms)
-    if(dual_sel1):
-        return False
-
-    dual_sel2 = (anion_atom in sele2_atoms and cation_atom in sele1_atoms)
-    if(dual_sel2):
-        return False
-    return True
-
-
-def prep_salt_bridge_computation(traj_frag_molid, frame_idx, sele_id, sele_id2):
-    """
-    Compute all possible anion and cation atoms from first frame of simulation
-
-    Returns
-    -------
-    anion_list: list of strings
-        List of atom labels for atoms in ASP or GLU that
-        can form salt bridges
-    cation_list: list of strings
-        List of atom labels for atoms in LYS, ARG, HIS that
-        can form salt bridges
-    """
-    anion_set = get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2)
-    cation_set = get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2)
-    return anion_set, cation_set
+acidic_asp = "((resname ASP) and (name OD1 OD2))"
+acidic_glu = "((resname GLU) and (name OE1 OE2))"
+basic_his = "((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2))"
+basic_lys = "((resname LYS) and (name NZ))"
+basic_arg = "((resname ARG) and (name NH1 NH2))"
 
 
 def compute_salt_bridges(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_criteria):
@@ -88,10 +46,6 @@ def compute_salt_bridges(traj_frag_molid, frame, index_to_atom, sele1, sele2, ge
         Compute contacts on subset of atom selection based on VMD query
     sele2: string, default = None
         If second VMD query is specified, then compute contacts between atom selection 1 and 2
-    sele1_atoms: list 
-        List of atom label indices for all atoms in selection 1
-    sele2_atoms: list 
-        List of atom label indices for all atoms in selection 2
     geom_criteria: dict
         Container for geometric criteria
 
@@ -102,14 +56,8 @@ def compute_salt_bridges(traj_frag_molid, frame, index_to_atom, sele1, sele2, ge
     """
     cutoff_dist = geom_criteria['SALT_BRIDGE_CUTOFF_DISTANCE']
 
-    acidic_asp = "((resname ASP) and (name OD1 OD2))"
-    acidic_glu = "((resname GLU) and (name OE1 OE2))"
     s1_anions = "(%s or %s) and %s" % (acidic_asp, acidic_glu, sele1)
     s2_anions = "(%s or %s) and %s" % (acidic_asp, acidic_glu, sele2)
-
-    basic_his = "((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2))"
-    basic_lys = "((resname LYS) and (name NZ))"
-    basic_arg = "((resname ARG) and (name NH1 NH2))"
     s1_cations = "( %s or %s or %s) and %s" % (basic_his, basic_lys, basic_arg, sele1)
     s2_cations = "( %s or %s or %s) and %s" % (basic_his, basic_lys, basic_arg, sele2)
 
