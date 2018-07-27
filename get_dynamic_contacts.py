@@ -142,8 +142,8 @@ def main(argv=None):
     print("output=%s" % output)
     print("cores=%s" % cores)
     print("solv=%s" % solv)
-    print("sele=%s" % sele)
-    print("sele=%s" % sele2)
+    print("sele=%s" % sele1)
+    print("sele2=%s" % sele2)
     print("stride=%s" % stride)
 
 
