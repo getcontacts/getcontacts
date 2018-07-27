@@ -66,7 +66,10 @@ def compute_salt_bridges(traj_frag_molid, frame, index_to_atom, sele1, sele2, ge
     evaltcl("set s1cations [atomselect %s \" %s \" frame %s]" % (traj_frag_molid, s1_cations, frame))
     evaltcl("set s2cations [atomselect %s \" %s \" frame %s]" % (traj_frag_molid, s2_cations, frame))
     contacts_12 = set(parse_contacts(evaltcl("measure contacts %f $s1anions $s2cations" % cutoff_dist)))
-    contacts_21 = set(parse_contacts(evaltcl("measure contacts %f $s2anions $s1cations" % cutoff_dist)))
+    if sele1 == sele2:
+        contacts_21 = set([])
+    else:
+        contacts_21 = set(parse_contacts(evaltcl("measure contacts %f $s2cations $s1aroms" % SOFT_DISTANCE_CUTOFF)))
     evaltcl("$s1anions delete")
     evaltcl("$s2anions delete")
     evaltcl("$s1cations delete")

@@ -116,7 +116,10 @@ def compute_pi_cation(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_
     evaltcl("set s1cations [atomselect %s \" %s \" frame %s]" % (traj_frag_molid, s1_cations, frame))
     evaltcl("set s2cations [atomselect %s \" %s \" frame %s]" % (traj_frag_molid, s2_cations, frame))
     contacts_12 = set(parse_contacts(evaltcl("measure contacts %f $s1cations $s2aroms" % SOFT_DISTANCE_CUTOFF)))
-    contacts_21 = set(parse_contacts(evaltcl("measure contacts %f $s2cations $s1aroms" % SOFT_DISTANCE_CUTOFF)))
+    if sele1 == sele2:
+        contacts_21 = set([])
+    else:
+        contacts_21 = set(parse_contacts(evaltcl("measure contacts %f $s2cations $s1aroms" % SOFT_DISTANCE_CUTOFF)))
     evaltcl("$s1aroms delete")
     evaltcl("$s2aroms delete")
     evaltcl("$s1cations delete")
@@ -127,10 +130,6 @@ def compute_pi_cation(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_
     # map every distinct combination of cation atom and aromatic residue to the three atoms on the aromatic atom
     pi_cation_aromatic_grouping = {}
     for cation_index, aromatic_index in contact_index_pairs:
-        # if sele1_atoms is not None and sele2_atoms is not None:
-        #     if filter_dual_selection_pi_cation(sele1_atoms, sele2_atoms, cation_index, aromatic_index):
-        #         continue
-
         cation_label = index_to_atom[cation_index].get_label()
         aromatic_label = index_to_atom[aromatic_index].get_label()
         pi_cation_aromatic_res_key = cation_label + ":" + ":".join(aromatic_label.split(":")[0:3])
