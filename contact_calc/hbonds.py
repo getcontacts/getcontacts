@@ -18,7 +18,6 @@
 # Imports
 ##############################################################################
 
-# import re
 from collections import defaultdict
 from itertools import product
 from vmd import *
@@ -26,8 +25,8 @@ from .contact_utils import *
 
 __all__ = ['compute_hydrogen_bonds']
 
-WATER_SHELL_RAD = 5
-WATER_TO_LIGAND_DIST = 12
+WATER_SHELL_RAD = 3.5
+
 int_pattern = re.compile(r'\d+')
 
 
@@ -103,15 +102,10 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
 
     sel_sel = extract_donor_acceptor(evaltcl("measure hbonds %s %s $selunion" % (cutoff_distance, cutoff_angle)))
     sel_sel = [(d, a) for (d, a) in sel_sel if filter_dual_selection(sele1_atoms, sele2_atoms, d, a)]
-    # sel_sel = set([])
-    # sel_sel |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $sel1 $sel2" % (cutoff_distance, cutoff_angle)))
-    # sel_sel |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $sel2 $sel1" % (cutoff_distance, cutoff_angle)))
 
     sel_solv = set([])
     sel_solv |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $selunion $shell" % (cutoff_distance, cutoff_angle)))
     sel_solv |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $shell $selunion" % (cutoff_distance, cutoff_angle)))
-    # sel_solv |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $sel2 $shell" % (cutoff_distance, cutoff_angle)))
-    # sel_solv |= extract_donor_acceptor(evaltcl("measure hbonds %s %s $shell $sel2" % (cutoff_distance, cutoff_angle)))
 
     solv_solv = extract_donor_acceptor(evaltcl("measure hbonds %s %s $shell" % (cutoff_distance, cutoff_angle)))
     evaltcl("$selunion delete")
@@ -155,7 +149,7 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
 
     # Build dictionary for water bridges
     water_dict = defaultdict(set)  # Associates water ids to lists of neighbors
-    for d_idx, a_idx in sel_solv:
+    for d_idx, a_idx in sel_solv | solv_solv:
         d_atom = index_to_atom[d_idx]
         a_atom = index_to_atom[a_idx]
 
@@ -167,16 +161,16 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
         a_solv = a_atom.resname in solvent_resn
 
         if d_solv:
-            water_dict[d_idx].append(a_idx)
+            water_dict[d_idx].add(a_idx)
 
         if a_solv:
-            water_dict[a_idx].append(d_idx)
+            water_dict[a_idx].add(d_idx)
 
     for w_idx in water_dict:
-        w_atom = index_to_atom[w_atom]
+        w_atom = index_to_atom[w_idx]
         for n1, n2 in product(water_dict[w_idx], repeat=2):
-            n1_atom = index_to_atom[n1_atom]
-            n2_atom = index_to_atom[n2_atom]
+            n1_atom = index_to_atom[n1]
+            n2_atom = index_to_atom[n2]
 
             n1_solv = n1_atom.resname in solvent_resn
             n2_solv = n2_atom.resname in solvent_resn
@@ -195,6 +189,9 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
                 for n2_n in water_dict[n2]:
                     n2_n_atom = index_to_atom[n2_n]
                     if n2_n_atom.resname not in solvent_resn:
+                        if n1_atom.chain == n2_n_atom.chain and abs(n1_atom.resid - n2_n_atom.resid) < res_diff:
+                            continue
+
                         n2_n_lig = n2_n_atom.resname in ligand_resn
                         if n1_lig or n2_n_lig:
                             hb_type = "lwb2"
@@ -203,6 +200,9 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
 
                         hbonds.append([frame, hb_type, n1_atom.get_label(), n2_n_atom.get_label(), w_atom.get_label(), n2_atom.get_label()])
             else:
+                if n1_atom.chain == n2_atom.chain and abs(n1_atom.resid - n2_atom.resid) < res_diff:
+                    continue
+
                 n2_lig = n2_atom.resname in ligand_resn
 
                 if n1_lig or n2_lig:

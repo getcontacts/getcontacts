@@ -800,6 +800,7 @@ def calc_angle_between_vectors(vector1, vector2):
     return angle_between_vectors
 
 
+
 def calc_geom_distance(point1, point2):
     """
     Compute distance between two points
