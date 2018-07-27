@@ -105,7 +105,7 @@ def compute_salt_bridges(traj_frag_molid, frame, index_to_atom, sele1, sele2, ge
     acidic_asp = "((resname ASP) and (name OD1 OD2))"
     acidic_glu = "((resname GLU) and (name OE1 OE2))"
     s1_anions = "(%s or %s) and %s" % (acidic_asp, acidic_glu, sele1)
-    s2_anions = "(%s or %s) and %s" % (acidic_asp, acidic_glu, sele1)
+    s2_anions = "(%s or %s) and %s" % (acidic_asp, acidic_glu, sele2)
 
     basic_his = "((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2))"
     basic_lys = "((resname LYS) and (name NZ))"
