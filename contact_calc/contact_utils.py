@@ -474,6 +474,7 @@ def configure_ligand(top, traj, sele1, sele2):
 
     if not ligand_resnames:
         print("No ligands detected (specify manually using e.g. --sele 'not (water or lipid)')")
+        evaltcl("atomselect macro ligand \" none \"")
     else:
         ligand_resn = " ".join(ligand_resnames)
         print("Identified the following residue names as ligands: " + ligand_resn)
@@ -798,7 +799,6 @@ def calc_angle_between_vectors(vector1, vector2):
                                         (calc_vector_length(vector1) * calc_vector_length(vector2)))
     angle_between_vectors = math.degrees(radians_between_vectors)
     return angle_between_vectors
-
 
 
 def calc_geom_distance(point1, point2):
