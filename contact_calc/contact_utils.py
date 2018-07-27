@@ -473,7 +473,7 @@ def configure_ligand(top, traj, sele1, sele2):
     molecule.delete(molid)
 
     if not ligand_resnames:
-        print("No ligands detected (manually specify using --sele or --sele2)")
+        print("No ligands detected (manually specify using e.g. --sele 'not (water or lipid)')")
     else:
         ligand_resn = " ".join(ligand_resnames)
         print("Identified the following residue names as ligands: " + ligand_resn)
