@@ -63,11 +63,11 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
     res_diff = geom_criteria['HBOND_RES_DIFF']
 
     if sele1 == sele2:
-        evaltcl("set selunion [atomselect %s \"%s and not (carbon or sulfur)\" frame %s]" % (molid, sele1, frame))
+        evaltcl("set selunion [atomselect %s \"%s and not (carbon or sulfur or solv)\" frame %s]" % (molid, sele1, frame))
         evaltcl("set shell [atomselect %s \"(solv) and within %s of (%s)\" frame %s]" %
                 (molid, WATER_SHELL_RAD, sele1, frame))
     else:
-        evaltcl("set selunion [atomselect %s \"((%s) or (%s)) and not (carbon or sulfur)\" frame %s]" % (molid, sele1, sele2, frame))
+        evaltcl("set selunion [atomselect %s \"((%s) or (%s)) and not (carbon or sulfur or solv)\" frame %s]" % (molid, sele1, sele2, frame))
         evaltcl("set shell [atomselect %s \"(solv) and within %s of ((%s) or (%s))\" frame %s]" %
                 (molid, WATER_SHELL_RAD, sele1, sele2, frame))
 
@@ -92,6 +92,8 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
         # Filter away local interactions
         if d_atom.chain == a_atom.chain and abs(d_atom.resid - a_atom.resid) < res_diff:
             continue
+        # if a_atom.resname in solvent_resn or d_atom.resname in solvent_resn:
+        #     continue
 
         d_bb = d_atom.is_bb()
         a_bb = a_atom.is_bb()
@@ -163,6 +165,10 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
 
             # If n1 is not water but n2 is, check for extended water-bridges between n1 and neighbors of n2
             if n2_solv:
+                # Disregard n2 if index is lower than w_atom to avoid double-counting wb2
+                if n2 <= w_idx:
+                    continue
+
                 for n2_n in water_dict[n2]:
                     n2_n_atom = index_to_atom[n2_n]
                     if n2_n_atom.resname not in solvent_resn:
