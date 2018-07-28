@@ -33,6 +33,9 @@ class Atom:
             sys.stderr.write("WARNING: Doesn't know van der Waals radius of "+self.element+". Defaulting to 1.7")
             self.vdwradius = 1.7
 
+    def is_bb(self):
+        return self.name in bb_names
+
     def get_label(self):
         """
         Return a colon-separated representation of this atom: "chain:resname:resid:name:index" e.g. "A:ASP:114:CA:11205"
@@ -95,6 +98,8 @@ def infer_element(resname, name):
     sys.stderr.write("WARNING: Element can't be determined for atom '" + name + "'")
     return "?"
 
+
+bb_names = set(["O", "N", "OP1", "OP2", "O1P", "O2P", "O3'", "O2'", "O4'", "O5'"])
 
 # https://en.wikipedia.org/wiki/Atomic_radii_of_the_elements_(data_page)
 # https://www.webelements.com/gadolinium/

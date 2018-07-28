@@ -14,30 +14,23 @@
 # limitations under the License.                                           #
 ############################################################################
 
-##############################################################################
-# Imports
-##############################################################################
-
 from .contact_utils import *
-from .atom import *
 
 __all__ = ["compute_vanderwaals"]
 
-##############################################################################
-# Globals
-##############################################################################
-
-ALPHA_CARBON_DIST_CUTOFF = 10.0  # Angstroms
-SOFT_VDW_CUTOFF = 5.0  # Angstroms
+SOFT_VDW_CUTOFF = 0
 
 
-##############################################################################
-# Functions
-##############################################################################
+def update_soft_cutoff(traj_frag_molid, index_to_atom, sele1, sele2, epsilon):
+    global SOFT_VDW_CUTOFF
+    ids1 = get_selection_indices(traj_frag_molid, 0, "%s" % sele1)
+    ids2 = get_selection_indices(traj_frag_molid, 0, "%s" % sele2)
+    max_vdw1 = max([index_to_atom[i].vdwradius for i in ids1])
+    max_vdw2 = max([index_to_atom[i].vdwradius for i in ids2])
+    SOFT_VDW_CUTOFF = max_vdw1 + max_vdw2 + epsilon
 
 
-def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele_id2, ligands,
-                        VDW_EPSILON, VDW_RES_DIFF):
+def compute_vanderwaals(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_criteria):
     """
     Compute all vanderwaals interactions in a frame of simulation
 
@@ -45,62 +38,47 @@ def compute_vanderwaals(traj_frag_molid, frame_idx, index_to_atom, sele_id, sele
     ----------
     traj_frag_molid: int
         Identifier to simulation fragment in VMD
-    frame_idx: int
+    frame: int
         Frame number to query
     index_to_atom: dict
         Maps VMD atom index to Atom
-    sele_id: string, default = None
+    sele1: string, default = None
         Compute contacts on subset of atom selection based on VMD query
-    sele_id2: string, default = None
+    sele2: string, default = None
         If second VMD query is specified, then compute contacts between atom selection 1 and 2
-    sele1_atoms: list 
-        List of atom label strings for all atoms in selection 1
-    sele2_atoms: list 
-        List of atom label strings for all atoms in selection 2
-    ligands: list of string
-        Residue names of ligands
-    VDW_EPSILON: float, default = 0.5 angstroms
-        amount of padding for calculating vanderwaals contacts
-    VDW_RES_DIFF: int, default = 2
-        minimum residue distance for which to consider computing vdw interactions
+    geom_criteria: dict
+        Container for geometric criteria
 
     Returns
     -------
     vanderwaals: list of tuples, [(frame_idx, itype, atom1_label, atom2_label), ...]
         itype = "vdw"
     """
-    
-    sel1 = "" if sele_id is None else "and (%s) " % (sele_id)
-    sel2 = "" if sele_id2 is None else "and (%s) " % (sele_id2)
-    custom_lig = "" if not ligands else "or (resname " + (" ".join(ligands)) + ") "
-    evaltcl("set vdw_atoms1 [atomselect %s \" noh and ( protein or (hetero and not solv and not lipid) %s) %s\" "
-            "frame %s]" % (traj_frag_molid, custom_lig, sel1, frame_idx))
-    evaltcl("set vdw_atoms2 [atomselect %s \" noh and ( protein or (hetero and not solv and not lipid) %s) %s\" "
-            "frame %s]" % (traj_frag_molid, custom_lig, sel2, frame_idx))
+    epsilon = geom_criteria['VDW_EPSILON']
+    res_diff = geom_criteria['VDW_RES_DIFF']
+    if SOFT_VDW_CUTOFF == 0:
+        update_soft_cutoff(traj_frag_molid, index_to_atom, sele1, sele2, epsilon)
 
-    if sel2 == "":
-        contacts = evaltcl("measure contacts %s $vdw_atoms1" % SOFT_VDW_CUTOFF)
-    else:  
-        contacts = evaltcl("measure contacts %s $vdw_atoms1 $vdw_atoms2" % SOFT_VDW_CUTOFF)
-    contact_index_pairs = parse_contacts(contacts)
+    evaltcl("set vdw_atoms1 [atomselect %s \" noh and (%s)\" frame %s]" % (traj_frag_molid, sele1, frame))
+    evaltcl("set vdw_atoms2 [atomselect %s \" noh and (%s)\" frame %s]" % (traj_frag_molid, sele2, frame))
+    contact_pairs = parse_contacts(evaltcl("measure contacts %s $vdw_atoms1 $vdw_atoms2" % SOFT_VDW_CUTOFF))
     evaltcl("$vdw_atoms1 delete")
     evaltcl("$vdw_atoms2 delete")
-    
-    vanderwaals = []
-    for atom1_index, atom2_index in contact_index_pairs:
 
-        # Convert to atom label
+    vanderwaals = []
+    for atom1_index, atom2_index in contact_pairs:
+
+        # Convert to atom
         atom1, atom2 = index_to_atom[atom1_index], index_to_atom[atom2_index]
 
-        if atom1.chain == atom2.chain and abs(atom1.resid - atom2.resid) < VDW_RES_DIFF:
+        if atom1.chain == atom2.chain and abs(atom1.resid - atom2.resid) < res_diff:
             continue
 
         # Perform distance cutoff with atom indices
-        distance = compute_distance(traj_frag_molid, frame_idx, atom1_index, atom2_index)
+        distance = compute_distance(traj_frag_molid, frame, atom1_index, atom2_index)
 
-        # vanderwaal_cutoff = ATOM_RADIUS[element1] + ATOM_RADIUS[element2] + VDW_EPSILON
-        vanderwaal_cutoff = atom1.vdwradius + atom2.vdwradius + VDW_EPSILON
+        vanderwaal_cutoff = atom1.vdwradius + atom2.vdwradius + epsilon
         if distance < vanderwaal_cutoff:
-            vanderwaals.append([frame_idx, "vdw", atom1.get_label(), atom2.get_label()])
+            vanderwaals.append([frame, "vdw", atom1.get_label(), atom2.get_label()])
 
     return vanderwaals

@@ -267,100 +267,6 @@ def get_selection_indices(traj_frag_molid, frame_idx, selection_id):
     return protein_selection_indices
 
 
-def get_anion_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
-    """
-    Get list of anion atoms that can form salt bridges
-
-    Returns
-    -------
-    anion_list: list of strings
-        List of atom labels for atoms in ASP or GLU that
-        can form salt bridges
-    """
-    anion_set = set()
-
-    if sele_id is None and sele_id2 is None:
-        evaltcl("set ASP [atomselect %s \" "
-                "(resname ASP) and (name OD1 OD2) \" frame %s]" % (traj_frag_molid, frame_idx))
-        evaltcl("set GLU [atomselect %s \" "
-                "(resname GLU) and (name OE1 OE2) \" frame %s]" % (traj_frag_molid, frame_idx))
-    
-    elif sele_id is not None and sele_id2 is None:
-        evaltcl("set ASP [atomselect %s \" "
-                "(resname ASP) and (name OD1 OD2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
-        evaltcl("set GLU [atomselect %s \" "
-                "(resname GLU) and (name OE1 OE2) and (%s) \" frame %s]" % (traj_frag_molid, sele_id, frame_idx))
-    
-    elif sele_id is not None and sele_id2 is not None:
-        sele_union = "(%s) or (%s)" % (sele_id, sele_id2)
-        evaltcl("set ASP [atomselect %s \" "
-                "(resname ASP) and (name OD1 OD2) and (%s) \" frame %s]" % (traj_frag_molid, sele_union, frame_idx))
-        evaltcl("set GLU [atomselect %s \" "
-                "(resname GLU) and (name OE1 OE2) and (%s) \" frame %s]" % (traj_frag_molid, sele_union, frame_idx))
-
-    # anion_set |= get_atom_selection_labels("ASP")
-    # anion_set |= get_atom_selection_labels("GLU")
-    anion_set |= get_atom_selection_indices("ASP")
-    anion_set |= get_atom_selection_indices("GLU")
-    evaltcl('$ASP delete')
-    evaltcl('$GLU delete')
-
-    return anion_set
-
-
-def get_cation_atoms(traj_frag_molid, frame_idx, sele_id, sele_id2):
-    """
-    Get list of cation atoms that can form salt bridges or pi cation contacts
-
-    Returns
-    -------
-    cation_list: list of strings
-        List of atom labels for atoms in LYS, ARG, HIS that
-        can form salt bridges
-    """
-
-    cation_set = set()
-
-    if sele_id is None and sele_id2 is None:
-        evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) \" frame %s]" %
-                (traj_frag_molid, frame_idx))
-        evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) \" frame %s]" %
-                (traj_frag_molid, frame_idx))
-        evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) \" frame %s]" %
-                (traj_frag_molid, frame_idx))
-    
-    elif sele_id is not None and sele_id2 is None:
-        evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) and (%s) \" frame %s]" %
-                (traj_frag_molid, sele_id, frame_idx))
-        evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) and (%s) \" frame %s]" %
-                (traj_frag_molid, sele_id, frame_idx))
-        evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s) \" "
-                "frame %s]" % (traj_frag_molid, sele_id, frame_idx))
-    
-    elif sele_id is not None and sele_id2 is not None:
-        sele_union = "(%s) or (%s)" % (sele_id, sele_id2)
-        evaltcl("set LYS [atomselect %s \" (resname LYS) and (name NZ) and (%s) \" frame %s]" %
-                (traj_frag_molid, sele_union, frame_idx))
-        evaltcl("set ARG [atomselect %s \" (resname ARG) and (name NH1 NH2) and (%s) \" frame %s]" %
-                (traj_frag_molid, sele_union, frame_idx))
-        evaltcl("set HIS [atomselect %s \" (resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2) and (%s) \" "
-                "frame %s]" % (traj_frag_molid, sele_union, frame_idx))
-
-    # cation_set |= get_atom_selection_labels("LYS")
-    # cation_set |= get_atom_selection_labels("ARG")
-    # cation_set |= get_atom_selection_labels("HIS")
-
-    cation_set |= get_atom_selection_indices("LYS")
-    cation_set |= get_atom_selection_indices("ARG")
-    cation_set |= get_atom_selection_indices("HIS")
-
-    evaltcl('$LYS delete')
-    evaltcl('$ARG delete')
-    evaltcl('$HIS delete')
-
-    return cation_set
-
-
 # def get_aromatic_atom_triplets(traj_frag_molid, frame_idx, chain_id):
 #     """
 #     Get list of aromatic atom triplets
@@ -485,25 +391,96 @@ def configure_solv(top, traj, solvent_resn):
     # Set up custom water selection
     if solvent_resn:
         evaltcl("atomselect macro solv \" resname " + solvent_resn + " \"")
-        return solvent_resn
+        return set(solvent_resn.split())
     else:
         solv_resnames = set("H2O HH0 OHH HOH OH2 SOL WAT TIP TIP2 TIP3 TIP4 T3P".split())
         traj_frag_molid = load_traj(top, traj, 0, 1, 1)
-        evaltcl("set all_atoms [atomselect %s \" all \"]" % traj_frag_molid)
+        evaltcl("set all_atoms [atomselect %s \" all \" frame 0]" % traj_frag_molid)
         all_resn = set(evaltcl("$all_atoms get resname").split())
         solv_resnames = solv_resnames & all_resn
         evaltcl("$all_atoms delete")
         molecule.delete(traj_frag_molid)
 
         if not solv_resnames:
-            print("Couldn't identify any water residue names. Consider specifying manually using --solv")
+            print("No waters detected (specify manually using --solv)")
             evaltcl("atomselect macro solv \" none \"")
-            return "HOH"
+            return set(["HOH"])
         else:
             solvent_resn = " ".join(solv_resnames)
             print("Identified the following residue names as waters: " + solvent_resn)
             evaltcl("atomselect macro solv \" (resname " + solvent_resn + ") \"")
-            return solvent_resn
+            return solv_resnames
+
+
+def configure_lipid(top, traj, lipid_resn):
+    """
+    Detects the lipid residue name and creates a corresponding VMD selection macro called 'lipid'.
+
+    Parameters
+    ----------
+    top: Topology
+        In .pdb or .mae format
+    traj: Trajectory
+        In .nc or .dcd format
+    lipid_resn: str
+        The command-line residue name for lipid. If empty or None, attempt to determine lipid resname
+    """
+    if lipid_resn:
+        evaltcl("atomselect macro lipid \" resname " + lipid_resn + " \"")
+        return set(lipid_resn.split())
+    else:
+        # If we need to expand default definition of lipids uncomment this line and add to this list
+        # evaltcl("atomselect macro lipid \" (resname DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE) \"")
+        # return set("DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE".split())
+
+        lipid_resnames = set("DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE".split())
+        molid = load_traj(top, traj, 0, 1, 1)
+        evaltcl("set all_atoms [atomselect %s \" all \" frame 0]" % molid)
+        all_resn = set(evaltcl("$all_atoms get resname").split())
+        lipid_resnames = lipid_resnames & all_resn
+        evaltcl("$all_atoms delete")
+        molecule.delete(molid)
+
+        if not lipid_resnames:
+            print("No lipids detected (specify manually using --lipids)")
+        else:
+            lipid_resn = " ".join(lipid_resnames)
+            print("Identified the following residue names as lipids: " + lipid_resn)
+            evaltcl("atomselect macro lipid \" (resname " + lipid_resn + ") \"")
+        return lipid_resnames
+
+
+def configure_ligand(top, traj, sele1, sele2):
+    """
+    Detects the lipid residue name and creates a corresponding VMD selection macro called 'lipid'.
+
+    Parameters
+    ----------
+    top: Topology
+        In .pdb or .mae format
+    traj: Trajectory
+        In .nc or .dcd format
+    sele1: str
+        Selection 1
+    sele2: str
+        Selection 2
+    """
+    molid = load_traj(top, traj, 0, 1, 1)
+    evaltcl("set restatoms [atomselect %s \" (%s or %s) and not (lipid or solv or protein or nucleic) \" frame 0]" %
+            (molid, sele1, sele2))
+    ligand_resnames = set(evaltcl("$restatoms get resname").split())
+    evaltcl("$restatoms delete")
+    molecule.delete(molid)
+
+    if not ligand_resnames:
+        print("No ligands detected (specify manually using e.g. --sele 'not (water or lipid)')")
+        evaltcl("atomselect macro ligand \" none \"")
+    else:
+        ligand_resn = " ".join(ligand_resnames)
+        print("Identified the following residue names as ligands: " + ligand_resn)
+        evaltcl("atomselect macro ligand \" (resname " + ligand_resn + ") \"")
+
+    return ligand_resnames
 
 
 # def compute_distance(molid, frame_idx, atom1_label, atom2_label):
@@ -553,6 +530,7 @@ def compute_distance(molid, frame_idx, atom1_index, atom2_index):
     """
     distance = float(evaltcl("measure bond {%s %s} molid %s frame %s" % (atom1_index, atom2_index, molid, frame_idx)))
     return distance
+
 
 def compute_angle(molid, frame_idx, atom1, atom2, atom3):
     """
