@@ -466,7 +466,7 @@ def configure_ligand(top, traj, sele1, sele2):
         Selection 2
     """
     molid = load_traj(top, traj, 0, 1, 1)
-    evaltcl("set restatoms [atomselect %s \" (%s or %s) and not (lipid or solv or protein or nucleic) \" frame 0]" %
+    evaltcl("set restatoms [atomselect %s \" (%s or %s) and not (lipid or solv or protein) \" frame 0]" %
             (molid, sele1, sele2))
     ligand_resnames = set(evaltcl("$restatoms get resname").split())
     evaltcl("$restatoms delete")
