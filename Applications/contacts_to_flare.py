@@ -44,6 +44,7 @@ CSS-format (e.g. '#FF0000' or 'red').
 """
 
 
+
 def main():
     """
     Main function called once at the end of this module. Configures and parses command line arguments, parses input
@@ -87,21 +88,9 @@ def main():
     labels = parse_residuelabels(args.flarelabels)
     graph = create_flare(contacts, labels)
 
-    # Convert string to pretty printed JSON
-    import json
-    pretty_json = json.dumps(graph, indent=2)
-
-    # "frames" entries can contain a lot of digits so put those on a single line
-    import re
-    pretty_json = re.sub(r"(?<=\d,)\n *|(?<=\[)\n *(?=\d)|(?<=\d)\n *(?=\])", "", pretty_json, flags=re.MULTILINE)
-
-    # Write to output file
     if args.output:
-        args.output.write(pretty_json)
+        write_json(graph, args.output)
         args.output.close()
-        print("Done - wrote flare-json to %s" % args.output.name)
-    else:
-        print(pretty_json)
 
 
 def parse_itypes(itype_argument):
@@ -113,6 +102,12 @@ def parse_itypes(itype_argument):
 
 
 if __name__ == "__main__":
+    import sys
+    from os import path
+    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+    from contact_calc.transformations import parse_contacts, parse_residuelabels
+    from contact_calc.flare import create_flare, write_json
+
     main()
 
 
