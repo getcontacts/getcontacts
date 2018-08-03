@@ -393,7 +393,7 @@ def configure_solv(top, traj, solvent_resn):
         evaltcl("atomselect macro solv \" resname " + solvent_resn + " \"")
         return set(solvent_resn.split())
     else:
-        solv_resnames = set("H2O HH0 OHH HOH OH2 SOL WAT TIP TIP2 TIP3 TIP4 T3P".split())
+        solv_resnames = set("H2O HH0 OHH HOH OH2 SOL WAT TIP TIP2 TIP3 TIP4 T3P IP3".split())
         traj_frag_molid = load_traj(top, traj, 0, 1, 1)
         evaltcl("set all_atoms [atomselect %s \" all \" frame 0]" % traj_frag_molid)
         all_resn = set(evaltcl("$all_atoms get resname").split())
