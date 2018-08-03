@@ -49,8 +49,13 @@ def write_json(flare, fstream):
     if type(fstream) == str:
         with open(fstream, "w") as f:
             f.write(pretty_json)
-    else:
+        return True
+    elif fstream is not None:
         fstream.write(pretty_json)
+        return True
+    else:
+        print(pretty_json)
+        return False
 
 
 def is_single_flare(flare):
