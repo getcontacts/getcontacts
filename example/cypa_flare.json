@@ -1,0 +1,928 @@
+{
+  "trees": [
+    {
+      "treePaths": [
+        "S10.GLY:64",
+        "S2.PHE:7",
+        "L7.TYR:48",
+        "L13.PRO:105",
+        "L13.GLY:109",
+        "L7.CYS:52",
+        "L5.VAL:29",
+        "L7.PHE:46",
+        "L15.THR:119",
+        "L7.GLU:43",
+        "S12.LEU:98",
+        "S10.CYS:62",
+        "L11.ILE:78",
+        "L21.LYS:151",
+        "L7.SER:51",
+        "L13.GLN:111",
+        "L1.PRO:4",
+        "S18.GLU:134",
+        "L15.LYS:118",
+        "H6.ARG:37",
+        "L11.ASN:71",
+        "S4.VAL:20",
+        "L21.LYS:154",
+        "L11.GLY:94",
+        "L7.GLY:47",
+        "L11.GLY:74",
+        "L13.ASN:102",
+        "S4.GLU:23",
+        "L11.GLY:80",
+        "S4.LEU:24",
+        "S22.CYS:161",
+        "L17.VAL:127",
+        "S4.GLU:15",
+        "L13.THR:107",
+        "L11.THR:68",
+        "L11.ASN:87",
+        "L9.GLY:59",
+        "S22.GLN:163",
+        "H20.MET:142",
+        "S12.MET:100",
+        "L11.LYS:91",
+        "L11.THR:93",
+        "L5.PHE:25",
+        "L13.GLY:104",
+        "S10.MET:61",
+        "L17.ASP:123",
+        "L21.SER:153",
+        "S4.PHE:22",
+        "S8.ILE:56",
+        "L11.GLY:65",
+        "L3.GLY:14",
+        "H6.GLU:34",
+        "S14.CYS:115",
+        "H6.LEU:39",
+        "L11.LYS:82",
+        "H6.PRO:30",
+        "S18.GLY:130",
+        "L11.PHE:83",
+        "L23.LEU:164",
+        "L11.ASP:66",
+        "S18.LYS:131",
+        "L17.GLY:124",
+        "H6.ALA:38",
+        "S12.SER:99",
+        "L3.ASP:13",
+        "L13.SER:110",
+        "L11.GLY:72",
+        "S4.PRO:16",
+        "S14.PHE:113",
+        "L1.ASN:3",
+        "L19.GLY:135",
+        "H20.ALA:141",
+        "S10.GLN:63",
+        "S18.VAL:128",
+        "S22.THR:157",
+        "S8.PHE:53",
+        "L11.ASP:85",
+        "L9.PRO:58",
+        "S2.PHE:8",
+        "L21.ARG:144",
+        "L11.GLY:96",
+        "L21.ASN:149",
+        "S14.ILE:114",
+        "H6.THR:32",
+        "S18.VAL:132",
+        "L13.ALA:101",
+        "L5.LYS:28",
+        "L21.PHE:145",
+        "S22.ILE:158",
+        "L11.ILE:89",
+        "S4.GLY:18",
+        "L5.ASP:27",
+        "L11.PHE:88",
+        "L11.GLU:86",
+        "L21.ARG:148",
+        "H20.MET:136",
+        "S2.THR:5",
+        "L11.TYR:79",
+        "L5.ALA:26",
+        "L13.ALA:103",
+        "S18.LYS:133",
+        "S22.GLY:162",
+        "L7.GLY:42",
+        "L11.SER:77",
+        "L15.THR:116",
+        "S22.ILE:156",
+        "S22.ALA:159",
+        "H6.THR:41",
+        "H20.GLU:143",
+        "H6.PHE:36",
+        "L13.ASN:106",
+        "H6.LYS:31",
+        "H20.GLU:140",
+        "L11.ARG:69",
+        "S22.ASP:160",
+        "S4.SER:21",
+        "L21.LYS:155",
+        "L21.SER:147",
+        "S12.ILE:97",
+        "H6.SER:40",
+        "S2.VAL:12",
+        "L11.PRO:95",
+        "L11.THR:73",
+        "L11.PHE:67",
+        "S2.ALA:11",
+        "L13.ASN:108",
+        "H16.LEU:122",
+        "S4.ARG:19",
+        "L7.LYS:49",
+        "H6.ASN:35",
+        "L7.GLY:45",
+        "S8.HIE:54",
+        "L11.HIS:92",
+        "L11.HIE:70",
+        "L7.LYS:44",
+        "L9.PHE:60",
+        "L1.VAL:2",
+        "L17.HIS:126",
+        "L17.LYS:125",
+        "S4.LEU:17",
+        "L15.ALA:117",
+        "L21.GLY:150",
+        "L11.GLY:75",
+        "L11.LEU:90",
+        "L21.THR:152",
+        "S18.PHE:129",
+        "S2.VAL:6",
+        "H20.ILE:138",
+        "H20.ASN:137",
+        "L11.GLU:81",
+        "H6.ALA:33",
+        "S14.PHE:112",
+        "H16.GLU:120",
+        "L21.GLY:146",
+        "L7.GLY:50",
+        "L11.GLU:84",
+        "H20.VAL:139",
+        "S8.ILE:57",
+        "S2.ASP:9",
+        "H16.TRP:121",
+        "S2.ILE:10",
+        "S8.ARG:55",
+        "L11.LYS:76"
+      ],
+      "treeLabel": "DefaultTree"
+    }
+  ],
+  "edges": [
+    {
+      "name2": "HIS:92",
+      "name1": "ASP:123",
+      "frames": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,17,18,19,20,21,22,23,24,25,26,27,28,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]
+    },
+    {
+      "name2": "LYS:49",
+      "name1": "ASP:160",
+      "frames": [0,1,2,11,12,14,18,19,20,21,22,23,24,25,27,28,30,33,35,37,39,40,41,43,44,45,46,48,49,50]
+    },
+    {
+      "name2": "ASP:9",
+      "name1": "ARG:19",
+      "frames": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]
+    },
+    {
+      "name2": "LYS:82",
+      "name1": "GLU:81",
+      "frames": [0,1,3,6,12,44]
+    },
+    {
+      "name2": "GLU:34",
+      "name1": "ARG:37",
+      "frames": [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]
+    },
+    {
+      "name2": "GLU:43",
+      "name1": "ARG:37",
+      "frames": [0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,21,22,23,24,25,26,27,29,30,31,32,33,35,36,37,38,41,42,43,44,45,46,48,49]
+    },
+    {
+      "name2": "LYS:31",
+      "name1": "GLU:84",
+      "frames": [0,1,2,3,4,5,6,7,9,10,14,15,16,17,19,20,21,22,23,24,25,26,27,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,46,48,49,50]
+    },
+    {
+      "name2": "GLU:140",
+      "name1": "ARG:144",
+      "frames": [1,2,3,4,6,7,8,9,10,11,12,13,16,17,18,20,22,26,28,31,35,36,40,41,42,49]
+    },
+    {
+      "name2": "LYS:133",
+      "name1": "GLU:23",
+      "frames": [1,2,3,5,6,8,9,10,12,13,14,15,17,18,19,20,21,22,23,24,25,27,28,30,31,32,33,34,35,38,39,40,41,44,46,47,48,49,50]
+    },
+    {
+      "name2": "LYS:118",
+      "name1": "GLU:120",
+      "frames": [1,3,5,6,7,8,9,11,12,14,17,18,19,20,21,32,37,39,43,46]
+    },
+    {
+      "name2": "LYS:91",
+      "name1": "ASP:123",
+      "frames": [2,6,7,8,9,11,12,13,14,16,17,18,20,22,23,24,25,26,27,28,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]
+    },
+    {
+      "name2": "LYS:155",
+      "name1": "ASP:13",
+      "frames": [2]
+    },
+    {
+      "name2": "LYS:154",
+      "name1": "ASP:13",
+      "frames": [2,6,7,8,9,10,11,13,14,15,16,17,19,21,23,24,25,26,27,28,29,30,32,33,34,35,36,37,40,45,47,48,49,50]
+    },
+    {
+      "name2": "LYS:28",
+      "name1": "ASP:27",
+      "frames": [2,3,4,6,7,8,9,10,11,12,13,15,16,17,19,20,21,22,23,24,25,26,27,29,30,31,34,35,36,37,38,39,40,41,42,43,45,47,48,49,50]
+    },
+    {
+      "name2": "LYS:76",
+      "name1": "GLU:81",
+      "frames": [3,17,20,28,31,35,42,45]
+    },
+    {
+      "name2": "LYS:91",
+      "name1": "GLU:120",
+      "frames": [6,12,16,20,22,23,24,25,26,27,28,29,30,31,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]
+    },
+    {
+      "name2": "LYS:44",
+      "name1": "GLU:43",
+      "frames": [6,18,25]
+    },
+    {
+      "name2": "LYS:131",
+      "name1": "GLU:23",
+      "frames": [13,22,26,29]
+    },
+    {
+      "name2": "GLU:143",
+      "name1": "ARG:148",
+      "frames": [43,44,45,46,47]
+    }
+  ],
+  "tracks": [
+    {
+      "trackProperties": [
+        {
+          "nodeName": "GLY:64",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "PHE:7",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "TYR:48",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "PRO:105",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLY:109",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "CYS:52",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "VAL:29",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "PHE:46",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "THR:119",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLU:43",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "LEU:98",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "CYS:62",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ILE:78",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "LYS:151",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "SER:51",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLN:111",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "PRO:4",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLU:134",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "LYS:118",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ARG:37",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "ASN:71",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "VAL:20",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "LYS:154",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLY:94",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLY:47",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLY:74",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ASN:102",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLU:23",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "GLY:80",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "LEU:24",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "CYS:161",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "VAL:127",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLU:15",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "THR:107",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "THR:68",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ASN:87",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLY:59",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLN:163",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "MET:142",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "MET:100",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "LYS:91",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "THR:93",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "PHE:25",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLY:104",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "MET:61",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ASP:123",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "SER:153",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "PHE:22",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ILE:56",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "GLY:65",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLY:14",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLU:34",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "CYS:115",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "LEU:39",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "LYS:82",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "PRO:30",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "GLY:130",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "PHE:83",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "LEU:164",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ASP:66",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "LYS:131",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "GLY:124",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ALA:38",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "SER:99",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ASP:13",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "SER:110",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLY:72",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "PRO:16",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "PHE:113",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ASN:3",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLY:135",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ALA:141",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "GLN:63",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "VAL:128",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "THR:157",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "PHE:53",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ASP:85",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "PRO:58",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "PHE:8",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ARG:144",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLY:96",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ASN:149",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ILE:114",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "THR:32",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "VAL:132",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ALA:101",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "LYS:28",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "PHE:145",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ILE:158",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ILE:89",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLY:18",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ASP:27",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "PHE:88",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLU:86",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ARG:148",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "MET:136",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "THR:5",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "TYR:79",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ALA:26",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ALA:103",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "LYS:133",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "GLY:162",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "GLY:42",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "SER:77",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "THR:116",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ILE:156",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ALA:159",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "THR:41",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "GLU:143",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "PHE:36",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "ASN:106",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "LYS:31",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "GLU:140",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "ARG:69",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ASP:160",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "SER:21",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "LYS:155",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "SER:147",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ILE:97",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "SER:40",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "VAL:12",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "PRO:95",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "THR:73",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "PHE:67",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ALA:11",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ASN:108",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "LEU:122",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "ARG:19",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "LYS:49",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ASN:35",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "GLY:45",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "HIE:54",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "HIS:92",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "HIE:70",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "LYS:44",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "PHE:60",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "VAL:2",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "HIS:126",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "LYS:125",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "LEU:17",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ALA:117",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLY:150",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLY:75",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "LEU:90",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "THR:152",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "PHE:129",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "VAL:6",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ILE:138",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "ASN:137",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "GLU:81",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "ALA:33",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "PHE:112",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "GLU:120",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "GLY:146",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLY:50",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "GLU:84",
+          "size": 1.0,"color": "white"
+        },
+        {
+          "nodeName": "VAL:139",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "ILE:57",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ASP:9",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "TRP:121",
+          "size": 1.0,"color": "#F06868"
+        },
+        {
+          "nodeName": "ILE:10",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "ARG:55",
+          "size": 1.0,"color": "#FFF200"
+        },
+        {
+          "nodeName": "LYS:76",
+          "size": 1.0,"color": "white"
+        }
+      ],
+      "trackLabel": "DefaultTrack"
+    }
+  ]
+}
