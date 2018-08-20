@@ -20,7 +20,14 @@
 
 import datetime
 from multiprocessing import Process, Queue
-from vmd import *  # Loads the static `molecule` object
+try:
+    from vmd import *  # Loads the static `molecule` object
+except ModuleNotFoundError:
+    import sys
+    sys.stderr.write("Error: The 'vmd-python' dependency could not be located. Please follow instructions "
+                     "at https://github.com/getcontacts/getcontacts to install.\n")
+    sys.exit(1)
+
 
 from .contact_utils import *
 from .aromatics import *

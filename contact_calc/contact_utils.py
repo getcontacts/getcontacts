@@ -473,7 +473,7 @@ def configure_ligand(top, traj, sele1, sele2):
     molecule.delete(molid)
 
     if not ligand_resnames:
-        print("No ligands detected (specify manually using e.g. --sele 'not (water or lipid)')")
+        print("No ligands detected (specify manually using e.g. --sele 'not (protein or water or lipid)')")
         evaltcl("atomselect macro ligand \" none \"")
     else:
         ligand_resn = " ".join(ligand_resnames)
