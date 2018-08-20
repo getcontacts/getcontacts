@@ -88,8 +88,8 @@ def main(argv=None):
     # Read contacts and generate graph
     itypes = parse_itypes(args.itype)
     contacts, num_frames = parse_contacts(args.input, itypes)
-    labels = parse_residuelabels(args.flarelabels)
-    graph = create_flare(contacts, labels)  # create_graph(contacts, labels)
+    labels, colors = parse_residuelabels(args.flarelabels)
+    graph = create_flare(contacts, labels, colors)  # create_graph(contacts, labels)
     args.input.close()
     if args.flarelabels is not None:
         args.flarelabels.close()

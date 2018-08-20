@@ -85,7 +85,7 @@ def is_compare_flare(flare):
     return True
 
 
-def create_flare(contacts, resi_labels):
+def create_flare(contacts, resi_labels, resi_colors):
     """
     Creates a flare from a contact-list and residue labels. If `resi_labels` isn't `None` then the "trees" and "tracks"
     will be generated as well.
@@ -95,13 +95,9 @@ def create_flare(contacts, resi_labels):
     contacts : list of list
         Each entry specifies a frame-number, an interaction type, and 2 to 4 atom-tuples depending on the interaction
         type. Water mediated and water-water mediated interactions will have waters in the third and fourth tuples.
-    #contacts : list of tuples of (str, str, tuple, tuple [[, tuple], tuple])
-    #    Each entry specifies a frame-number, an interaction type, and 2 to 4 atom-tuples depending on the interaction
-    #    type. Water mediated and water-water mediated interactions will have waters in the third and fourth tuples.
 
-    resi_labels : dict of (str : dict of (str : str))
-        Each key is a residue identifier and the associated value is a dictionary with the label, tree-path, and color
-        that are consistent with the format of flareplots.
+    resi_labels : dict of (str : str))
+    resi_colors : dict of (str : str))
 
     Returns
     -------
@@ -153,8 +149,8 @@ def create_flare(contacts, resi_labels):
             if a1_key not in resi_labels or a2_key not in resi_labels:
                 print("create_flare: Omitting contact "+str(contact)+" as it doesn't appear in flare-label file")
                 continue
-            a1_label = resi_labels[a1_key]["label"]
-            a2_label = resi_labels[a2_key]["label"]
+            a1_label = resi_labels[a1_key].split('.')[-1]
+            a2_label = resi_labels[a2_key].split('.')[-1]
         else:
             a1_label = a1_key
             a2_label = a2_key
@@ -179,11 +175,11 @@ def create_flare(contacts, resi_labels):
         track = {"trackLabel": "DefaultTrack", "trackProperties": []}
         ret["tracks"] = [track]
 
-        for rlabel in resi_labels.values():
-            tree["treePaths"].append(rlabel["treepath"])
+        for res in resi_labels:
+            tree["treePaths"].append(resi_labels[res])
             track["trackProperties"].append({
-                "nodeName": rlabel["label"],
-                "color": rlabel["color"],
+                "nodeName": resi_labels[res].split(".")[-1],
+                "color": resi_colors[res],
                 "size": 1.0
             })
 
