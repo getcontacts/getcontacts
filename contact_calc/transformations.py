@@ -77,7 +77,7 @@ def parse_residuelabels(label_file):
 
     Returns
     -------
-    tuple[dict[str:str]]
+    tuple of (dict of str: str, dict of str: str)
         Both tuple-entries have residue identifiers as keys. The values are strings that hold the label and the
         CSS-compatible color string respectively.
 
@@ -87,7 +87,7 @@ def parse_residuelabels(label_file):
         if a residue identifier (CHAIN:RESN:RESI) is specified twice in the file, or if a LABEL appears twice.
     """
     if label_file is None:
-        return None
+        return None, None
 
     ret = ({}, {})
     flarelabels = set()  # Only used to check for duplicates
