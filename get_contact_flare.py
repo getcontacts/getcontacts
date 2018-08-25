@@ -85,7 +85,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     if args.output:
-        print("Parsing %s contacts from %s" % (args.itype, args.input.name))
+        print("Parsing contact types %s from %s" % (str(args.itypes), args.input.name))
 
     # Read contacts and generate graph
     itypes = parse_itypes(args.itypes)
