@@ -10,20 +10,19 @@ the embedding projector (open the webpage, Click 'Load data' and locate the file
 """
 
 from __future__ import division
-import argparse
 
 
 def main(argv=None):
     # Parse command line arguments
-    class MyParser(argparse.ArgumentParser):
-        def error(self, message):
-            # Prints full program help when error occurs
-            self.print_help(sys.stderr)
-            sys.stderr.write('\nError: %s\n' % message)
-            sys.exit(2)
+    # class MyParser(argparse.ArgumentParser):
+    #     def error(self, message):
+    #         # Prints full program help when error occurs
+    #         self.print_help(sys.stderr)
+    #         sys.stderr.write('\nError: %s\n' % message)
+    #         sys.exit(2)
+    import argparse
 
-    parser = MyParser(description=__doc__,
-                      formatter_class=argparse.RawTextHelpFormatter)
+    parser = ap.PrintUsageParser(description=__doc__)
     parser.add_argument('--input',
                         type=argparse.FileType('r'),
                         required=True,
@@ -87,5 +86,6 @@ if __name__ == '__main__':
     from os import path
     sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
     from contact_calc.transformations import *
+    import contact_calc.argparsers as ap
 
     main()
