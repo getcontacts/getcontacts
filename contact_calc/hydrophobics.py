@@ -4,6 +4,50 @@ from .contact_utils import *
 
 __all__ = ['compute_hydrophobics']
 
+sele1_hp_indices = None
+sele2_hp_indices = None
+
+
+def prepare_indices(molid, index_to_atom, sele1, sele2):
+    global sele1_hp_indices, sele2_hp_indices
+    aa_sel = "(resname ALA PHE GLY ILE LEU PRO VAL TRP or ligand) and (element C)"
+
+    evaltcl("set allcarbons1 [atomselect %s \"%s and (%s)\" frame %s]" % (molid, aa_sel, sele1, 0))
+    all_carbons1 = get_atom_selection_indices("allcarbons1")
+    evaltcl("$allcarbons1 delete")
+    # print(all_carbons1)
+
+    sele1_hp_indices = []
+    for c_idx in all_carbons1:
+        evaltcl("set cneighbors [atomselect %s \"within 1.7 of (index %d)\" frame %s]" % (molid, c_idx, 0))
+        c_neighbor_indices = get_atom_selection_indices("cneighbors")
+        evaltcl("$cneighbors delete")
+        # print("neighbors of", c_idx, ":", c_neighbor_indices)
+
+        c_neighbor_elements = set([index_to_atom[n].element for n in c_neighbor_indices])
+        if c_neighbor_elements | set(["C", "H"]) == set(["C", "H"]):
+            sele1_hp_indices.append(str(c_idx))
+    sele1_hp_indices = " ".join(sele1_hp_indices)
+
+    evaltcl("set allcarbons2 [atomselect %s \"%s and (%s)\" frame %s]" % (molid, aa_sel, sele2, 0))
+    all_carbons2 = get_atom_selection_indices("allcarbons2")
+    evaltcl("$allcarbons2 delete")
+
+    sele2_hp_indices = []
+    for c_idx in all_carbons2:
+        evaltcl("set cneighbors [atomselect %s \"within 1.7 of (index %d)\" frame %s]" % (molid, c_idx, 0))
+        c_neighbor_indices = get_atom_selection_indices("cneighbors")
+        evaltcl("$cneighbors delete")
+
+        c_neighbor_elements = set([index_to_atom[n].element for n in c_neighbor_indices])
+        if c_neighbor_elements == set(["C", "H"]):
+            sele2_hp_indices.append(str(c_idx))
+    sele2_hp_indices = " ".join(sele2_hp_indices)
+
+    # print("preparing hp")
+    # print("sele1:",sele1_hp_indices)
+    # print("sele2:",sele2_hp_indices)
+
 
 def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, geom_criteria):
     """
@@ -32,16 +76,21 @@ def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2
     epsilon = geom_criteria['VDW_EPSILON']
     res_diff = geom_criteria['VDW_RES_DIFF']
 
-    aa_sel = "(resname ALA CYS PHE GLY ILE LEU MET PRO VAL TRP or ligand) and (element C S)"
+    if sele1_hp_indices is None:
+        prepare_indices(traj_frag_molid, index_to_atom, sele1, sele2)
 
-    if sele1 == sele2:
-        evaltcl("set hp_atoms [atomselect %s \"(%s) and (%s)\" frame %s]" % (traj_frag_molid, aa_sel, sele1, frame_idx))
-        contacts = evaltcl("measure contacts %s $hp_atoms" % (epsilon + 2 * 1.8))
+    if not sele1_hp_indices:
+        contacts = ""
+    elif sele1 == sele2:
+        evaltcl("set hp_atoms [atomselect %s \"index %s\" frame %s]" % (traj_frag_molid, sele1_hp_indices, frame_idx))
+        contacts = evaltcl("measure contacts %s $hp_atoms" % (epsilon + 2 * 1.7))
         evaltcl("$hp_atoms delete")
     else:
-        evaltcl("set hp_atoms1 [atomselect %s \"(%s) and (%s)\" frame %s]" % (traj_frag_molid, aa_sel, sele1, frame_idx))
-        evaltcl("set hp_atoms2 [atomselect %s \"(%s) and (%s)\" frame %s]" % (traj_frag_molid, aa_sel, sele2, frame_idx))
-        contacts = evaltcl("measure contacts %s $hp_atoms1 $hp_atoms2" % (epsilon + 2 * 1.8))
+        evaltcl("set hp_atoms1 [atomselect %s \"index %s\" frame %s]" % (traj_frag_molid, sele1_hp_indices, frame_idx))
+        evaltcl("set hp_atoms2 [atomselect %s \"index %s\" frame %s]" % (traj_frag_molid, sele2_hp_indices, frame_idx))
+        # evaltcl("set hp_atoms1 [atomselect %s \"(%s) and (%s)\" frame %s]" % (traj_frag_molid, aa_sel, sele1, frame_idx))
+        # evaltcl("set hp_atoms2 [atomselect %s \"(%s) and (%s)\" frame %s]" % (traj_frag_molid, aa_sel, sele2, frame_idx))
+        contacts = evaltcl("measure contacts %s $hp_atoms1 $hp_atoms2" % (epsilon + 2 * 1.7))
         evaltcl("$hp_atoms1 delete")
         evaltcl("$hp_atoms2 delete")
 
