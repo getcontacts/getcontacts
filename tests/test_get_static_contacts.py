@@ -17,7 +17,7 @@ class TestGetDynamicContacts(unittest.TestCase):
         self.assertTrue(os.path.exists(outfile))
         with open(outfile) as f:
             lines = f.readlines()
-            self.assertEqual(len(lines), 268)
+            self.assertEqual(len(lines), 261)
 
             # Check that first two lines are comments
             self.assertEqual(lines[0][0], "#")
