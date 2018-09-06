@@ -6,7 +6,7 @@ import get_static_contacts
 import os
 
 
-class TestGetDynamicContacts(unittest.TestCase):
+class TestGetStaticContacts(unittest.TestCase):
 
     def test_5y0t_interface(self):
         outfile = "tests/5Y0T_all.tsv"
