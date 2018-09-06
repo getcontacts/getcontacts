@@ -44,10 +44,6 @@ def prepare_indices(molid, index_to_atom, sele1, sele2):
             sele2_hp_indices.append(str(c_idx))
     sele2_hp_indices = " ".join(sele2_hp_indices)
 
-    # print("preparing hp")
-    # print("sele1:",sele1_hp_indices)
-    # print("sele2:",sele2_hp_indices)
-
 
 def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, geom_criteria):
     """
@@ -108,6 +104,7 @@ def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2
         vanderwaal_cutoff = atom1.vdwradius + atom2.vdwradius + epsilon
         if distance < vanderwaal_cutoff:
             ret.append([frame_idx, "hp", atom1.get_label(), atom2.get_label()])
+            # print(atom1.get_label(), atom2.get_label())
 
     return ret
 
