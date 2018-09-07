@@ -9,4 +9,5 @@ get_static_contacts.py \
   --itypes hb \
   --output contacts.tsv \
   --ps_cutoff_dist 6.5 \
+  --hbond_cutoff_ang 70 \
   --solv HOH
