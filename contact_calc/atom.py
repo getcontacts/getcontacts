@@ -102,6 +102,7 @@ def infer_element(resname, name):
     return "?"
 
 
+# Atom names of back-bone atoms
 bb_names = set(["O", "N", "OP1", "OP2", "O1P", "O2P", "O3'", "O2'", "O4'", "O5'"])
 
 # https://en.wikipedia.org/wiki/Atomic_radii_of_the_elements_(data_page)
