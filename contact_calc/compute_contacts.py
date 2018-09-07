@@ -47,7 +47,7 @@ TRAJ_FRAG_SIZE = 100
 ##############################################################################
 
 
-def compute_frame_contacts(molid, frame, itypes, geom_criteria, solvent_resn, sele1, sele2,
+def compute_frame_contacts(molid, frame, itypes, geom_criteria, sele1, sele2,
                            sele1_atoms, sele2_atoms, index_to_atom):
     """
     Computes each of the specified non-covalent interaction type for a single frame
@@ -62,8 +62,6 @@ def compute_frame_contacts(molid, frame, itypes, geom_criteria, solvent_resn, se
         Denotes the list of non-covalent interaction types to compute contacts for 
     geom_criteria: dict
         Dictionary containing the cutoff values for all geometric criteria
-    solvent_resn: set
-        Resname(s) of solvent in simulation
     sele1: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele2: string, default = None
@@ -95,7 +93,7 @@ def compute_frame_contacts(molid, frame, itypes, geom_criteria, solvent_resn, se
     if "vdw" in itypes:
         frame_contacts += compute_vanderwaals(molid, frame, index_to_atom, sele1, sele2, geom_criteria)
     if "hb" in itypes:
-        frame_contacts += compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn,
+        frame_contacts += compute_hydrogen_bonds(molid, frame, index_to_atom,
                                                  sele1, sele2, sele1_atoms, sele2_atoms, geom_criteria)
     if "hp" in itypes:
         frame_contacts += compute_hydrophobics(molid, frame, index_to_atom, sele1, sele2, geom_criteria)
@@ -104,7 +102,7 @@ def compute_frame_contacts(molid, frame, itypes, geom_criteria, solvent_resn, se
 
 
 def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values, stride,
-                              solvent_resn, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom):
+                              sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom):
     """ 
     Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
 
@@ -126,8 +124,6 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes,
         Dictionary containing the cutoff values for all geometric criteria
     stride: int, default = 1
         Frequency to skip frames in trajectory
-    solvent_resn: set
-        Resname(s) of solvent in simulation
     sele1: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele2: string, default = None
@@ -154,7 +150,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes,
     for frame_idx in range(num_frag_frames):
         # if frame_idx > 1: break
         fragment_contacts += compute_frame_contacts(traj_frag_molid, frame_idx, itypes, geom_criterion_values,
-                                                    solvent_resn, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom)
+                                                    sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom)
 
     # Delete trajectory fragment to clear memory
     molecule.delete(traj_frag_molid)
@@ -222,7 +218,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
 
     index_to_atom = gen_index_to_atom(top, traj)
     sim_length = simulation_length(top, traj)
-    solvent_resn = configure_solv(top, traj, solv_sele)
+    configure_solv(top, traj, solv_sele)
     configure_lipid(top, traj, lipid_sele)
     configure_ligand(top, traj, ligand_sele, sele1, sele2)
 
@@ -245,7 +241,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         end_frame = beg_frame + (TRAJ_FRAG_SIZE * stride) - 1
         # print(frag_idx, beg_frame, end_frame, stride)
         inputqueue.put((frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values,
-                        stride, solvent_resn, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom))
+                        stride, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom))
 
     # Set up result queue for workers to transfer results to the consumer
     resultsqueue = Queue()

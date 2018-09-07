@@ -26,7 +26,7 @@ WATER_SHELL_RAD = 3.5  # Experimentally determined to be a low value that doesn'
 int_pattern = re.compile(r'\d+')
 
 
-def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, sele1, sele2,
+def compute_hydrogen_bonds(molid, frame, index_to_atom, sele1, sele2,
                            sele1_atoms, sele2_atoms, geom_criteria):
     """
     Compute hydrogen bonds involving protein for a single frame of simulation
@@ -39,8 +39,6 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, sele1, sel
         Specify frame index with respect to the smaller trajectory fragment
     index_to_atom: dict
         Maps VMD atom index to Atom
-    solvent_resn: string
-        Denotes the resname of solvent in simulation
     sele1: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele2: string, default = None
@@ -72,6 +70,7 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, sele1, sel
                 (molid, WATER_SHELL_RAD, sele1, sele2, frame))
 
     ligand_indices = get_selection_indices(molid, frame, "ligand")  # TODO: This can be sped up by not fetching selection indices at every frame
+    solvent_atoms = get_selection_indices(molid, frame, "solv")  # TODO: This can be sped up by not fetching selection indices at every frame
 
     sel_sel = extract_donor_acceptor(evaltcl("measure hbonds %s %s $selunion" % (cutoff_distance, cutoff_angle)))
     sel_sel = [(d, a) for (d, a) in sel_sel if filter_dual_selection(sele1_atoms, sele2_atoms, d, a)]
@@ -133,8 +132,8 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, sele1, sel
         if d_atom.chain == a_atom.chain and d_atom.resid == a_atom.resid:
             continue
 
-        d_solv = d_atom.resname in solvent_resn
-        a_solv = a_atom.resname in solvent_resn
+        d_solv = d_idx in solvent_atoms  # d_atom.resname in solvent_resn
+        a_solv = a_idx in solvent_atoms  # a_atom.resname in solvent_resn
 
         if d_solv:
             water_dict[d_idx].add(a_idx)
@@ -151,8 +150,8 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, sele1, sel
             n1_atom = index_to_atom[n1]
             n2_atom = index_to_atom[n2]
 
-            n1_solv = n1_atom.resname in solvent_resn
-            n2_solv = n2_atom.resname in solvent_resn
+            n1_solv = n1 in solvent_atoms  # n1_atom.resname in solvent_resn
+            n2_solv = n2 in solvent_atoms  # n2_atom.resname in solvent_resn
 
             # If n1 and n2 are both waters, ignore the pair
             if n1_solv and n2_solv:
@@ -173,7 +172,8 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, sele1, sel
 
                 for n2_n in water_dict[n2]:
                     n2_n_atom = index_to_atom[n2_n]
-                    if n2_n_atom.resname not in solvent_resn:
+                    # if n2_n_atom.resname not in solvent_resn:
+                    if n2_n not in solvent_atoms:
                         # This neighbor of n2 is not a water, so check for extended bridge from n1
                         if not filter_dual_selection(sele1_atoms, sele2_atoms, n1, n2_n):
                             continue

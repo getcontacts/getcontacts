@@ -376,10 +376,10 @@ def calc_water_to_residues_map(water_hbonds, solvent_resn):
     return frame_idx, water_to_residues, solvent_bridges
 
 
-def configure_solv(top, traj, solvent_resn):
+def configure_solv(top, traj, solvent_sele):
     """
-    Detects the solvent residue name and creates a corresponding VMD selection macro called 'solv'. Will print a warning
-    if no solvent molecule could be located and returns 'HOH'.
+    Detects the solvent atoms and creates a corresponding VMD selection macro called 'solv'. Will print a warning
+    if no solvent molecule could be located and returns an empty set.
 
     Parameters
     ----------
@@ -387,40 +387,54 @@ def configure_solv(top, traj, solvent_resn):
         In .pdb or .mae format
     traj: Trajectory
         In .nc or .dcd format
-    solvent_resn: str
-        The command-line residue name for solvent. If empty or None, attempt to determine solvent resname
+    solvent_sele: str
+        The solvent selection. If empty or None, attempt to determine solvent resname
 
     Returns
     -------
-    str
-        If `solvent_resn` is specified it will be returned as is. If not the residue name of the auto-detected solvent
-        is returned
+    set of int:
+        A set of vmd-indices of atoms that are in the solvent selection
     """
     # Set up custom water selection
-    if solvent_resn:
-        evaltcl("atomselect macro solv \" resname " + solvent_resn + " \"")
-        return set(solvent_resn.split())
+    if solvent_sele:
+        evaltcl("atomselect macro solv \" " + solvent_sele + " \"")
+
+        # Determine resnames in selection
+        molid = load_traj(top, traj, 0, 1, 1)
+        evaltcl("set all_solv [atomselect %s \" solv \" frame 0]" % molid)
+        solv_resn = set(evaltcl("$all_solv get resname").split())
+        solv_ids = get_atom_selection_indices("all_solv")
+        evaltcl("$all_solv delete")
+        molecule.delete(molid)
+        if solv_ids:
+            print("Detected %d solvent atoms (resnames %s) matching --solv '%s'" %
+                  (len(solv_ids), " ".join(set(solv_resn)), solvent_sele))
+        else:
+            print("Detected no solvent atoms matching --solv '%s'" % solvent_sele)
+        return solv_ids
     else:
         solv_resnames = set("H2O HH0 OHH HOH OH2 SOL WAT TIP TIP2 TIP3 TIP4 T3P IP3".split())
-        traj_frag_molid = load_traj(top, traj, 0, 1, 1)
-        evaltcl("set all_atoms [atomselect %s \" all \" frame 0]" % traj_frag_molid)
+        molid = load_traj(top, traj, 0, 1, 1)
+        evaltcl("set all_atoms [atomselect %s \" all \" frame 0]" % molid)
         all_resn = set(evaltcl("$all_atoms get resname").split())
         solv_resnames = solv_resnames & all_resn
         evaltcl("$all_atoms delete")
-        molecule.delete(traj_frag_molid)
 
         if not solv_resnames:
-            print("No waters detected (specify manually using --solv)")
+            print("Detected no solvent atoms (specify manually using --solv)")
             evaltcl("atomselect macro solv \" none \"")
-            return set(["HOH"])
+            molecule.delete(molid)
+            return set([])
         else:
             solvent_resn = " ".join(solv_resnames)
-            print("Identified the following residue names as waters: " + solvent_resn)
             evaltcl("atomselect macro solv \" (resname " + solvent_resn + ") \"")
-            return solv_resnames
+            solv_ids = get_selection_indices(molid, 0, "solv")
+            print("Detected %d solvent atoms (resname %s)" % (len(solv_ids), solvent_resn))
+            molecule.delete(molid)
+            return solv_ids
 
 
-def configure_lipid(top, traj, lipid_resn):
+def configure_lipid(top, traj, lipid_sele):
     """
     Detects the lipid residue name and creates a corresponding VMD selection macro called 'lipid'.
 
@@ -430,12 +444,25 @@ def configure_lipid(top, traj, lipid_resn):
         In .pdb or .mae format
     traj: Trajectory
         In .nc or .dcd format
-    lipid_resn: str
-        The command-line residue name for lipid. If empty or None, attempt to determine lipid resname
+    lipid_sele: str
+        VMD-selection for lipids. If empty or None, attempt to determine lipid resname
     """
-    if lipid_resn:
-        evaltcl("atomselect macro lipid \" resname " + lipid_resn + " \"")
-        return set(lipid_resn.split())
+    if lipid_sele:
+        evaltcl("atomselect macro lipid \" " + lipid_sele + " \"")
+
+        # Determine resnames in selection
+        molid = load_traj(top, traj, 0, 1, 1)
+        evaltcl("set all_lipid [atomselect %s \" lipid \" frame 0]" % molid)
+        lipid_resn = set(evaltcl("$all_lipid get resname").split())
+        lipid_ids = get_atom_selection_indices("all_lipid")
+        evaltcl("$all_lipid delete")
+        molecule.delete(molid)
+        if lipid_ids:
+            print("Detected %d lipid atoms (resnames %s) matching --lipid '%s'" %
+                  (len(lipid_ids), " ".join(set(lipid_resn)), lipid_sele))
+        else:
+            print("Detected no lipid atoms matching --lipid '%s'" % lipid_sele)
+        return lipid_ids
     else:
         # If we need to expand default definition of lipids uncomment this line and add to this list
         # evaltcl("atomselect macro lipid \" (resname DLPE DMPC DPPC GPC LPPC PALM PC PGCL POPC POPE) \"")
@@ -447,15 +474,19 @@ def configure_lipid(top, traj, lipid_resn):
         all_resn = set(evaltcl("$all_atoms get resname").split())
         lipid_resnames = lipid_resnames & all_resn
         evaltcl("$all_atoms delete")
-        molecule.delete(molid)
 
         if not lipid_resnames:
-            print("No lipids detected (specify manually using --lipids)")
+            print("Detected no lipid atoms (specify manually using --lipid)")
+            evaltcl("atomselect macro lipid \" none \"")
+            molecule.delete(molid)
+            return set([])
         else:
             lipid_resn = " ".join(lipid_resnames)
-            print("Identified the following residue names as lipids: " + lipid_resn)
             evaltcl("atomselect macro lipid \" (resname " + lipid_resn + ") \"")
-        return lipid_resnames
+            lipid_ids = get_selection_indices(molid, 0, "lipid")
+            print("Detected %d lipid atoms (resname %s)" % (len(lipid_ids), lipid_resn))
+            molecule.delete(molid)
+            return lipid_ids
 
 
 def configure_ligand(top, traj, ligand_sele, sele1, sele2):
@@ -479,16 +510,17 @@ def configure_ligand(top, traj, ligand_sele, sele1, sele2):
     if ligand_sele:
         evaltcl("atomselect macro ligand \" (" + ligand_sele + ") \"")
         evaltcl("set ligatoms [atomselect %s \" ligand \" frame 0]" % molid)
-        ligatoms = get_selection_indices("ligand")
+        ligatoms = get_selection_indices(molid, 0, "ligand")
         if ligatoms:
+            print("Detected %d ligand atoms matching --ligand '%s'" % (len(ligatoms), ligand_sele))
+
             # Warn if there is no overlap between ligand and sele1 or sele2
             ligatoms = get_selection_indices(molid, 0, "ligand and (%s or %s)" % (sele1, sele2))
             if not ligatoms:
-                print("Warning: None of the selected ligand atoms are in either --sele or --sele2")
+                print("Warning: None of the selected ligand atoms are in --sele or --sele2")
         else:
-            print("No ligand atoms matching \"%s\" were detected" % ligand_sele)
+            print("Detected no ligand atoms matching --ligand '%s'" % ligand_sele)
 
-        evaltcl("$ligatoms delete")
     else:
         evaltcl("atomselect macro ligand \"not (lipid or solv or protein or nucleic)\"")
         evaltcl("set ligatoms [atomselect %s \" ligand \" frame 0]" % molid)
@@ -496,14 +528,14 @@ def configure_ligand(top, traj, ligand_sele, sele1, sele2):
         ligand_resnames = set(evaltcl("$ligatoms get resname").split())
         if ligatoms:
             ligand_resn = " ".join(ligand_resnames)
-            print("Identified %d ligand atoms (residue names: %s)" % (len(ligatoms), ligand_resn))
+            print("Detected %d ligand atoms (resnames: %s)" % (len(ligatoms), ligand_resn))
 
             # Warn if there is no overlap between ligand and sele1 or sele2
             ligatoms = get_selection_indices(molid, 0, "ligand and (%s or %s)" % (sele1, sele2))
             if not ligatoms:
                 print("Warning: No ligand atoms are in --sele or --sele2")
         else:
-            print("No ligand atoms detected (specify manually using e.g. --ligand 'resname GTP')")
+            print("Detected no ligand atoms (specify manually using e.g. --ligand 'resname GTP')")
             evaltcl("atomselect macro ligand \" none \"")
 
     evaltcl("$ligatoms delete")
