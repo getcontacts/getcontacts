@@ -46,6 +46,7 @@ def get_file_type(file_name):
     """
     if file_name is None:
         return None
+
     file_type = file_name.split(".")[-1].strip()
     if file_type == "nc":
         file_type = "netcdf"
@@ -53,6 +54,9 @@ def get_file_type(file_name):
         file_type = "parm7"
     if file_type == "cms":
         file_type = "mae"
+    if file_type == "cif":
+        file_type = "pdbx"
+
     return file_type
 
 
@@ -213,7 +217,7 @@ def gen_index_to_atom(top, traj):
 
     """
     # Select all atoms from first frame of trajectory
-    trajid = load_traj(top, traj, 1, 2, 1)
+    trajid = load_traj(top, traj, 0, 1, 1)
     all_atom_sel = "set all_atoms [atomselect %s \" all \" frame %s]" % (trajid, 0)
     evaltcl(all_atom_sel)
     chains, resnames, resids, names, elements, indices = get_atom_selection_properties("all_atoms")
