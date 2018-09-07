@@ -24,6 +24,7 @@ __all__ = ['compute_salt_bridges']
 
 acidic_asp = "((resname ASP) and (name OD1 OD2))"
 acidic_glu = "((resname GLU) and (name OE1 OE2))"
+acidic_nucl = "((resname C U G A DC DT DG DA) and (name OP1 OP2))"
 basic_his = "((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2))"
 basic_lys = "((resname LYS) and (name NZ))"
 basic_arg = "((resname ARG) and (name NH1 NH2))"
@@ -56,10 +57,10 @@ def compute_salt_bridges(traj_frag_molid, frame, index_to_atom, sele1, sele2, ge
     """
     cutoff_dist = geom_criteria['SALT_BRIDGE_CUTOFF_DISTANCE']
 
-    s1_anions = "(%s or %s) and %s" % (acidic_asp, acidic_glu, sele1)
-    s2_anions = "(%s or %s) and %s" % (acidic_asp, acidic_glu, sele2)
-    s1_cations = "( %s or %s or %s) and %s" % (basic_his, basic_lys, basic_arg, sele1)
-    s2_cations = "( %s or %s or %s) and %s" % (basic_his, basic_lys, basic_arg, sele2)
+    s1_anions = "(%s or %s or %s) and (%s)" % (acidic_asp, acidic_glu, acidic_nucl, sele1)
+    s2_anions = "(%s or %s or %s) and (%s)" % (acidic_asp, acidic_glu, acidic_nucl, sele2)
+    s1_cations = "(%s or %s or %s) and (%s)" % (basic_his, basic_lys, basic_arg, sele1)
+    s2_cations = "(%s or %s or %s) and (%s)" % (basic_his, basic_lys, basic_arg, sele2)
 
     evaltcl("set s1anions [atomselect %s \" %s \" frame %s]" % (traj_frag_molid, s1_anions, frame))
     evaltcl("set s2anions [atomselect %s \" %s \" frame %s]" % (traj_frag_molid, s2_anions, frame))

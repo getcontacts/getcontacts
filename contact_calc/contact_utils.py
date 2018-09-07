@@ -310,17 +310,21 @@ def get_selection_indices(traj_frag_molid, frame_idx, selection_id):
 #     return aromatic_atom_triplet_list
 
 
-def convert_to_single_atom_aromatic_string(aromatic_atom_label):
+def convert_to_single_atom_aromatic_string(aromatic_atom_labels):
     """
-    Replaces any aromatic ring atom with CG label
+    Checks the triple of aromatic atom labels and returns the one with lower atom name
 
+    Parameters
+    ----------
+    aromatic_atom_labels: list of str
+        triple of atom labels
     Returns
     -------
-    aromatic_CG_atom_label: The CG atom label for an aromatic ring (ie C:PHE:49:CG)
+    str: A label of a single atom representative of the aromatic ring (ie C:PHE:49:CG)
     """
-
-    aromatic_CG_atom_label = ":".join(aromatic_atom_label.split(":")[0:3]) + ":CG:vmd_idx"
-    return aromatic_CG_atom_label
+    return min(aromatic_atom_labels, key=lambda l: l.split(":")[3])
+    # aromatic_CG_atom_label = ":".join(aromatic_atom_label.split(":")[0:3]) + ":CG:vmd_idx"
+    # return aromatic_CG_atom_label
 
 
 def calc_water_to_residues_map(water_hbonds, solvent_resn):
@@ -450,9 +454,9 @@ def configure_lipid(top, traj, lipid_resn):
         return lipid_resnames
 
 
-def configure_ligand(top, traj, sele1, sele2):
+def configure_ligand(top, traj, ligand_sele, sele1, sele2):
     """
-    Detects the lipid residue name and creates a corresponding VMD selection macro called 'lipid'.
+    Detects the ligands if not specified in ligand_sele and creates a VMD selection macro called 'ligand'
 
     Parameters
     ----------
@@ -460,27 +464,46 @@ def configure_ligand(top, traj, sele1, sele2):
         In .pdb or .mae format
     traj: Trajectory
         In .nc or .dcd format
+    ligand_sele: str | None
+        Ligand selection
     sele1: str
         Selection 1
     sele2: str
         Selection 2
     """
     molid = load_traj(top, traj, 0, 1, 1)
-    evaltcl("set restatoms [atomselect %s \" (%s or %s) and not (lipid or solv or protein) \" frame 0]" %
-            (molid, sele1, sele2))
-    ligand_resnames = set(evaltcl("$restatoms get resname").split())
-    evaltcl("$restatoms delete")
-    molecule.delete(molid)
+    if ligand_sele:
+        evaltcl("atomselect macro ligand \" (" + ligand_sele + ") \"")
+        evaltcl("set ligatoms [atomselect %s \" ligand \" frame 0]" % molid)
+        ligatoms = get_selection_indices("ligand")
+        if ligatoms:
+            # Warn if there is no overlap between ligand and sele1 or sele2
+            ligatoms = get_selection_indices(molid, 0, "ligand and (%s or %s)" % (sele1, sele2))
+            if not ligatoms:
+                print("Warning: None of the selected ligand atoms are in either --sele or --sele2")
+        else:
+            print("No ligand atoms matching \"%s\" were detected" % ligand_sele)
 
-    if not ligand_resnames:
-        print("No ligands detected (specify manually using e.g. --sele 'not (protein or water or lipid)')")
-        evaltcl("atomselect macro ligand \" none \"")
+        evaltcl("$ligatoms delete")
     else:
-        ligand_resn = " ".join(ligand_resnames)
-        print("Identified the following residue names as ligands: " + ligand_resn)
-        evaltcl("atomselect macro ligand \" (resname " + ligand_resn + ") \"")
+        evaltcl("atomselect macro ligand \"not (lipid or solv or protein or nucleic)\"")
+        evaltcl("set ligatoms [atomselect %s \" ligand \" frame 0]" % molid)
+        ligatoms = get_atom_selection_indices("ligatoms")
+        ligand_resnames = set(evaltcl("$ligatoms get resname").split())
+        if ligatoms:
+            ligand_resn = " ".join(ligand_resnames)
+            print("Identified %d ligand atoms (residue names: %s)" % (len(ligatoms), ligand_resn))
 
-    return ligand_resnames
+            # Warn if there is no overlap between ligand and sele1 or sele2
+            ligatoms = get_selection_indices(molid, 0, "ligand and (%s or %s)" % (sele1, sele2))
+            if not ligatoms:
+                print("Warning: No ligand atoms are in --sele or --sele2")
+        else:
+            print("No ligand atoms detected (specify manually using e.g. --ligand 'resname GTP')")
+            evaltcl("atomselect macro ligand \" none \"")
+
+    evaltcl("$ligatoms delete")
+    molecule.delete(molid)
 
 
 # def compute_distance(molid, frame_idx, atom1_label, atom2_label):

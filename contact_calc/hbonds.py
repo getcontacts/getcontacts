@@ -26,7 +26,7 @@ WATER_SHELL_RAD = 3.5  # Experimentally determined to be a low value that doesn'
 int_pattern = re.compile(r'\d+')
 
 
-def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_resn, sele1, sele2,
+def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, sele1, sele2,
                            sele1_atoms, sele2_atoms, geom_criteria):
     """
     Compute hydrogen bonds involving protein for a single frame of simulation
@@ -41,8 +41,6 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
         Maps VMD atom index to Atom
     solvent_resn: string
         Denotes the resname of solvent in simulation
-    ligand_resn: string
-        Denotes the resname(s) of ligand(s) in simulation
     sele1: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele2: string, default = None
@@ -71,6 +69,8 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
         evaltcl("set shell [atomselect %s \"(solv) and within %s of ((%s) or (%s))\" frame %s]" %
                 (molid, WATER_SHELL_RAD, sele1, sele2, frame))
 
+    ligand_indices = get_selection_indices(molid, frame, "ligand")  # TODO: This can be sped up by not fetching selection indices at every frame
+
     sel_sel = extract_donor_acceptor(evaltcl("measure hbonds %s %s $selunion" % (cutoff_distance, cutoff_angle)))
     sel_sel = [(d, a) for (d, a) in sel_sel if filter_dual_selection(sele1_atoms, sele2_atoms, d, a)]
 
@@ -97,8 +97,8 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
 
         d_bb = d_atom.is_bb()
         a_bb = a_atom.is_bb()
-        d_lig = d_atom.resname in ligand_resn
-        a_lig = a_atom.resname in ligand_resn
+        d_lig = d_atom.index in ligand_indices  # d_atom.resname in ligand_resn
+        a_lig = a_atom.index in ligand_indices  # a_atom.resname in ligand_resn
 
         if d_lig and a_lig:
             hb_type = "hbll"
@@ -161,7 +161,7 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
                 n1_solv, n2_solv = n2_solv, n1_solv
                 n1_atom, n2_atom = n2_atom, n1_atom
 
-            n1_lig = n1_atom.resname in ligand_resn
+            n1_lig = n1_atom.index in ligand_indices  # n1_atom.resname in ligand_resn
 
             # If n1 is not water but n2 is, check for extended water-bridges between n1 and neighbors of n2
             if n2_solv:
@@ -178,7 +178,7 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
                         if n1_atom.chain == n2_n_atom.chain and abs(n1_atom.resid - n2_n_atom.resid) < res_diff:
                             continue
 
-                        n2_n_lig = n2_n_atom.resname in ligand_resn
+                        n2_n_lig = n2_n_atom.index in ligand_indices  # n2_n_atom.resname in ligand_resn
                         if n1_lig or n2_n_lig:
                             hb_type = "lwb2"
                         else:
@@ -192,7 +192,7 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, ligand_res
                 if n1_atom.chain == n2_atom.chain and abs(n1_atom.resid - n2_atom.resid) < res_diff:
                     continue
 
-                n2_lig = n2_atom.resname in ligand_resn
+                n2_lig = n2_atom.index in ligand_indices  # n2_atom.resname in ligand_resn
 
                 if n1_lig or n2_lig:
                     hb_type = "lwb"

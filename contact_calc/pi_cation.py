@@ -27,6 +27,7 @@ basic_arg = "((resname ARG) and (name NH1 NH2))"
 aromatic_phe = "((resname PHE) and (name CG CE1 CE2))"
 aromatic_trp = "((resname TRP) and (name CD2 CZ2 CZ3))"
 aromatic_tyr = "((resname TYR) and (name CG CE1 CE2))"
+aromatic_nucl = "(nucleic and (name C4 C2 C6))"
 
 
 def compute_pi_cation(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_criteria):
@@ -56,10 +57,10 @@ def compute_pi_cation(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_
     cutoff_distance = geom_criteria['PI_CATION_CUTOFF_DISTANCE']
     cutoff_angle = geom_criteria['PI_CATION_CUTOFF_ANGLE']
 
-    s1_aroms = "(%s or %s or %s) and %s" % (aromatic_phe, aromatic_trp, aromatic_tyr, sele1)
-    s2_aroms = "(%s or %s or %s) and %s" % (aromatic_phe, aromatic_trp, aromatic_tyr, sele2)
-    s1_cations = "( %s or %s or %s) and %s" % (basic_his, basic_lys, basic_arg, sele1)
-    s2_cations = "( %s or %s or %s) and %s" % (basic_his, basic_lys, basic_arg, sele2)
+    s1_aroms = "(%s or %s or %s or %s) and (%s)" % (aromatic_phe, aromatic_trp, aromatic_tyr, aromatic_nucl, sele1)
+    s2_aroms = "(%s or %s or %s or %s) and (%s)" % (aromatic_phe, aromatic_trp, aromatic_tyr, aromatic_nucl, sele2)
+    s1_cations = "(%s or %s or %s) and (%s)" % (basic_his, basic_lys, basic_arg, sele1)
+    s2_cations = "(%s or %s or %s) and (%s)" % (basic_his, basic_lys, basic_arg, sele2)
 
     evaltcl("set s1aroms [atomselect %s \" %s \" frame %s]" % (traj_frag_molid, s1_aroms, frame))
     evaltcl("set s2aroms [atomselect %s \" %s \" frame %s]" % (traj_frag_molid, s2_aroms, frame))
@@ -82,6 +83,7 @@ def compute_pi_cation(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_
     for cation_index, aromatic_index in contact_index_pairs:
         cation_label = index_to_atom[cation_index].get_label()
         aromatic_label = index_to_atom[aromatic_index].get_label()
+        # print("PC", cation_label, aromatic_label)
         pi_cation_aromatic_res_key = cation_label + ":" + ":".join(aromatic_label.split(":")[0:3])
         if pi_cation_aromatic_res_key not in pi_cation_aromatic_grouping:
             pi_cation_aromatic_grouping[pi_cation_aromatic_res_key] = set()
@@ -118,7 +120,9 @@ def compute_pi_cation(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_
             continue
 
         # Append just the CG atom of the aromatic ring
-        single_arom_atom_label = convert_to_single_atom_aromatic_string(arom_atom1_label)
+        single_arom_atom_label = convert_to_single_atom_aromatic_string([arom_atom1_label,
+                                                                         arom_atom2_label,
+                                                                         arom_atom3_label])
         pi_cations.append([frame, "pc", cation_atom_label, single_arom_atom_label])
 
     return pi_cations

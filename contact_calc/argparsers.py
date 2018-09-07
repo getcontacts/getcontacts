@@ -55,10 +55,13 @@ def build_getcontact_parser(program_description, trajectory):
                                 help="VMD selection 1 [default = 'protein']")
     optional_group.add_argument("--sele2", type=str, metavar="STR", default=None,
                                 help="VMD selection 2 [default = <same as --sele>]")
+    optional_group.add_argument("--ligand", type=str, metavar="STR", default="",
+                                help="VMD selection of ligand atoms "
+                                     "[default = 'not (protein or nucleic or solv or lipid)']")
     optional_group.add_argument("--solv", type=str, metavar="STR", default="",
-                                help="Resname(s) of solvent residue names [default = 'HOH TIP3 T3P ..']")
-    optional_group.add_argument("--lipids", type=str, metavar="STR", default="",
-                                help="Resname(s) of lipid residue names [default = 'DLPE DMPC POPC ..']")
+                                help="VMD selection of solvent atoms [default = 'resname HOH TIP3 T3P ..']")
+    optional_group.add_argument("--lipid", type=str, metavar="STR", default="",
+                                help="VMD selection of lipid atoms [default = 'resname DLPE DMPC POPC ..']")
 
     if trajectory:
         optional_group.add_argument("--cores", type=int, metavar="INT", default=6,

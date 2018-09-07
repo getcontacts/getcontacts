@@ -100,8 +100,9 @@ def main(argv=None):
     traj = args.structure
     output = args.output
     cores = 1
+    ligand = args.ligand
     solv = args.solv
-    lipids = args.lipids
+    lipid = args.lipid
     sele1 = args.sele
     sele2 = args.sele2
     beg = 0
@@ -126,7 +127,7 @@ def main(argv=None):
 
     # Begin computation
     tic = datetime.datetime.now()
-    compute_contacts(top, traj, output, itypes, geom_criteria, cores, beg, end, stride, solv, lipids, sele1, sele2)
+    compute_contacts(top, traj, output, itypes, geom_criteria, cores, beg, end, stride, ligand, solv, lipid, sele1, sele2)
     toc = datetime.datetime.now()
     print("\nTotal computation time: " + str((toc-tic).total_seconds()) + " seconds")
 

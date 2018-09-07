@@ -75,7 +75,7 @@ def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2
     if sele1_hp_indices is None:
         prepare_indices(traj_frag_molid, index_to_atom, sele1, sele2)
 
-    if not sele1_hp_indices:
+    if (not sele1_hp_indices) or (not sele2_hp_indices):
         contacts = ""
     elif sele1 == sele2:
         evaltcl("set hp_atoms [atomselect %s \"index %s\" frame %s]" % (traj_frag_molid, sele1_hp_indices, frame_idx))
