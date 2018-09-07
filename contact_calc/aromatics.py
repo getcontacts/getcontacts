@@ -96,7 +96,7 @@ def get_aromatic_triplet(molid, frame, aatom, index_to_atom):
     chain, resname, resid = aatom.chain, aatom.resname, aatom.resid
     # Use the dict above and assume nucleic acid if residue name is not present
     arom_triple = residue_to_atom_names[resname] if resname in residue_to_atom_names else "C2 C4 C6"
-    evaltcl("set aromatic_atoms [atomselect %s \"(chain %s) and (resname %s) and (resid '%s') and (name %s)\" frame %s]"
+    evaltcl("set aromatic_atoms [atomselect %s \"(chain '%s') and (resname '%s') and (resid '%s') and (name '%s')\" frame %s]"
             % (molid, chain, resname, resid, arom_triple, frame))
     aromatic_atom_triplet_indices = get_atom_selection_indices("aromatic_atoms")
     evaltcl('$aromatic_atoms delete')
