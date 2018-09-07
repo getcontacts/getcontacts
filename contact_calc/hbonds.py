@@ -61,11 +61,13 @@ def compute_hydrogen_bonds(molid, frame, index_to_atom, solvent_resn, sele1, sel
     res_diff = geom_criteria['HBOND_RES_DIFF']
 
     if sele1 == sele2:
-        evaltcl("set selunion [atomselect %s \"%s and not (carbon or sulfur or solv)\" frame %s]" % (molid, sele1, frame))
+        evaltcl("set selunion [atomselect %s \"%s and not (carbon or sulfur or solv)\" frame %s]" %
+                (molid, sele1, frame))
         evaltcl("set shell [atomselect %s \"(solv) and within %s of (%s)\" frame %s]" %
                 (molid, WATER_SHELL_RAD, sele1, frame))
     else:
-        evaltcl("set selunion [atomselect %s \"((%s) or (%s)) and not (carbon or sulfur or solv)\" frame %s]" % (molid, sele1, sele2, frame))
+        evaltcl("set selunion [atomselect %s \"((%s) or (%s)) and not (carbon or sulfur or solv)\" frame %s]" %
+                (molid, sele1, sele2, frame))
         evaltcl("set shell [atomselect %s \"(solv) and within %s of ((%s) or (%s))\" frame %s]" %
                 (molid, WATER_SHELL_RAD, sele1, sele2, frame))
 

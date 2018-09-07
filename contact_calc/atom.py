@@ -46,6 +46,9 @@ class Atom:
         """
         return "%s:%s:%d:%s:%d" % (self.chain, self.resname, self.resid, self.name, self.index)
 
+    def __str__(self):
+        return self.get_label()
+
 
 def infer_element(resname, name):
     """
