@@ -55,7 +55,6 @@ Interaction types are denoted by the following abbreviations:
   * **hbss** - Sidechain-sidechain hydrogen bonds
   * **wb** - Water-mediated hydrogen bond
   * **wb2** - Extended water-mediated hydrogen bond
-* **lhb** - Ligand-hydrogen bond subtypes 
   * **hblb** - Ligand-backbone hydrogen bonds
   * **hbls** - Ligand-sidechain hydrogen bonds
   * **lwb** - Ligand water-mediated hydrogen bond
@@ -141,7 +140,7 @@ Required Arguments:
         Path to output file
     --itypes STRING [STRING ...]
         Specifies interaction types (see above)
-          all, sb, pc, ps, ts, vdw, hb, lhb
+          all, sb, pc, ps, ts, vdw, hb
 
 Optional Arguments:
 
@@ -214,7 +213,7 @@ Compute salt bridges and hydrogen bonds for residues 100 to 160, including those
                             --solv IP3 \
                             --sele "chain A and resid 100 to 160" \
                             --ligand EJ4 \
-                            --itypes sb hb lhb
+                            --itypes sb hb 
 
 Compute all interactions formed at a protein-protein interface throughout simulation:
 

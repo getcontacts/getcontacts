@@ -52,7 +52,7 @@ Compute salt bridges and hydrogen bonds for residues 100 to 160 and a ligand:
                            --output output.tsv \\
                            --solv IP3 \\
                            --sele "(chain A and resid 100 to 160) or resname EJ4" \\
-                           --itypes sb hb lhb
+                           --itypes sb hb
 
 Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
     get_static_contacts.py --structure.psf \\
@@ -115,7 +115,7 @@ def main(argv=None):
         sele2 = sele1
 
     # Check interaction types
-    all_itypes = ["hp", "sb", "pc", "ps", "ts", "vdw", "hb", "lhb"]
+    all_itypes = ["hp", "sb", "pc", "ps", "ts", "vdw", "hb"]
     if "all" in args.itypes:
         itypes = all_itypes
     else:

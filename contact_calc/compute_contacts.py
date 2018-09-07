@@ -207,15 +207,6 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         If second VMD query is specified, then compute contacts between atom selection 1 and 2 
     """
 
-    contact_types = []
-    for itype in itypes:
-        if itype == "hb":
-            contact_types += ["hbbb", "hbsb", "hbss", "wb", "wb2"]
-        elif itype == "lhb":
-            contact_types += ["hbls", "hblb", "lwb", "lwb2"]
-        else:
-            contact_types += [itype]
-
     index_to_atom = gen_index_to_atom(top, traj)
     sim_length = simulation_length(top, traj)
     configure_solv(top, traj, solv_sele)
