@@ -39,8 +39,8 @@ Interaction types are denoted by the following abbreviations:
     · wb - Water-mediated hydrogen bond
     · wb2 - Extended water-mediated hydrogen bond
   Ligand-hydrogen bond subtypes
-    · hlb - Ligand-backbone hydrogen bonds
-    · hls - Ligand-sidechain hydrogen bonds
+    · hblb - Ligand-backbone hydrogen bonds
+    · hbls - Ligand-sidechain hydrogen bonds
     · lwb - Ligand water-mediated hydrogen bond
     · lwb2 - Ligand extended water-mediated hydrogen bond
 
