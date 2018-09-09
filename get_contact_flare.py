@@ -18,8 +18,8 @@ specifies a list of abbreviated interaction types:
     hbss           sidechain-sidechain hydrogen bonds
     wb             water bridges
     wb2            extended water bridges
-    hls            ligand-sidechain residue hydrogen bonds
-    hlb            ligand-backbone residue hydrogen bonds
+    hbls            ligand-sidechain residue hydrogen bonds
+    hblb            ligand-backbone residue hydrogen bonds
     lwb            ligand water bridges
     lwb2           extended ligand water bridges
 
@@ -107,7 +107,7 @@ def main(argv=None):
 def parse_itypes(itypes):
     """Parses the itype argument and returns a set of strings with all the selected interaction types """
     if "all" in itypes:
-        return set(["sb", "pc", "ps", "ts", "vdw", "hb", "lhb", "hbbb", "hbsb", "hbss", "wb", "wb2", "hls", "hlb",
+        return set(["sb", "pc", "ps", "ts", "vdw", "hb", "lhb", "hbbb", "hbsb", "hbss", "wb", "wb2", "hbls", "hblb",
                     "lwb", "lwb2"])
     return set(itypes)
 

@@ -97,7 +97,7 @@ def main(argv=None):
                              '* vdw (van der Waals), \n'
                              '* hbbb, hbsb, hbss, (hydrogen bonds with specific backbone/side-chain profile)\n'
                              '* wb, wb2 (water-bridges and extended water-bridges) \n'
-                             '* hls, hlb (ligand-sidechain and ligand-backbone hydrogen bonds), \n'
+                             '* hbls, hblb (ligand-sidechain and ligand-backbone hydrogen bonds), \n'
                              '* lwb, lwb2 (ligand water-bridges and extended water-bridges)')
 
     # results, unknown = parser.parse_known_args()
@@ -106,7 +106,7 @@ def main(argv=None):
     # Update itypes if "all" is specified
     if "all" in args.itypes:
         args.itypes = ["sb", "pc", "ps", "ts", "vdw", "hb", "lhb", "hbbb", "hbsb",
-                       "hbss", "wb", "wb2", "hls", "hlb", "lwb", "lwb2"]
+                       "hbss", "wb", "wb2", "hbls", "hblb", "lwb", "lwb2"]
 
     output_file = args.output_file
     input_files = args.input_files
