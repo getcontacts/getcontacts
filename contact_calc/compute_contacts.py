@@ -218,6 +218,13 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
     sele2_atoms = get_selection_indices(trajid, 0, sele2)
     molecule.delete(trajid)
 
+    if len(sele1_atoms) == 0:
+        print("The --sele selection is empty!")
+        sys.exit(1)
+    if len(sele2_atoms) == 0:
+        print("The --sele2 selection is empty!")
+        sys.exit(1)
+
     beg = max(min(beg, sim_length - 1), 0)
     end = min(max(end, beg), sim_length - 1)
     stride = max(1, stride)
