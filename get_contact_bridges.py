@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 """
 Forms bridges between pairs of atoms that share an interaction with a residue
