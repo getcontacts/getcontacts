@@ -26,10 +26,10 @@ __all__ = ['compute_pi_stacking', 'compute_t_stacking']
 PI_STACK_SOFT_DISTANCE_CUTOFF = 10.0  # angstroms
 T_STACK_SOFT_DISTANCE_CUTOFF = 6.0  # angstroms
 
-aromatic_phe = "(resname PHE) and (name CG CE1 CE2)"
-aromatic_trp = "(resname TRP) and (name CD2 CZ2 CZ3)"
-aromatic_tyr = "(resname TYR) and (name CG CE1 CE2)"
-aromatic_nucl = "(nucleic) and (name C4 C2 C6)"
+aromatic_phe = "resname PHE and name CG CE1 CE2"
+aromatic_trp = "resname TRP and name CD2 CZ2 CZ3"
+aromatic_tyr = "resname TYR and name CG CE1 CE2"
+aromatic_nucl = "nucleic and name C4 C2 C6"
 
 ############################################################################
 # Functions
@@ -87,7 +87,6 @@ def get_aromatic_triplet(molid, frame, aatom, index_to_atom):
     aromatic_atom_triplet_labels: list of strings
         ie ["A:PHE:329:CE1:55228", "A:PHE:329:CE2:55234", "A:PHE:329:CG:55225"]
     """
-
     residue_to_atom_names = {
         "PHE": "CG CE1 CE2",
         "TRP": "CD2 CZ2 CZ3",
@@ -96,7 +95,7 @@ def get_aromatic_triplet(molid, frame, aatom, index_to_atom):
     chain, resname, resid = aatom.chain, aatom.resname, aatom.resid
     # Use the dict above and assume nucleic acid if residue name is not present
     arom_triple = residue_to_atom_names[resname] if resname in residue_to_atom_names else "C2 C4 C6"
-    evaltcl("set aromatic_atoms [atomselect %s \"(chain '%s') and (resname '%s') and (resid '%s') and (name '%s')\" frame %s]"
+    evaltcl("set aromatic_atoms [atomselect %s \"(chain '%s') and (resname '%s') and (resid '%s') and (name %s)\" frame %s]"
             % (molid, chain, resname, resid, arom_triple, frame))
     aromatic_atom_triplet_indices = get_atom_selection_indices("aromatic_atoms")
     evaltcl('$aromatic_atoms delete')
@@ -149,10 +148,11 @@ def compute_aromatics(molid, frame, index_to_atom, sele1, sele2, sele1_atoms, se
     sele_union = "(%s) or (%s)" % (sele1, sele2)
     aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" ((%s) or (%s) or (%s) or (%s)) and (%s) \" frame %s]" % \
                         (molid, aromatic_phe, aromatic_trp, aromatic_tyr, aromatic_nucl, sele_union, frame)
-    # "(" + aromatic_phe + " and (%s)) or " \
-    #                      "((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or " \
-    #                      "((resname TYR) and (name CG CE1 CE2) and (%s)) \" frame %s]" % \
-    # (traj_frag_molid, sele_union, sele_union, sele_union, frame_idx)
+    # aromatic_atom_sel = "set aromatic_atoms [atomselect %s \"" \
+    #                     "((resname PHE) and (name CG CE1 CE2) and (%s)) or " \
+    #                     "((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or " \
+    #                     "((resname TYR) and (name CG CE1 CE2) and (%s)) \" frame %s]" % \
+    #                     (molid, sele_union, sele_union, sele_union, frame)
 
     evaltcl(aromatic_atom_sel)
     contacts = evaltcl("measure contacts %s $aromatic_atoms" % soft_distance_cutoff)
@@ -178,7 +178,6 @@ def compute_aromatics(molid, frame, index_to_atom, sele1, sele2, sele1_atoms, se
         if aromatic1_res == aromatic2_res:
             continue
 
-        # print(aromatic1_label, aromatic2_label)
         if aromatic1_res not in residue_to_atom_labels:
             residue_to_atom_labels[aromatic1_res] = get_aromatic_triplet(molid, frame, index_to_atom[aromatic1_index], index_to_atom)
         if aromatic2_res not in residue_to_atom_labels:
@@ -193,7 +192,6 @@ def compute_aromatics(molid, frame, index_to_atom, sele1, sele2, sele1_atoms, se
     for aromatic1_res, aromatic2_res in res_pairs:
         aromatic1_atom_labels = residue_to_atom_labels[aromatic1_res]
         aromatic2_atom_labels = residue_to_atom_labels[aromatic2_res]
-        # print(aromatic1_atom_labels, aromatic2_atom_labels)
 
         # Ignore interactions between residues with missing atoms
         if len(aromatic1_atom_labels) != 3 or len(aromatic2_atom_labels) != 3:
