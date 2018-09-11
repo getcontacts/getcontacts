@@ -13,7 +13,7 @@ from contact_calc.flare import compose_frequencytable, write_json
 from contact_calc.transformations import parse_frequencyfiles
 
 
-def write_frequencytable(freq_table, col_labels, fname, cluster_columns=False, cluster_rows=False):
+def write_frequencytable(freq_table, col_labels, fname, cluster_columns=True, cluster_rows=True):
     row_labels = [(r1, r2) for r1, r2 in freq_table]
     freq_matrix = np.array([freq_table[(r1, r2)] for (r1, r2) in freq_table])
     m, n = freq_matrix.shape
