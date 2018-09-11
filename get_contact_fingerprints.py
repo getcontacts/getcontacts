@@ -13,11 +13,34 @@ from contact_calc.flare import compose_frequencytable, write_json
 from contact_calc.transformations import parse_frequencyfiles
 
 
-def write_frequencytable(freq_table, col_labels, fname):
+def write_frequencytable(freq_table, col_labels, fname, cluster_columns=False, cluster_rows=False):
+    row_labels = [(r1, r2) for r1, r2 in freq_table]
+    freq_matrix = np.array([freq_table[(r1, r2)] for (r1, r2) in freq_table])
+    m, n = freq_matrix.shape
+    if cluster_rows:
+        from scipy.cluster.hierarchy import linkage, leaves_list
+        l = linkage(freq_matrix, method='single')
+        row_ordering = leaves_list(l)
+    else:
+        row_ordering = range(m)
+
+    if cluster_columns:
+        from scipy.cluster.hierarchy import linkage, leaves_list
+        l = linkage(freq_matrix.T, method='single')
+        col_ordering = leaves_list(l)
+    else:
+        col_ordering = range(n)
+
+    freq_matrix = freq_matrix[row_ordering]
+    freq_matrix = freq_matrix[:, col_ordering]
+    row_labels = [row_labels[i] for i in row_ordering]
+    col_labels = [col_labels[i] for i in col_ordering]
+
     with open(fname, "w") as out_file:
         out_file.write("\t".join(["", ""] + col_labels) + "\n")
-        for (res1, res2) in freq_table:
-            freq_strings = [str(freq) for freq in freq_table[(res1, res2)]]
+        for i in range(m):
+            res1, res2 = row_labels[i]
+            freq_strings = [str(freq) for freq in freq_matrix[i]]
             out_file.write("\t".join([res1, res2] + freq_strings) + "\n")
 
 

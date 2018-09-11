@@ -106,7 +106,7 @@ def main(argv=None):
     # Update itypes if "all" is specified
     if "all" in args.itypes:
         args.itypes = ["sb", "pc", "ps", "ts", "vdw", "hb", "lhb", "hbbb", "hbsb",
-                       "hbss", "wb", "wb2", "hbls", "hblb", "lwb", "lwb2"]
+                       "hbss", "wb", "wb2", "hbls", "hblb", "lwb", "lwb2", "br"]
 
     output_file = args.output_file
     input_files = args.input_files
