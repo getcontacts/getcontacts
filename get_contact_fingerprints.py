@@ -176,7 +176,7 @@ def main(argv=None):
         parser.error("--table_output, --flare_output, or --plot_output must be specified")
 
     if args.table_output is not None:
-        write_frequencytable(freq_table, column_headers, args.table_output)
+        write_frequencytable(freq_table, column_headers, args.table_output, args.cluster_columns, True)
         print("Wrote frequency table to "+args.table_output)
 
     if args.flare_output is not None:
