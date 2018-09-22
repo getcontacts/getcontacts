@@ -59,7 +59,7 @@ def compute_frame_contacts(molid, frame, itypes, geom_criteria, sele1, sele2,
     frame: int
         Frame number to query
     itypes: list
-        Denotes the list of non-covalent interaction types to compute contacts for 
+        Denotes the list of non-covalent interaction types to compute contacts for
     geom_criteria: dict
         Dictionary containing the cutoff values for all geometric criteria
     sele1: string, default = None
@@ -101,7 +101,7 @@ def compute_frame_contacts(molid, frame, itypes, geom_criteria, sele1, sele2,
     return frame_contacts
 
 
-def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values, stride,
+def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values, stride, distout,
                               sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom):
     """ 
     Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
@@ -124,6 +124,8 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes,
         Dictionary containing the cutoff values for all geometric criteria
     stride: int, default = 1
         Frequency to skip frames in trajectory
+    distout: bool
+        Whether to write out distances or not
     sele1: string, default = None
         Compute contacts on subset of atom selection based on VMD query
     sele2: string, default = None
@@ -142,18 +144,26 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes,
     fragment_contacts: list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
     """
     tic = datetime.datetime.now()
-    traj_frag_molid = load_traj(top, traj, beg_frame, end_frame, stride)
+    molid = load_traj(top, traj, beg_frame, end_frame, stride)
     fragment_contacts = []
 
     # Compute contacts for each frame
-    num_frag_frames = molecule.numframes(traj_frag_molid)
+    num_frag_frames = molecule.numframes(molid)
     for frame_idx in range(num_frag_frames):
         # if frame_idx > 1: break
-        fragment_contacts += compute_frame_contacts(traj_frag_molid, frame_idx, itypes, geom_criterion_values,
+        fragment_contacts += compute_frame_contacts(molid, frame_idx, itypes, geom_criterion_values,
                                                     sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom)
 
+    if distout:
+        for contact in fragment_contacts:
+            frame = contact[0]
+            a1_id = contact[2].split(":")[-1]
+            a2_id = contact[3].split(":")[-1]
+            distance = compute_distance(molid, frame, a1_id, a2_id)
+            contact.append("%.3f" % distance)
+
     # Delete trajectory fragment to clear memory
-    molecule.delete(traj_frag_molid)
+    molecule.delete(molid)
 
     # Update frame-number so it's not relative to beg_frame
     for fc in fragment_contacts:
@@ -171,7 +181,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes,
 #
 
 def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
-                     beg, end, stride, ligand_sele, solv_sele, lipid_sele, sele1, sele2):
+                     beg, end, stride, distout, ligand_sele, solv_sele, lipid_sele, sele1, sele2):
     """
     Computes non-covalent contacts across the entire trajectory and writes them to `output`.
 
@@ -193,8 +203,10 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         First frame to read
     end: int
         Last frame to read
-    stride: int, default
+    stride: int
         The number of frames to increment after each read frame
+    distout: bool
+        Indicates whether to write out distances
     ligand_sele: string
         Ligand VMD selection
     solv_sele: string
@@ -239,7 +251,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         end_frame = beg_frame + (TRAJ_FRAG_SIZE * stride) - 1
         # print(frag_idx, beg_frame, end_frame, stride)
         inputqueue.put((frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values,
-                        stride, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom))
+                        stride, distout, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom))
 
     # Set up result queue for workers to transfer results to the consumer
     resultsqueue = Queue()
@@ -263,7 +275,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
 
         # Set up and start consumer process which takes contact results and saves them to output
         output_fd = open(output, "w")
-        consumer = Process(target=contact_consumer, args=(resultsqueue, output_fd, itypes, beg, end, stride))
+        consumer = Process(target=contact_consumer, args=(resultsqueue, output_fd, itypes, beg, end, stride, distout))
         consumer.start()
 
         # Wait for everyone to finish
@@ -287,13 +299,17 @@ def contact_worker(inputqueue, resultsqueue):
         resultsqueue.put((frag_idx, contacts))
 
 
-def contact_consumer(resultsqueue, output_fd, itypes, beg, end, stride):
+def contact_consumer(resultsqueue, output_fd, itypes, beg, end, stride, distout):
     import heapq
 
     total_frames = math.ceil((end - beg + 1) / stride)
     output_fd.write("# total_frames:%d beg:%d end:%d stride:%d interaction_types:%s\n" %
                     (total_frames, beg, end, stride, ",".join(itypes)))
-    output_fd.write("# Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]\n")
+
+    if distout:
+        output_fd.write("# Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]], distance_1-2\n")
+    else:
+        output_fd.write("# Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]\n")
 
     resultheap = []
     waiting_for_fragment = 0
@@ -316,7 +332,7 @@ def contact_consumer(resultsqueue, output_fd, itypes, beg, end, stride):
 
             # Strip VMD id, order atom 1 and 2
             for interaction in contacts:
-                for a in range(2, len(interaction)):
+                for a in range(2, len(interaction) - 1 if distout else len(interaction)):
                     atom_str = interaction[a]
                     interaction[a] = atom_str[0:atom_str.rfind(":")]
 

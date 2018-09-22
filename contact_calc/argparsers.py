@@ -72,6 +72,8 @@ def build_getcontact_parser(program_description, trajectory):
                                     help="last frame to read (unless end-of-trajectory is met first) [default = infty]")
         optional_group.add_argument("--stride", type=int, metavar="INT", default=1,
                                     help="steps between computed frames [default = 1]")
+    optional_group.add_argument("--distout", default=False, action='store_true',
+                                help="write distance info in the contact file")
 
     # Parse geometric criterion arguments
     geometric_group = parser.add_argument_group("Geometric criteria")

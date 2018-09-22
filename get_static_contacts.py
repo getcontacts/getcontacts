@@ -108,6 +108,7 @@ def main(argv=None):
     beg = 0
     end = 0
     stride = 1
+    distout = args.distout
     geom_criteria = process_geometric_criterion_args(args)
 
     # If sele2 is None set it to sele1
@@ -127,7 +128,8 @@ def main(argv=None):
 
     # Begin computation
     tic = datetime.datetime.now()
-    compute_contacts(top, traj, output, itypes, geom_criteria, cores, beg, end, stride, ligand, solv, lipid, sele1, sele2)
+    compute_contacts(top, traj, output, itypes, geom_criteria, cores, beg, end, stride, distout,
+                     ligand, solv, lipid, sele1, sele2)
     toc = datetime.datetime.now()
     print("\nTotal computation time: " + str((toc-tic).total_seconds()) + " seconds")
 

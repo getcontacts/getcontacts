@@ -113,6 +113,7 @@ def main(argv=None):
     beg = args.beg
     end = args.end if args.end else sys.maxsize
     stride = args.stride
+    distout = args.distout
     geom_criteria = process_geometric_criterion_args(args)
 
     # If sele2 is None set it to sele1
@@ -132,7 +133,8 @@ def main(argv=None):
 
     # Begin computation
     tic = datetime.datetime.now()
-    compute_contacts(top, traj, output, itypes, geom_criteria, cores, beg, end, stride, ligand, solv, lipid, sele1, sele2)
+    compute_contacts(top, traj, output, itypes, geom_criteria, cores, beg, end, stride, distout,
+                     ligand, solv, lipid, sele1, sele2)
     toc = datetime.datetime.now()
     total_time = (toc-tic).total_seconds()
     print("\nTotal computation time:", total_time, "seconds")
