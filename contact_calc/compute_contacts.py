@@ -265,7 +265,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         contact_worker(inputqueue, resultsqueue)
         resultsqueue.put("DONE")
         output_fd = open(output, "w")
-        contact_consumer(resultsqueue, output_fd, itypes, beg, end, stride)
+        contact_consumer(resultsqueue, output_fd, itypes, beg, end, stride, distout)
         output_fd.close()
 
     else:
