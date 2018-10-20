@@ -3,7 +3,7 @@ import sys
 
 
 class Atom:
-    def __init__(self, vmd_index, chain, resname, resid, name, element):
+    def __init__(self, vmd_index, chain, resname, resid, name, element, icode=''):
         """
         Construct a new atom with the values, check the element (potentially infer from name) and set van der Waals
         radius based on it.
@@ -23,6 +23,7 @@ class Atom:
         self.resname = resname
         self.name = name
         self.element = element.upper()
+        self.icode = icode
 
         if element == "X":
             self.element = infer_element(resname, name)
@@ -44,7 +45,7 @@ class Atom:
         -------
         string
         """
-        return "%s:%s:%d:%s:%d" % (self.chain, self.resname, self.resid, self.name, self.index)
+        return "%s:%s:%d%s:%s:%d" % (self.chain, self.resname, self.resid, self.icode, self.name, self.index)
 
     def __str__(self):
         return self.get_label()
