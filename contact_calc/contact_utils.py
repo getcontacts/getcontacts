@@ -189,17 +189,30 @@ def get_atom_selection_properties(selection_id):
         Atom name of each atom ["NZ", "CA", "N", ...]
     indices: list of strings
         VMD based index for each atom ["12304", "1231", ...]
-    """
-    chains = list(map(str, evaltcl("$%s get chain" % selection_id).split(" ")))
-    resnames = list(map(str, evaltcl("$%s get resname" % selection_id).split(" ")))
-    resids = list(map(str, evaltcl("$%s get resid" % selection_id).split(" ")))
-    names = list(map(str, evaltcl("$%s get name" % selection_id).split(" ")))
-    elements = list(map(str, evaltcl("$%s get element" % selection_id).split(" ")))
-    indices = list(map(str, evaltcl("$%s get index" % selection_id).split(" ")))
-    if chains == [''] or resnames == [''] or resids == [''] or names == [''] or indices == ['']:
+    icodes: list of strings
+        insertion code for each atom where present, and '' otherwise
+        ['','','','','A','A','A','','','',...]
+        """
+    chains   = safely_parsed_evaltcl("$%s get chain" % selection_id)
+    resnames = safely_parsed_evaltcl("$%s get resname" % selection_id)
+    resids   = safely_parsed_evaltcl("$%s get resid" % selection_id)
+    names    = safely_parsed_evaltcl("$%s get name" % selection_id)
+    elements = safely_parsed_evaltcl("$%s get element" % selection_id)
+    indices  = safely_parsed_evaltcl("$%s get index" % selection_id)
+    icodes   = safely_parsed_evaltcl("$%s get insertion" % selection_id)
+    if icodes == [''] or chains == [''] or resnames == [''] or resids == [''] or names == [''] or indices == ['']:
         return [], [], [], [], [], []
-    return chains, resnames, resids, names, elements, indices
+    return chains, resnames, resids, names, elements, indices, icodes
 
+def safely_parsed_evaltcl(tclstr):
+    ''' When a value is not found, VMD outputs '{ }', which can throw off a split function.
+    Therefore we define a function here which takes this into account and correctly returns values 
+    from evaltcl. '''
+    nonchar = '{ }'
+    working_string = evaltcl(tclstr).replace(nonchar, '{}')
+    working_list = working_string.split(' ')
+    working_list = [str(i) if i != '{}' else '' for i in working_list]
+    return working_list
 
 def gen_index_to_atom(top, traj):
     """
@@ -220,9 +233,8 @@ def gen_index_to_atom(top, traj):
     trajid = load_traj(top, traj, 0, 1, 1)
     all_atom_sel = "set all_atoms [atomselect %s \" all \" frame %s]" % (trajid, 0)
     evaltcl(all_atom_sel)
-    chains, resnames, resids, names, elements, indices = get_atom_selection_properties("all_atoms")
+    chains, resnames, resids, names, elements, indices, icodes = get_atom_selection_properties("all_atoms")
     evaltcl('$all_atoms delete')
-
     # Generate mapping
     index_to_atom = {}
     for idx, index in enumerate(indices):
@@ -231,10 +243,11 @@ def gen_index_to_atom(top, traj):
         resid = resids[idx]
         name = names[idx]
         element = elements[idx]
+        icode = icodes[idx]
         # atom_label = "%s:%s:%s:%s:%s" % (chain, resname, resid, name, index)
         index_key = int(index)
         # index_to_atom[index_key] = atom_label
-        index_to_atom[index_key] = Atom(int(index_key), chain, resname, int(resid), name, element)
+        index_to_atom[index_key] = Atom(int(index_key), chain, resname, int(resid), name, element, icode=icode)
 
     molecule.delete(trajid)
     return index_to_atom
