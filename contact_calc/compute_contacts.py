@@ -35,7 +35,7 @@ from .hbonds import *
 from .salt_bridges import *
 from .pi_cation import *
 from .vanderwaals import *
-from .hydrophobics import compute_hydrophobics
+from .hydrophobics import *
 
 ##############################################################################
 # Global Variables
@@ -289,12 +289,9 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
 def contact_worker(inputqueue, resultsqueue):
     while True:
         args = inputqueue.get()
-        # print("====================== producer ====================== ")
-        # print(args)
         if args == "DONE":
             return
         contacts = compute_fragment_contacts(*args)
-        # print(args)
         frag_idx = args[0]
         resultsqueue.put((frag_idx, contacts))
 

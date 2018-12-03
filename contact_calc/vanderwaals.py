@@ -18,16 +18,17 @@ from .contact_utils import *
 
 __all__ = ["compute_vanderwaals"]
 
-SOFT_VDW_CUTOFF = 0
+# SOFT_VDW_CUTOFF = 0
 
 
-def update_soft_cutoff(traj_frag_molid, index_to_atom, sele1, sele2, epsilon):
-    global SOFT_VDW_CUTOFF
+def update_soft_cutoff(traj_frag_molid, index_to_atom, sele1, sele2, epsilon, geom_criteria):
+    # global SOFT_VDW_CUTOFF
     ids1 = get_selection_indices(traj_frag_molid, 0, "%s" % sele1)
     ids2 = get_selection_indices(traj_frag_molid, 0, "%s" % sele2)
     max_vdw1 = max([index_to_atom[i].vdwradius for i in ids1])
     max_vdw2 = max([index_to_atom[i].vdwradius for i in ids2])
-    SOFT_VDW_CUTOFF = max_vdw1 + max_vdw2 + epsilon
+    # SOFT_VDW_CUTOFF = max_vdw1 + max_vdw2 + epsilon
+    geom_criteria['soft_vdw_cutoff'] = max_vdw1 + max_vdw2 + epsilon
 
 
 def compute_vanderwaals(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_criteria):
@@ -56,12 +57,15 @@ def compute_vanderwaals(traj_frag_molid, frame, index_to_atom, sele1, sele2, geo
     """
     epsilon = geom_criteria['VDW_EPSILON']
     res_diff = geom_criteria['VDW_RES_DIFF']
-    if SOFT_VDW_CUTOFF == 0:
-        update_soft_cutoff(traj_frag_molid, index_to_atom, sele1, sele2, epsilon)
+    # if SOFT_VDW_CUTOFF == 0:
+    if 'soft_vdw_cutoff' not in geom_criteria:
+        update_soft_cutoff(traj_frag_molid, index_to_atom, sele1, sele2, epsilon, geom_criteria)
+
+    soft_vdw_cutoff = geom_criteria['soft_vdw_cutoff']
 
     evaltcl("set vdw_atoms1 [atomselect %s \" noh and (%s)\" frame %s]" % (traj_frag_molid, sele1, frame))
     evaltcl("set vdw_atoms2 [atomselect %s \" noh and (%s)\" frame %s]" % (traj_frag_molid, sele2, frame))
-    contact_pairs = parse_contacts(evaltcl("measure contacts %s $vdw_atoms1 $vdw_atoms2" % SOFT_VDW_CUTOFF))
+    contact_pairs = parse_contacts(evaltcl("measure contacts %s $vdw_atoms1 $vdw_atoms2" % soft_vdw_cutoff))
     evaltcl("$vdw_atoms1 delete")
     evaltcl("$vdw_atoms2 delete")
 
