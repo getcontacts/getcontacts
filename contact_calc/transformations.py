@@ -1,4 +1,7 @@
 
+class ParseError(Exception):
+    pass
+
 
 def parse_contacts(input_lines, itypes=None):
     """
@@ -32,6 +35,10 @@ def parse_contacts(input_lines, itypes=None):
     -------
     (list of list, int)
         The list of interactions and the total number of frames
+
+    Raises
+    ------
+    ParseError: If contents of lines couldn't be parsed
     """
     ret = []
     total_frames = 0
@@ -45,12 +52,66 @@ def parse_contacts(input_lines, itypes=None):
             continue
 
         tokens = line.split("\t")
-        tokens[0] = int(tokens[0])
+        try:
+            tokens[0] = int(tokens[0])
+        except ValueError:
+            raise ParseError("First column isn't a integer")
+
+        if len(tokens) not in range(4, 7):
+            raise ParseError("Invalid number of tokens")
 
         if itypes is None or tokens[1] in itypes:
             ret.append(tokens)
 
     return ret, total_frames
+
+
+def split_by_itype(contacts):
+    itypes = set([c[1] for c in contacts])
+    return {i: [c for c in contacts if c[1] == i] for i in itypes}
+
+
+def multi_to_single_contact(contacts, min_frames):
+    """
+    Convert multi-frame contacts to single-frame. Each interaction type is considered separately and only interactions
+    whose residues form interactions in at least `min_frames` frames are retained.
+
+    Example
+    -------
+        multi_to_single_contact([
+              [0, "hbbb", "A:ALA:1:N", "A:THR:5:O"],
+              [0, "vdw", "A:ALA:1:CB", "B:CYS:3:H"],
+              [0, "vdw", "A:ALA:1:CB", "B:PRO:8:CB"],
+              [1, "hbbb", "A:ALA:1:N", "A:THR:5:O"],
+              [1, "vdw", "A:ALA:1:CB", "B:CYS:3:N"],
+        ], 2)
+        # Returns
+        # [ [0, "hbbb", "A:ALA:1:N",  "A:THR:5:O"],
+            [0,  "vdw", "A:ALA:1:CB", "B:CYS:3:H"],
+            [0,  "vdw", "A:ALA:1:CB", "B:CYS:3:N"] ]
+    """
+    ret = []
+    itype_dict = split_by_itype(contacts)
+    for itype, itype_contacts in itype_dict.items():
+        residue_contacts = res_contacts(itype_contacts)
+        counts = gen_counts(residue_contacts)  # dict of (str, str): int
+        included_pairs = set()
+
+        for contact in itype_contacts:
+            atom1 = contact[2]
+            atom2 = contact[3]
+            resi1 = ":".join(atom1.split(":")[0:3])
+            resi2 = ":".join(atom2.split(":")[0:3])
+            if resi2 < resi1:
+                resi1, resi2 = resi2, resi1
+                atom1, atom2 = atom2, atom1
+
+            if counts[(resi1, resi2)] >= min_frames:
+                if (atom1, atom2) not in included_pairs:
+                    ret.append([0] + contact[1:])
+                    included_pairs.add((atom1, atom2))
+
+    return ret
 
 
 def parse_residuelabels(label_file):
@@ -160,6 +221,24 @@ def res_contacts(contacts):
 
 
 def parse_frequencyfiles(freq_files, freq_cutoff):
+    """
+    TODO: Document
+
+    Example:
+        parse_frequencyfiles([
+            "A:ILE:1    A:ALA:10    0.4",
+            "A:PHE:2    A:PRO:19    0.1",
+            "A:PHE:2    A:ALA:10    0.9"
+            ])
+        # Returns:
+        # { ("A:ILE:1", "A:ALA:10"): 0.4,
+        #   ("A:PHE:2    A:PRO:19"): 0.1,
+        #   ("A:PHE:2    A:ALA:10"): 0.9 }
+
+    Raises
+    ------
+    ParseError: If contents of lines couldn't be parsed
+    """
     import numpy as np
 
     columns = len(freq_files)
@@ -171,16 +250,22 @@ def parse_frequencyfiles(freq_files, freq_cutoff):
                 continue
 
             tokens = line.split("\t")
+            if len(tokens) != 3:
+                raise ParseError("Invalid number of columns in frequency file")
+
             res1 = tokens[0]
             res2 = tokens[1]
-            freq = float(tokens[2])
+            try:
+                freq = float(tokens[2])
+            except ValueError:
+                raise ParseError("Third column in frequency file must be float")
 
             if not (res1, res2) in ret:
                 ret[(res1, res2)] = np.zeros(columns)
 
             ret[(res1, res2)][fidx] = freq
 
-    # Remove entries where no frequency exceeds 0.6
+    # Remove entries where no frequency exceeds freq_cutoff
     ret = {key: val for key, val in ret.items() if np.amax(val) > freq_cutoff}
     return ret
 

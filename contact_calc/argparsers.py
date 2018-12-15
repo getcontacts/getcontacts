@@ -17,7 +17,7 @@ class PrintUsageParser(argparse.ArgumentParser):
         """
         Prints full program usage and exits with errorcode 2 when error occurs
         """
-        self.print_help(sys.stderr)
+        sys.stderr.write(self.description)
         sys.stderr.write('\nError: %s\n' % message)
         sys.exit(2)
 

@@ -1,69 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Computes non-covalent contact networks for a protein structure.
+Computes non-covalent interaction networks for protein structures. Detailed
+description at https://github.com/getcontacts/getcontacts and further command-
+line help by providing the --help argument.
 
-The input is a path to a structure and a specification of interaction-types. The
-output is a tab-separated file where each line (except the first two) records frame
-(always 0), interaction-type, and atoms involved in the interaction, e.g.:
+Example usage (hbonds and salt-bridges between chain A and B):
 
-    # total_frames:20000 interaction_types:sb,pc,ps,ts,hb
-    # Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]
-    0   sb     C:GLU:21:OE2    C:ARG:86:NH2
-    0   ps     C:TYR:36:CG     C:TRP:108:CG
-    0   ts     A:TYR:36:CG     A:TRP:108:CG
-    0   hbss   A:GLN:53:NE2    A:GLN:69:OE1
-    0   wb2    C:ASN:110:O     C:SER:111:OG    W:TIP3:1524:OH2    W:TIP3:2626:OH2
-    0   hbsb   A:LYS:28:N      A:HIS:27:ND1
-    0   hbsb   A:ASP:52:OD2    A:PHE:48:O
-    ...
-
-Interactions that involve more than two atoms (water bridges and extended water bridges)
-have extra columns to denote the identities of the water molecules. For simplicity, all
-stacking and pi-cation interactions involving an aromatic ring will be denoted by the
-CG atom. If there are multiple conformers in the structure, all interactions between all
-conformers are computed, but the output will not reflect which conformers an interaction
-relates to.
-
-Interaction types are denoted by the following abbreviations:
-  · hp - hydrophobics
-  · sb - salt bridges
-  · pc - pi-cation
-  · ps - pi-stacking
-  · ts - T-stacking
-  · vdw - van der Waals
-  Hydrogen bond subtypes:
-    · hbbb - Backbone-backbone hydrogen bonds
-    · hbsb - Backbone-sidechain hydrogen bonds
-    · hbss - Sidechain-sidechain hydrogen bonds
-    · wb - Water-mediated hydrogen bond
-    · wb2 - Extended water-mediated hydrogen bond
-  Ligand-hydrogen bond subtypes
-    · hblb - Ligand-backbone hydrogen bonds
-    · hbls - Ligand-sidechain hydrogen bonds
-    · lwb - Ligand water-mediated hydrogen bond
-    · lwb2 - Ligand extended water-mediated hydrogen bond
-
-
-Examples:
-
-Compute salt bridges and hydrogen bonds for residues 100 to 160 and a ligand:
     get_static_contacts.py --structure struc.pdb \\
                            --output output.tsv \\
-                           --solv IP3 \\
-                           --sele "(chain A and resid 100 to 160) or resname EJ4" \\
-                           --itypes sb hb
-
-Pi-cation, pi-stacking, and vanderwaals contacts in the entire protein:
-    get_static_contacts.py --structure.psf \\
-                           --output output.tsv \\
-                           --itypes pc ps vdw
-
-Salt bridges and hydrogen bonds in the entire protein with modified distance cutoffs:
-    get_static_contacts.py --structure struc.pdb \\
-                           --output output.tsv \\
-                           --sb_cutoff_dist 5.0 \\
-                           --hbond_cutoff_dist 4.5 \\
+                           --solv HOH \\
+                           --sele "chain A" \\
+                           --sele2 "chain B" \\
                            --itypes sb hb
 """
 
