@@ -603,18 +603,21 @@ def extract_ligand_features(top, traj, index_to_atom):
 
     metal_cations = ["MG", "MN", "RH", "ZN", "FE", "BI", "AS", "AG"]
 
+    ''' Find all neighbors '''
+    index_to_neighbors = {}
     for atom_idx in ligand_indices:
         # print("Atom idx {}, element {}".format(atom_idx, index_to_atom[atom_idx].element))
+        evaltcl("set neighbors [atomselect %s \"within 1.95 of (index %d)\" frame %s]" % (molid, atom_idx, 0))
+        neighbor_indices = [idx for idx in get_atom_selection_indices("neighbors") if idx != atom_idx]
+        evaltcl("$neighbors delete")
 
+    ''' Identify ligand cations/anions '''
+    for atom_idx in ligand_indices:
+        neighbors = index_to_neighbors[atom_idx]
         ''' Check if the atom is a metal cation. I.E. one of the metal_cations names appears in its label. '''
         if any([cation in index_to_atom[atom_idx].get_label() for cation in metal_cations]):
             ligand_cations += [atom_idx]
             continue
-
-        ''' Find all neighbors '''
-        evaltcl("set neighbors [atomselect %s \"within 1.95 of (index %d)\" frame %s]" % (molid, atom_idx, 0))
-        neighbor_indices = [idx for idx in get_atom_selection_indices("neighbors") if idx != atom_idx]
-        evaltcl("$neighbors delete")
 
         ''' Detect carboxylates in ligand. There are two restrictions:
         - sp2 carbon,
