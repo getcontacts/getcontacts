@@ -87,6 +87,8 @@ def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2
         evaltcl("$hp_atoms1 delete")
         evaltcl("$hp_atoms2 delete")
 
+    ligand_indices = get_selection_indices(traj_frag_molid, frame_idx, "ligand")  # TODO: This can be sped up by not fetching selection indices at every frame
+
     ret = []
     contact_index_pairs = parse_contacts(contacts)
     for atom1_index, atom2_index in contact_index_pairs:
@@ -99,8 +101,17 @@ def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2
         # Perform distance cutoff with atom indices
         distance = compute_distance(traj_frag_molid, frame_idx, atom1_index, atom2_index)
         vanderwaal_cutoff = atom1.vdwradius + atom2.vdwradius + epsilon
-        if distance < vanderwaal_cutoff:
+        if not(distance < vanderwaal_cutoff): continue
+
+        if (atom1_index not in ligand_indices) and (atom2_index not in ligand_indices):
+            # Neither atom is in the ligand
             ret.append([frame_idx, "hp", atom1.get_label(), atom2.get_label()])
+        elif (atom1_index not in ligand_indices) ^ (atom2_index not in ligand_indices):
+            # Exactly one atom is in the ligand
+            ret.append([frame_idx, "hplp", atom1.get_label(), atom2.get_label()])
+        else:
+            # Both atoms are in the ligand
+            ret.append([frame_idx, "hpll", atom1.get_label(), atom2.get_label()])
 
     return ret
 
