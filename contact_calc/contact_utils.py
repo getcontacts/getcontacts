@@ -613,7 +613,7 @@ def extract_ligand_features(top, traj, index_to_atom):
 
     ''' Identify ligand cations/anions '''
     for atom_idx in ligand_indices:
-        neighbors = index_to_neighbors[atom_idx]
+        neighbors = index_to_neighbors[atom_idx] if atom_idx in index_to_neighbors else []
         ''' Check if the atom is a metal cation. I.E. one of the metal_cations names appears in its label. '''
         if any([cation in index_to_atom[atom_idx].get_label() for cation in metal_cations]):
             ligand_cations += [atom_idx]
