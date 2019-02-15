@@ -610,6 +610,7 @@ def extract_ligand_features(top, traj, index_to_atom):
         evaltcl("set neighbors [atomselect %s \"within 1.95 of (index %d)\" frame %s]" % (molid, atom_idx, 0))
         neighbor_indices = [idx for idx in get_atom_selection_indices("neighbors") if idx != atom_idx]
         evaltcl("$neighbors delete")
+        index_to_neighbors[atom_idx] = neighbor_indices
 
     ''' Identify ligand cations/anions '''
     for atom_idx in ligand_indices:
