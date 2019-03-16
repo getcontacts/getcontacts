@@ -446,7 +446,6 @@ def configure_solv(top, traj, solvent_sele):
             molecule.delete(molid)
             return solv_ids
 
-
 def configure_lipid(top, traj, lipid_sele):
     """
     Detects the lipid residue name and creates a corresponding VMD selection macro called 'lipid'.
@@ -553,6 +552,93 @@ def configure_ligand(top, traj, ligand_sele, sele1, sele2):
 
     evaltcl("$ligatoms delete")
     molecule.delete(molid)
+
+def is_sp3(molid, index_to_atom, atom1, atom2, atom3):
+    atom1 = index_to_atom[atom1].get_label()
+    atom2 = index_to_atom[atom2].get_label()
+    atom3 = index_to_atom[atom3].get_label()
+    
+    angle = compute_angle(molid, 0, atom1, atom2, atom3)
+    return (109.5 - 5) < angle and angle < (109.5 + 5)
+
+def is_sp2(molid, index_to_atom, atom1, atom2, atom3):
+    atom1 = index_to_atom[atom1].get_label()
+    atom2 = index_to_atom[atom2].get_label()
+    atom3 = index_to_atom[atom3].get_label()
+
+    angle = compute_angle(molid, 0, atom1, atom2, atom3)
+    return (120. - 5) < angle and angle < (120. + 5)
+
+def is_sp(molid, atom1, atom2, atom3):
+    atom1 = index_to_atom[atom1].get_label()
+    atom2 = index_to_atom[atom2].get_label()
+    atom3 = index_to_atom[atom3].get_label()
+    
+    angle = compute_angle(molid, 0, atom1, atom2, atom3)
+    return (180. - 5) < angle and angle < (180. + 5)
+
+def extract_ligand_features(top, traj, index_to_atom):
+    """
+    Extracts lists of cationc and anionic atoms identified in the ligand
+
+    Parameters
+    ----------
+    top: Topology
+        In .pdb or .mae format
+    traj: Trajectory
+        In .nc or .dcd format
+    index_to_atom: dict
+        Maps VMD atom index to Atom
+
+    Returns
+    -------
+    ligand_anions/ligand_cations: list
+        VMD indices of anions/cations, respectively, detected among the ligand atoms
+    """
+    molid = load_traj(top, traj, 0, 1, 1)
+    ligand_indices = get_selection_indices(molid, 0, "ligand")
+
+    ligand_anions = []
+    ligand_cations = []
+
+    metal_cations = ["MG", "MN", "RH", "ZN", "FE", "BI", "AS", "AG"]
+
+    ''' Find all neighbors '''
+    index_to_neighbors = {}
+    for atom_idx in ligand_indices:
+        # print("Atom idx {}, element {}".format(atom_idx, index_to_atom[atom_idx].element))
+        evaltcl("set neighbors [atomselect %s \"within 1.95 of (index %d)\" frame %s]" % (molid, atom_idx, 0))
+        neighbor_indices = [idx for idx in get_atom_selection_indices("neighbors") if idx != atom_idx]
+        evaltcl("$neighbors delete")
+        index_to_neighbors[atom_idx] = neighbor_indices
+
+    ''' Identify ligand cations/anions '''
+    for atom_idx in ligand_indices:
+        neighbors = index_to_neighbors[atom_idx] if atom_idx in index_to_neighbors else []
+        ''' Check if the atom is a metal cation. I.E. one of the metal_cations names appears in its label. '''
+        if any([cation in index_to_atom[atom_idx].get_label() for cation in metal_cations]):
+            ligand_cations += [atom_idx]
+            continue
+
+        ''' Detect carboxylates in ligand. There are two restrictions:
+        - sp2 carbon,
+        - attached to 2 O's and 1 C
+        '''
+        if index_to_atom[atom_idx].element == 'C' and len(neighbor_indices) == 3:
+            # Check hybridization
+            if not is_sp2(molid, index_to_atom, neighbor_indices[0], atom_idx, neighbor_indices[1]): continue
+            # Check bonded atoms
+            neighbor_elements = [index_to_atom[n_idx].element for n_idx in neighbor_indices]
+            from collections import Counter
+            neighbor_elem_counts = Counter(neighbor_elements)
+            if not (neighbor_elem_counts['C'] == 1 and neighbor_elem_counts['O'] == 2):
+                continue
+            # It's a carboxylate (probably)! Add both O's to ligand_anions
+            ligand_anions += [n_idx for n_idx in neighbor_indices if index_to_atom[n_idx].element == 'O']
+
+    molecule.delete(molid)
+    return ligand_anions, ligand_cations
+
 
 
 # def compute_distance(molid, frame_idx, atom1_label, atom2_label):

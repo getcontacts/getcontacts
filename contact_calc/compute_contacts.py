@@ -48,7 +48,7 @@ TRAJ_FRAG_SIZE = 100
 
 
 def compute_frame_contacts(molid, frame, itypes, geom_criteria, sele1, sele2,
-                           sele1_atoms, sele2_atoms, index_to_atom):
+                           sele1_atoms, sele2_atoms, index_to_atom, ligand_anions, ligand_cations):
     """
     Computes each of the specified non-covalent interaction type for a single frame
 
@@ -81,7 +81,7 @@ def compute_frame_contacts(molid, frame, itypes, geom_criteria, sele1, sele2,
 
     frame_contacts = []
     if "sb" in itypes:
-        frame_contacts += compute_salt_bridges(molid, frame, index_to_atom, sele1, sele2, geom_criteria)
+        frame_contacts += compute_salt_bridges(molid, frame, index_to_atom, sele1, sele2, geom_criteria, ligand_anions, ligand_cations)
     if "pc" in itypes:
         frame_contacts += compute_pi_cation(molid, frame, index_to_atom, sele1, sele2, geom_criteria)
     if "ps" in itypes:
@@ -102,7 +102,7 @@ def compute_frame_contacts(molid, frame, itypes, geom_criteria, sele1, sele2,
 
 
 def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values, stride, distout,
-                              sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom):
+                              sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom, ligand_anions, ligand_cations):
     """ 
     Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
 
@@ -152,7 +152,7 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes,
     for frame_idx in range(num_frag_frames):
         # if frame_idx > 1: break
         fragment_contacts += compute_frame_contacts(molid, frame_idx, itypes, geom_criterion_values,
-                                                    sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom)
+                                                    sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom, ligand_anions, ligand_cations)
 
     if distout:
         for contact in fragment_contacts:
@@ -224,6 +224,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
     configure_solv(top, traj, solv_sele)
     configure_lipid(top, traj, lipid_sele)
     configure_ligand(top, traj, ligand_sele, sele1, sele2)
+    ligand_anions, ligand_cations = extract_ligand_features(top, traj, index_to_atom)
 
     trajid = load_traj(top, traj, 0, 1, 1)
     sele1_atoms = get_selection_indices(trajid, 0, sele1)
@@ -251,7 +252,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         end_frame = beg_frame + (TRAJ_FRAG_SIZE * stride) - 1
         # print(frag_idx, beg_frame, end_frame, stride)
         inputqueue.put((frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values,
-                        stride, distout, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom))
+                        stride, distout, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom, ligand_anions, ligand_cations))
 
     # Set up result queue for workers to transfer results to the consumer
     resultsqueue = Queue()

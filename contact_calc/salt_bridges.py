@@ -30,7 +30,7 @@ basic_lys = "((resname LYS) and (name NZ))"
 basic_arg = "((resname ARG) and (name NH1 NH2))"
 
 
-def compute_salt_bridges(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_criteria):
+def compute_salt_bridges(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_criteria, ligand_anions, ligand_cations):
     """
     Compute salt bridges in a frame of simulation
 
@@ -57,10 +57,17 @@ def compute_salt_bridges(traj_frag_molid, frame, index_to_atom, sele1, sele2, ge
     """
     cutoff_dist = geom_criteria['SALT_BRIDGE_CUTOFF_DISTANCE']
 
-    s1_anions = "(%s or %s or %s) and (%s)" % (acidic_asp, acidic_glu, acidic_nucl, sele1)
-    s2_anions = "(%s or %s or %s) and (%s)" % (acidic_asp, acidic_glu, acidic_nucl, sele2)
-    s1_cations = "(%s or %s or %s) and (%s)" % (basic_his, basic_lys, basic_arg, sele1)
-    s2_cations = "(%s or %s or %s) and (%s)" % (basic_his, basic_lys, basic_arg, sele2)
+    ligand_indices = get_selection_indices(traj_frag_molid, frame, "ligand")
+    ligand_anions_string, ligand_cations_string = "", ""
+    if len(ligand_anions) > 0:
+        ligand_anions_string = "or (index {})".format(' '.join([str(idx) for idx in ligand_anions]))
+    if len(ligand_cations) > 0:
+        ligand_cations_string = "or (index {})".format(' '.join([str(idx) for idx in ligand_cations]))
+
+    s1_anions = "(%s or %s or %s %s) and (%s)" % (acidic_asp, acidic_glu, acidic_nucl, ligand_anions_string, sele1)
+    s2_anions = "(%s or %s or %s %s) and (%s)" % (acidic_asp, acidic_glu, acidic_nucl, ligand_anions_string, sele2)
+    s1_cations = "(%s or %s or %s %s) and (%s)" % (basic_his, basic_lys, basic_arg, ligand_cations_string, sele1)
+    s2_cations = "(%s or %s or %s %s) and (%s)" % (basic_his, basic_lys, basic_arg, ligand_cations_string, sele2)
 
     evaltcl("set s1anions [atomselect %s \" %s \" frame %s]" % (traj_frag_molid, s1_anions, frame))
     evaltcl("set s2anions [atomselect %s \" %s \" frame %s]" % (traj_frag_molid, s2_anions, frame))
@@ -77,5 +84,17 @@ def compute_salt_bridges(traj_frag_molid, frame, index_to_atom, sele1, sele2, ge
     evaltcl("$s2cations delete")
 
     acpairs = contacts_12 | contacts_21
-    return [[frame, "sb", index_to_atom[a].get_label(), index_to_atom[c].get_label()] for (a, c) in acpairs]
+
+    salt_bridges = []
+    for (a, c) in acpairs:
+        if a in ligand_indices and c not in ligand_indices:
+            salt_bridges.append([frame, "sblp", index_to_atom[a].get_label(), index_to_atom[c].get_label()])
+        if a not in ligand_indices and c in ligand_indices:
+            salt_bridges.append([frame, "sbpl", index_to_atom[a].get_label(), index_to_atom[c].get_label()])
+        if a in ligand_indices and c in ligand_indices:
+            salt_bridges.append([frame, "sbll", index_to_atom[a].get_label(), index_to_atom[c].get_label()])
+        else:
+            salt_bridges.append([frame, "sb", index_to_atom[a].get_label(), index_to_atom[c].get_label()])
+    # return [[frame, "sb", index_to_atom[a].get_label(), index_to_atom[c].get_label()] for (a, c) in acpairs]
+    return salt_bridges
 
