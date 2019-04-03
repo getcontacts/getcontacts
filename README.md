@@ -253,6 +253,6 @@ The code aims to be [PEP 8](http://pep8.org/) compliant, but pull-requests wont 
 
 ## Citation
 
-When using GetContacts for publication, please cite: 
+When using GetContacts for publication, please reference:
 
 ``https://getcontacts.github.io/``
