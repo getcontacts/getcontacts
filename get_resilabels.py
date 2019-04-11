@@ -10,7 +10,7 @@ import os
 def parse_two_queries(gesamt_lines):
     proteins = []
     for idx, line in enumerate(gesamt_lines):
-        if "reading QUERY structure" in line or "reading TARGET structure" in line:
+        if "reading QUERY structure" in line or "reading TARGET structure" in line or "reading FIXED structure" in line or "reading MOVING structure" in line:
             protein_filename = line.split("'")[1]
             protein, _ = os.path.splitext(protein_filename)
             proteins.append(protein)
@@ -23,9 +23,9 @@ def parse_two_queries(gesamt_lines):
             line_tokens = [token.strip() for token in line.split("|")]
             # the header line looks like this: "|    Query    |  Dist.(A)  |   Target    |"
             if (
-                "Query" in line_tokens
+                ("Query" in line_tokens or "FIXED" in line_tokens)
                 and "Dist.(A)" in line_tokens
-                and "Target" in line_tokens
+                and ("Target" in line_tokens or "MOVING" in line_tokens)
             ):
                 alignment_start_idx = idx + 2
         else:
@@ -140,7 +140,7 @@ def main(argv=None):
         ]
 
     # parse the input file differently depending on whether there are 2 queries or >2 queries
-    if "reading QUERY structure" in "".join(gesamt_lines):
+    if "reading QUERY structure" in "".join(gesamt_lines) or "reading FIXED structure" in "".join(gesamt_lines):
         alignment_lines, proteins = parse_two_queries(gesamt_lines)
     else:
         alignment_lines, proteins = parse_more_than_two_queries(gesamt_lines)
