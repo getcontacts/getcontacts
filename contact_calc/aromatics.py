@@ -29,6 +29,7 @@ T_STACK_SOFT_DISTANCE_CUTOFF = 6.0  # angstroms
 aromatic_phe = "resname PHE and name CG CE1 CE2"
 aromatic_trp = "resname TRP and name CD2 CZ2 CZ3"
 aromatic_tyr = "resname TYR and name CG CE1 CE2"
+aromatic_his = "(resname HIS HSD HSE HSP HIE HIP HID) and (name CG CE1 CD2 NE2 NE1)"
 aromatic_nucl = "nucleic and name C4 C2 C6"
 
 ############################################################################
@@ -90,7 +91,14 @@ def get_aromatic_triplet(molid, frame, aatom, index_to_atom):
     residue_to_atom_names = {
         "PHE": "CG CE1 CE2",
         "TRP": "CD2 CZ2 CZ3",
-        "TYR": "CG CE1 CE2"
+        "TYR": "CG CE1 CE2",
+        "HIS": "CG CE1 CD2 NE2 NE1",
+        "HSD": "CG CE1 CD2 NE2 NE1",
+        "HSE": "CG CE1 CD2 NE2 NE1",
+        "HSP": "CG CE1 CD2 NE2 NE1",
+        "HIE": "CG CE1 CD2 NE2 NE1",
+        "HIP": "CG CE1 CD2 NE2 NE1", 
+        "HID": "CG CE1 CD2 NE2 NE1",
     }
     chain, resname, resid = aatom.chain, aatom.resname, aatom.resid
     # Use the dict above and assume nucleic acid if residue name is not present
@@ -146,8 +154,8 @@ def compute_aromatics(molid, frame, index_to_atom, sele1, sele2, sele1_atoms, se
     aromatics = []
 
     sele_union = "(%s) or (%s)" % (sele1, sele2)
-    aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" ((%s) or (%s) or (%s) or (%s)) and (%s) \" frame %s]" % \
-                        (molid, aromatic_phe, aromatic_trp, aromatic_tyr, aromatic_nucl, sele_union, frame)
+    aromatic_atom_sel = "set aromatic_atoms [atomselect %s \" ((%s) or (%s) or (%s) or (%s) or (%s)) and (%s) \" frame %s]" % \
+                        (molid, aromatic_phe, aromatic_trp, aromatic_tyr, aromatic_his, aromatic_nucl, sele_union, frame)
     # aromatic_atom_sel = "set aromatic_atoms [atomselect %s \"" \
     #                     "((resname PHE) and (name CG CE1 CE2) and (%s)) or " \
     #                     "((resname TRP) and (name CD2 CZ2 CZ3) and (%s)) or " \
