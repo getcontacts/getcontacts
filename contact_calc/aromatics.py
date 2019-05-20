@@ -29,7 +29,7 @@ T_STACK_SOFT_DISTANCE_CUTOFF = 6.0  # angstroms
 aromatic_phe = "resname PHE and name CG CE1 CE2"
 aromatic_trp = "resname TRP and name CD2 CZ2 CZ3"
 aromatic_tyr = "resname TYR and name CG CE1 CE2"
-aromatic_his = "(resname HIS HSD HSE HSP HIE HIP HID) and (name CG CE1 CD2 NE2 NE1)"
+aromatic_his = "(resname HIS HSD HSE HSP HIE HIP HID) and (name CG CE1 CD2)"
 aromatic_nucl = "nucleic and name C4 C2 C6"
 
 ############################################################################
