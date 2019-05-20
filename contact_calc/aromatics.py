@@ -92,13 +92,13 @@ def get_aromatic_triplet(molid, frame, aatom, index_to_atom):
         "PHE": "CG CE1 CE2",
         "TRP": "CD2 CZ2 CZ3",
         "TYR": "CG CE1 CE2",
-        "HIS": "CG CE1 CD2 NE2 NE1",
-        "HSD": "CG CE1 CD2 NE2 NE1",
-        "HSE": "CG CE1 CD2 NE2 NE1",
-        "HSP": "CG CE1 CD2 NE2 NE1",
-        "HIE": "CG CE1 CD2 NE2 NE1",
-        "HIP": "CG CE1 CD2 NE2 NE1", 
-        "HID": "CG CE1 CD2 NE2 NE1",
+        "HIS": "CG CE1 CD2",
+        "HSD": "CG CE1 CD2",
+        "HSE": "CG CE1 CD2",
+        "HSP": "CG CE1 CD2",
+        "HIE": "CG CE1 CD2",
+        "HIP": "CG CE1 CD2", 
+        "HID": "CG CE1 CD2",
     }
     chain, resname, resid = aatom.chain, aatom.resname, aatom.resid
     # Use the dict above and assume nucleic acid if residue name is not present
