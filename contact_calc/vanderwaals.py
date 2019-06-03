@@ -78,6 +78,10 @@ def compute_vanderwaals(traj_frag_molid, frame, index_to_atom, sele1, sele2, geo
         if atom1.chain == atom2.chain and abs(atom1.resid - atom2.resid) < res_diff:
             continue
 
+        #Check and continue if disulphide bond
+        if atom1.resname == atom2.resname == "CYS" and atom1.name == atom2.name == "SG":
+            continue
+
         # Perform distance cutoff with atom indices
         distance = compute_distance(traj_frag_molid, frame, atom1_index, atom2_index)
 
