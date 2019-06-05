@@ -99,7 +99,7 @@ def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2
             continue
 
         #Check and continue if disulphide bond
-        if atom1.resname == atom2.resname == "CYS" and atom1.name == atom2.name == "SG":
+        if atom1.resid in disulfide_cys and atom2.resid in disulfide_cys:
             continue
 
         # Perform distance cutoff with atom indices

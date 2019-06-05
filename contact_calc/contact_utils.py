@@ -388,6 +388,18 @@ def calc_water_to_residues_map(water_hbonds, solvent_resn):
 
     return frame_idx, water_to_residues, solvent_bridges
 
+def find_disulfide(top, traj):
+    """
+    Find Cysteines making disulfide bridges and return their resids
+    """
+    molid = load_traj(top, traj, 0, 1, 1)
+    evaltcl("set bridge_cys [atomselect %s \" resname CYS  \" frame 0]" % molid)
+    cys_all = set(evaltcl("$bridge_cys get resid").split())
+    evaltcl("set bridge_cys [atomselect %s \" name HG1 and resname CYS  \" frame 0]" % molid)
+    cys_nobridge = set(evaltcl("$bridge_cys get resid").split())
+    cys_bridge = cys_all.difference(cys_nobridge)
+    cys_bridge =  set(map(int, cys_bridge))
+    return(cys_bridge)
 
 def configure_solv(top, traj, solvent_sele):
     """

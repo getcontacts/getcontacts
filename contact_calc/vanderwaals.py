@@ -31,7 +31,7 @@ def update_soft_cutoff(traj_frag_molid, index_to_atom, sele1, sele2, epsilon, ge
     geom_criteria['soft_vdw_cutoff'] = max_vdw1 + max_vdw2 + epsilon
 
 
-def compute_vanderwaals(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_criteria):
+def compute_vanderwaals(traj_frag_molid, frame, index_to_atom, sele1, sele2, geom_criteria, disulfide_cys):
     """
     Compute all vanderwaals interactions in a frame of simulation
 
@@ -49,6 +49,9 @@ def compute_vanderwaals(traj_frag_molid, frame, index_to_atom, sele1, sele2, geo
         If second VMD query is specified, then compute contacts between atom selection 1 and 2
     geom_criteria: dict
         Container for geometric criteria
+    disulfide_cys: set
+        Set with residue ids of cysteines making disulfide bridges
+
 
     Returns
     -------
@@ -79,7 +82,7 @@ def compute_vanderwaals(traj_frag_molid, frame, index_to_atom, sele1, sele2, geo
             continue
 
         #Check and continue if disulphide bond
-        if atom1.resname == atom2.resname == "CYS" and atom1.name == atom2.name == "SG":
+        if atom1.resid in disulfide_cys and atom2.resid in disulfide_cys:
             continue
 
         # Perform distance cutoff with atom indices
