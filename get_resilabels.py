@@ -10,26 +10,32 @@ import os
 class Aligned_Residues:
     def __init__(self, processed_line, include_nonaligned=False):
         resnames = [resname for protein, ss, resname in processed_line]
-        self.ss_colormap = {"H": "red", "S":"yellow"}
+        self.ss_colormap = {"H": "red", "S": "yellow"}
         if include_nonaligned:
             self.to_print = True
         else:
             self.to_print = sum([bool(resname) for resname in resnames]) > 1
         print(self.to_print)
-        self.generic = '-'.join(resnames)
-        self.protein_map = {protein:{"resname": resname, "ss": ss, "to_print": (len(resname) > 0)} for protein, ss, resname in processed_line}
+        self.generic = "-".join(resnames)
+        self.protein_map = {
+            protein: {"resname": resname, "ss": ss, "to_print": (len(resname) > 0)}
+            for protein, ss, resname in processed_line
+        }
 
     def get_line(self, protein):
         if not self.to_print or not self.protein_map[protein]["to_print"]:
             return ""
         line = "{}\t{}".format(self.protein_map[protein]["resname"], self.generic)
-        if self.protein_map[protein]["ss"] and self.protein_map[protein]["ss"] in self.ss_colormap:
+        if (
+            self.protein_map[protein]["ss"]
+            and self.protein_map[protein]["ss"] in self.ss_colormap
+        ):
             line += "\t{}".format(self.ss_colormap[self.protein_map[protein]["ss"]])
         line += "\n"
         return line
 
 
-def parse_two_queries(gesamt_lines, include_nonaligned, proteins = None):
+def parse_two_queries(gesamt_lines, include_nonaligned, proteins=None):
     if proteins is None:
         proteins = []
         for idx, line in enumerate(gesamt_lines):
@@ -74,7 +80,9 @@ def parse_two_queries(gesamt_lines, include_nonaligned, proteins = None):
     for line in alignment_lines:
         new_line = []
         for protein, token in zip(proteins, line):
-            resname = token[-10:-5] + ":" + str(int(token[-5:])) if token.strip() else ''
+            resname = (
+                token[-10:-5] + ":" + str(int(token[-5:])) if token.strip() else ""
+            )
             ss = token[0].strip()
             new_line.append((protein, ss, resname))
         print(new_line)
@@ -83,7 +91,7 @@ def parse_two_queries(gesamt_lines, include_nonaligned, proteins = None):
     return aligned_residues
 
 
-def parse_more_than_two_queries(gesamt_lines, include_nonaligned, proteins = None):
+def parse_more_than_two_queries(gesamt_lines, include_nonaligned, proteins=None):
     if proteins is None:
         proteins = []
         for idx, line in enumerate(gesamt_lines):
@@ -121,11 +129,11 @@ def parse_more_than_two_queries(gesamt_lines, include_nonaligned, proteins = Non
         new_line = []
         for protein, token in zip(proteins, line):
             if len(token.split("|")) == 1:
-                ss = ''
+                ss = ""
                 resname = token
             elif len(token.split("|")) == 2:
                 ss, resname = token.split("|")
-            resname = resname[:5] + ":" + str(int(resname[5:])) if resname else ''
+            resname = resname[:5] + ":" + str(int(resname[5:])) if resname else ""
             new_line.append((protein, ss, resname))
         print(new_line)
         aligned_residues.append(Aligned_Residues(new_line))
@@ -160,7 +168,7 @@ def main(argv=None):
         required=False,
         dest="include_nonaligned",
         action="store_true",
-        help="Optionally, include in the label file residues that are not aligned to any other residue. This option is not recommended."
+        help="Optionally, include in the label file residues that are not aligned to any other residue. This option is not recommended.",
     )
     parser.set_defaults(include_nonaligned=False)
 
@@ -171,20 +179,32 @@ def main(argv=None):
     include_nonaligned = args.include_nonaligned
 
     with open(input_gesamt, "r") as r_open:
-        gesamt_lines = [line.strip() for line in r_open.readlines() if len(line.strip()) > 0]
+        gesamt_lines = [
+            line.strip() for line in r_open.readlines() if len(line.strip()) > 0
+        ]
 
     # parse the input file differently depending on whether there are 2 queries or >2 queries
     gesamt_text = "".join(gesamt_lines)
-    if "reading QUERY structure" in gesamt_text or "reading FIXED structure" in gesamt_text:
-        aligned_residues = parse_two_queries(gesamt_lines, include_nonaligned, proteins = proteins)
+    if (
+        "reading QUERY structure" in gesamt_text
+        or "reading FIXED structure" in gesamt_text
+    ):
+        aligned_residues = parse_two_queries(
+            gesamt_lines, include_nonaligned, proteins=proteins
+        )
     else:
-        aligned_residues = parse_more_than_two_queries(gesamt_lines, include_nonaligned, proteins = proteins)
-    
+        aligned_residues = parse_more_than_two_queries(
+            gesamt_lines, include_nonaligned, proteins=proteins
+        )
+
+    os.system("mkdir -p {}".format(output_path))
+
     for protein in proteins:
         # write output file
         with open("{}/{}.label".format(output_path, protein), "w+") as w_open:
             for residue_set in aligned_residues:
                 w_open.write(residue_set.get_line(protein))
+
 
 if __name__ == "__main__":
     main()
