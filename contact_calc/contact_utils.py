@@ -392,14 +392,16 @@ def find_disulfide(top, traj):
     """
     Find Cysteines making disulfide bridges and return their resids
     """
+    disulfide_pairs = list()
     molid = load_traj(top, traj, 0, 1, 1)
-    evaltcl("set bridge_cys [atomselect %s \" resname CYS  \" frame 0]" % molid)
-    cys_all = set(evaltcl("$bridge_cys get resid").split())
-    evaltcl("set bridge_cys [atomselect %s \" name HG1 and resname CYS  \" frame 0]" % molid)
-    cys_nobridge = set(evaltcl("$bridge_cys get resid").split())
-    cys_bridge = cys_all.difference(cys_nobridge)
-    cys_bridge =  set(map(int, cys_bridge))
-    return(cys_bridge)
+    evaltcl("set cys_all [atomselect %s \" resname CYS  \" frame 0]" % molid)
+    cys_all = set(evaltcl("$cys_all get resid").split())
+    for cys in cys_all:
+        evaltcl("set bridge_cys [atomselect %s \" name SG and within 2.1 of (resid %s and name SG)  \" frame 0]" % (molid, cys))
+        disulfide_pair = set(map(int,evaltcl("$bridge_cys get resid").split()))
+        if len(disulfide_pair) == 2 and disulfide_pair not in disulfide_pairs:
+            disulfide_pairs.append(disulfide_pair)
+    return(disulfide_pairs)
 
 def configure_solv(top, traj, solvent_sele):
     """
