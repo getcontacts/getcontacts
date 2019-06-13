@@ -71,7 +71,7 @@ Generated contact-list files are useful as inputs to visualization and analysis 
 GetContacts has the following dependencies
 * [vmd-python](https://github.com/Eigenstate/vmd-python) 
   * netcdf >= 4.3
-  * tk = 8.5
+  * tk = 8.6
 * numpy scipy expat matplotlib scikit-learn pytest pandas seaborn cython
 * futures (if using python 2.7)
 
@@ -82,7 +82,7 @@ brew install netcdf
 
 To install vmd-python on LINUX, use the [anaconda platform](https://www.anaconda.com/download):
 ```bash
-conda install -c https://conda.anaconda.org/rbetz vmd-python
+conda install -c conda-forge vmd-python
 ```
 
 To install vmd-python on MAC (or LINUX systems without `conda`), you'll need to compile and install from source:
@@ -97,7 +97,7 @@ python -c "import vmd"  # Should not throw error
 
 The remaining dependencies can be installed using either `pip` or `conda`, e.g.
 ```bash
-conda install tk=8.5 numpy scipy expat matplotlib scikit-learn pytest pandas seaborn cython
+conda install tk=8.6 numpy scipy expat matplotlib scikit-learn pytest pandas seaborn cython
 conda install futures  # Only do this if using python2.7
 ```
 
@@ -114,7 +114,7 @@ source ~/.bashrc
 
 To test the installation, run:
 ```bash
-cd getcontacts/example
+cd getcontacts/example/5xnd
 get_dynamic_contacts.py --topology 5xnd_topology.pdb \
                         --trajectory 5xnd_trajectory.dcd \
                         --itypes hb \
