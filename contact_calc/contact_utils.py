@@ -37,7 +37,7 @@ def atoi(text):
 
 
 def natural_keys(text):
-    return [atoi(c) for c in re.split('(\d+)', text)]
+    return [atoi(c) for c in re.split(r'(\d+)', text)]
 
 
 def get_file_type(file_name):
