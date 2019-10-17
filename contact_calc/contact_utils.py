@@ -640,15 +640,15 @@ def extract_ligand_features(top, traj, index_to_atom):
         '''
         if index_to_atom[atom_idx].element == 'C' and len(neighbor_indices) == 3:
             # Check hybridization
-            if not is_sp2(molid, index_to_atom, neighbor_indices[0], atom_idx, neighbor_indices[1]): continue
+            if not is_sp2(molid, index_to_atom, neighbors[0], atom_idx, neighbors[1]): continue
             # Check bonded atoms
-            neighbor_elements = [index_to_atom[n_idx].element for n_idx in neighbor_indices]
+            neighbor_elements = [index_to_atom[n_idx].element for n_idx in neighbors]
             from collections import Counter
             neighbor_elem_counts = Counter(neighbor_elements)
             if not (neighbor_elem_counts['C'] == 1 and neighbor_elem_counts['O'] == 2):
                 continue
             # It's a carboxylate (probably)! Add both O's to ligand_anions
-            ligand_anions += [n_idx for n_idx in neighbor_indices if index_to_atom[n_idx].element == 'O']
+            ligand_anions += [n_idx for n_idx in neighbors if index_to_atom[n_idx].element == 'O']
 
     molecule.delete(molid)
     return ligand_anions, ligand_cations
