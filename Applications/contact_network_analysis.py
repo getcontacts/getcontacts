@@ -67,13 +67,14 @@ def create_graph(contact_frequency):
     """
 
     # Parse the contact_frequency graph file
-    f = open(contact_frequency, 'r')
-    nodes, edges = set(), set()
-    for line in f:
-        linfo = line.strip().split("\t")
-        res1 = linfo[0]
-        res2 = linfo[1]
-        freq = float(linfo[2])
+    with open(contact_frequency, 'r') as f:
+        nodes, edges = set(), set()
+        for line in f:
+            if not line[0] == "#":
+                linfo = line.strip().split("\t")
+                res1 = linfo[0]
+                res2 = linfo[1]
+                freq = float(linfo[2])
 
         nodes.add(res1)
         nodes.add(res2)
