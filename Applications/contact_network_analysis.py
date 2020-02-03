@@ -76,9 +76,9 @@ def create_graph(contact_frequency):
                 res2 = linfo[1]
                 freq = float(linfo[2])
 
-        nodes.add(res1)
-        nodes.add(res2)
-        edges.add((res1, res2, freq))
+                nodes.add(res1)
+                nodes.add(res2)
+                edges.add((res1, res2, freq))
 
     # Construct networkx graph
     graph = nx.Graph()
