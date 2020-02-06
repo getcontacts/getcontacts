@@ -638,7 +638,7 @@ def extract_ligand_features(top, traj, index_to_atom):
         - sp2 carbon,
         - attached to 2 O's and 1 C
         '''
-        if index_to_atom[atom_idx].element == 'C' and len(neighbor_indices) == 3:
+        if index_to_atom[atom_idx].element == 'C' and len(neighbors) == 3:
             # Check hybridization
             if not is_sp2(molid, index_to_atom, neighbors[0], atom_idx, neighbors[1]): continue
             # Check bonded atoms
