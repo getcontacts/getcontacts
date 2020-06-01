@@ -534,9 +534,15 @@ def configure_ligand(top, traj, ligand_sele, sele1, sele2):
     """
     molid = load_traj(top, traj, 0, 1, 1)
     if ligand_sele:
-        evaltcl("atomselect macro ligand \" (" + ligand_sele + ") \"")
+        try:
+            evaltcl("atomselect macro ligand \" (" + ligand_sele + ") \"")
+        except ValueError as err:
+            print("Error:", err, "- not a valid VMD-selection.", file=sys.stderr)
+            sys.exit(-1)
+
         evaltcl("set ligatoms [atomselect %s \" ligand \" frame 0]" % molid)
         ligatoms = get_selection_indices(molid, 0, "ligand")
+
         if ligatoms:
             print("Detected %d ligand atoms matching --ligand '%s'" % (len(ligatoms), ligand_sele))
 

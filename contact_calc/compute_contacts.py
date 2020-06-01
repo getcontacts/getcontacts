@@ -228,6 +228,7 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
     configure_solv(top, traj, solv_sele)
     configure_lipid(top, traj, lipid_sele)
     configure_ligand(top, traj, ligand_sele, sele1, sele2)
+
     disulfide_cys = find_disulfide(top, traj)
     ligand_anions, ligand_cations = extract_ligand_features(top, traj, index_to_atom)
 
