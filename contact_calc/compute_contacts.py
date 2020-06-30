@@ -343,6 +343,9 @@ def contact_consumer(resultsqueue, output_fd, itypes, beg, end, stride, distout)
                 # Sort atom 1 and 2 lexicographically
                 if interaction[3] < interaction[2]:
                     interaction[2], interaction[3] = interaction[3], interaction[2]  # Swap
+                    if len(interaction) == (7 if distout else 6):
+                        # In case of double water bridges, also swap the waters
+                        interaction[4], interaction[5] = interaction[5], interaction[4]
 
             contact_line_hash = set()
             for interaction in contacts:
