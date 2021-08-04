@@ -24,7 +24,7 @@ __all__ = ['compute_salt_bridges']
 
 acidic_asp = "((resname ASP) and (name OD1 OD2))"
 acidic_glu = "((resname GLU) and (name OE1 OE2))"
-acidic_nucl = "((resname C U G A DC DT DG DA) and (name OP1 OP2))"
+acidic_nucl = "((resname C U G A DC DT DG DA) and (name OP1 OP2 O1P O2P))"
 basic_his = "((resname HIS HSD HSE HSP HIE HIP HID) and (name ND1 NE2))"
 basic_lys = "((resname LYS) and (name NZ))"
 basic_arg = "((resname ARG) and (name NH1 NH2))"
