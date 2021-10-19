@@ -58,9 +58,9 @@ def get_file_type(file_name):
     if file_type == "cif":
         file_type = "pdbx"
     if file_type == "dcd":
-        filetype = "dcd"
-    if filetype == "xtc":
-        filetype = "xtc"
+        file_type = "dcd"
+    if file_type == "xtc":
+        file_type = "xtc"
 
     return file_type
 
