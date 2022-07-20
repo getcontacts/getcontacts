@@ -56,8 +56,8 @@ def parse_contacts(input_lines, itypes=None):
             tokens[0] = int(tokens[0])
         except ValueError:
             raise ParseError("First column isn't a integer")
-
-        if len(tokens) not in range(4, 7):
+        
+        if len(tokens) not in range(4, 8):
             raise ParseError("Invalid number of tokens")
 
         if itypes is None or tokens[1] in itypes:
