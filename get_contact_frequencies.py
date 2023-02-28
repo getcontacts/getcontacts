@@ -119,9 +119,8 @@ def main(argv=None):
 
     counts = []
     for input_file in input_files:
-        contacts, num_frames = parse_contacts(input_file, itypes)
+        residue_contacts, num_frames = res_contacts_xl(input_file, itypes)
         input_file.close()
-        residue_contacts = res_contacts(contacts)
         residue_contacts = relabel(residue_contacts, labels)
         counts.append((num_frames, gen_counts(residue_contacts)))
 
