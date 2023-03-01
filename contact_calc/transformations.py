@@ -69,8 +69,9 @@ def parse_contacts(input_lines, itypes=None):
 
 def res_contacts_xl(input_lines, itypes=None):
     """
+    Reduces memory usage for contact frequency calculation by combining parse_contact and res_contacts.
     Read a contact-file (tab-separated file with columns: frame, i-type, atomid1, atomid2[, atomid3[, atomid4]] 
-    one frame at a time and run res_contacts after each frame.  Return 
+    one frame at a time and run res_contacts after each frame.  
     The total number of frames is also returned.
 
     Example
@@ -113,6 +114,9 @@ def res_contacts_xl(input_lines, itypes=None):
     current_frame = 0
 
     for line in input_lines:
+        # check for end of file 
+        if line == '':
+            ret.extend(res_contacts(frame_contacts))
         line = line.strip()
         if "total_frames" in line:
             tokens = line.split(" ")
