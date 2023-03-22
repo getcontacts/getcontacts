@@ -42,6 +42,7 @@ def parse_contacts(input_lines, itypes=None):
     """
     ret = []
     total_frames = 0
+
     for line in input_lines:
         line = line.strip()
         if "total_frames" in line:
@@ -62,6 +63,89 @@ def parse_contacts(input_lines, itypes=None):
 
         if itypes is None or tokens[1] in itypes:
             ret.append(tokens)
+
+    return ret, total_frames
+
+
+def res_contacts_xl(input_lines, itypes=None):
+    """
+    Reduces memory usage for contact frequency calculation by combining parse_contact and res_contacts.
+    Read a contact-file (tab-separated file with columns: frame, i-type, atomid1, atomid2[, atomid3[, atomid4]] 
+    one frame at a time and run res_contacts after each frame.  
+    The total number of frames is also returned.
+
+    Example
+    -------
+        parse_contacts([
+            "# total_frames:2\n",
+            "0  hbbb    A:ALA:1:N   A:THR:10:O\n",
+            "0  vdw     A:ALA:1:CB  B:CYS:3:H\n",
+            "1  vdw     A:ALA:1:N   A:THR:10:C\n"
+        ])
+        # returns:
+        # ([
+        #        [0, "hbbb", "A:ALA:1:N", "A:THR:10:O"],
+        #        [0, "vdw", "A:ALA:1:CB", "B:CYS:3:H"],
+        #        [1, "vdw", "A:ALA:1:N", "A:THR:10:C"]
+        #  ], 2)
+
+    Parameters
+    ----------
+    input_lines: iterable
+        Iterator of over a set of strings. Can be a file-handle
+
+    itypes: set of str | None
+        Interactions to include in the output
+
+    Returns
+    -------
+    List of list
+        Each entry is a list with a frame and two residue identifiers
+
+    Raises
+    ------
+    ParseError: If contents of lines couldn't be parsed
+    """
+    ret = []
+    # hold the contacts for a single frame
+    frame_contacts = []
+    total_frames = 0
+    # track the current frame
+    current_frame = 0
+
+    for line in input_lines:
+        # check for end of file 
+        if line == '':
+            ret.extend(res_contacts(frame_contacts))
+        line = line.strip()
+        if "total_frames" in line:
+            tokens = line.split(" ")
+            total_frames = int(tokens[1][tokens[1].find(":")+1:])
+
+        if len(line) == 0 or line[0] == "#":
+            continue
+
+        tokens = line.split("\t")
+        try:
+            tokens[0] = int(tokens[0])
+        except ValueError:
+            raise ParseError("First column isn't a integer")
+        
+        if len(tokens) not in range(4, 8):
+            raise ParseError("Invalid number of tokens")
+        # check that the data is from the same frame
+        if tokens[0] == current_frame:
+            if itypes is None or tokens[1] in itypes:
+                frame_contacts.append(tokens)
+        # if it's not, convert the previous frame to single contact records
+        # update the frame record
+        # start a new frame_contacts list
+        # check for end of file
+        else:
+            ret.extend(res_contacts(frame_contacts))
+            frame_contacts = []
+            current_frame = tokens[0]
+
 
     return ret, total_frames
 
