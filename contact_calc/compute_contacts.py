@@ -19,7 +19,7 @@
 ##############################################################################
 
 import datetime
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, get_context
 try:
     from vmd import *  # Loads the static `molecule` object
 except ModuleNotFoundError:
@@ -28,6 +28,8 @@ except ModuleNotFoundError:
                      "at https://github.com/getcontacts/getcontacts to install.\n")
     sys.exit(1)
 
+# Workaround for multiprocessing which was changed to use spawn under OSX since py 3.8
+mp_fork = get_context("fork")
 
 from .contact_utils import *
 from .aromatics import *
@@ -276,13 +278,13 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
         output_fd.close()
 
     else:
-        workers = [Process(target=contact_worker, args=(inputqueue, resultsqueue)) for _ in range(num_workers)]
+        workers = [mp_fork.Process(target=contact_worker, args=(inputqueue, resultsqueue)) for _ in range(num_workers)]
         for w in workers:
             w.start()
 
         # Set up and start consumer process which takes contact results and saves them to output
         output_fd = open(output, "w")
-        consumer = Process(target=contact_consumer, args=(resultsqueue, output_fd, itypes, beg, end, stride, distout))
+        consumer = mp_fork.Process(target=contact_consumer, args=(resultsqueue, output_fd, itypes, beg, end, stride, distout))
         consumer.start()
 
         # Wait for everyone to finish
