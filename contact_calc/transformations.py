@@ -145,7 +145,8 @@ def res_contacts_xl(input_lines, itypes=None):
             ret.extend(res_contacts(frame_contacts))
             frame_contacts = []
             current_frame = tokens[0]
-
+    if len(frame_contacts) > 0 and len(ret) < total_frames:
+        ret.extend(res_contacts(frame_contacts))
 
     return ret, total_frames
 

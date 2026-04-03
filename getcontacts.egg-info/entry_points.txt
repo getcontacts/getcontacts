@@ -1,0 +1,11 @@
+[console_scripts]
+get-contact-bridges = getcontacts.get_contact_bridges:main
+get-contact-fingerprints = getcontacts.get_contact_fingerprints:main
+get-contact-flare = getcontacts.get_contact_flare:main
+get-contact-frequencies = getcontacts.get_contact_frequencies:main
+get-contact-singleframe = getcontacts.get_contact_singleframe:main
+get-contact-ticc = getcontacts.get_contact_ticc:main
+get-contact-trace = getcontacts.get_contact_trace:main
+get-dynamic-contacts = getcontacts.get_dynamic_contacts:main
+get-resilabels = getcontacts.get_resilabels:main
+get-static-contacts = getcontacts.get_static_contacts:main

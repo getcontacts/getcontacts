@@ -1,0 +1,65 @@
+{% set name = "getcontacts" %}
+{% set version = "0.1.0" %}
+
+package:
+  name: {{ name }}
+  version: {{ version }}
+
+source:
+  # For local builds: conda build conda-recipe/
+  # For a tagged release, replace with:
+  # url: https://github.com/getcontacts/getcontacts/archive/v{{ version }}.tar.gz
+  path: ..
+
+build:
+  number: 0
+  script: {{ PYTHON }} -m pip install . --no-deps -vv
+  entry_points:
+    - get-dynamic-contacts     = getcontacts.get_dynamic_contacts:main
+    - get-static-contacts      = getcontacts.get_static_contacts:main
+    - get-contact-frequencies  = getcontacts.get_contact_frequencies:main
+    - get-contact-fingerprints = getcontacts.get_contact_fingerprints:main
+    - get-contact-flare        = getcontacts.get_contact_flare:main
+    - get-contact-bridges      = getcontacts.get_contact_bridges:main
+    - get-contact-ticc         = getcontacts.get_contact_ticc:main
+    - get-contact-trace        = getcontacts.get_contact_trace:main
+    - get-contact-singleframe  = getcontacts.get_contact_singleframe:main
+    - get-resilabels           = getcontacts.get_resilabels:main
+
+requirements:
+  host:
+    - python
+    - pip
+    - setuptools >=61
+  run:
+    - python
+    - numpy
+    - scipy
+    - matplotlib
+    - scikit-learn
+    - pandas
+    - seaborn
+    - cython
+    - vmd-python  # only available on conda-forge
+
+test:
+  imports:
+    - contact_calc
+    - getcontacts
+    - getcontacts.get_dynamic_contacts
+    - getcontacts.get_static_contacts
+  commands:
+    - get-dynamic-contacts --help
+    - get-static-contacts --help
+
+about:
+  home: https://getcontacts.github.io
+  license: Apache-2.0
+  license_file: LICENSE
+  summary: "Efficient computation of non-covalent contact networks in MD simulations"
+  description: |
+    GetContacts computes non-covalent contact networks (hydrogen bonds, salt bridges,
+    pi-cation/stacking, van der Waals, etc.) for molecular dynamics trajectories and
+    static structures using VMD as the backend.
+  doc_url: https://getcontacts.github.io
+  dev_url: https://github.com/getcontacts/getcontacts

@@ -1,7 +1,7 @@
 import unittest
-import get_static_contacts
-import get_contact_frequencies
-import get_contact_fingerprints
+from getcontacts import get_static_contacts
+from getcontacts import get_contact_frequencies
+from getcontacts import get_contact_fingerprints
 import os
 
 

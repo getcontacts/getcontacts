@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "getcontacts"
+version = "0.1.0"
+description = "Efficient computation of non-covalent contact networks in molecular structures and MD simulations"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Anthony Ma", email = "anthonyma27@gmail.com" },
+    { name = "Rasmus Fonseca", email = "fonseca.rasmus@gmail.com" },
+]
+keywords = ["molecular dynamics", "contacts", "protein", "bioinformatics", "VMD"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
+requires-python = ">=3.7"
+
+# Core scientific dependencies (available on PyPI and conda-forge).
+# NOTE: vmd-python is only available on conda-forge, not PyPI.
+#       Install it first with:  conda install -c conda-forge vmd-python
+#       Then install this package with: pip install -e . (or pip install .)
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "scikit-learn",
+    "pandas",
+    "seaborn",
+    "cython",
+    "vmd-python",
+]
+
+[project.optional-dependencies]
+# pip install getcontacts[ticc]
+ticc = ["ticc==0.1.4"]
+
+[project.scripts]
+get-dynamic-contacts    = "getcontacts.get_dynamic_contacts:main"
+get-static-contacts     = "getcontacts.get_static_contacts:main"
+get-contact-frequencies = "getcontacts.get_contact_frequencies:main"
+get-contact-fingerprints = "getcontacts.get_contact_fingerprints:main"
+get-contact-flare       = "getcontacts.get_contact_flare:main"
+get-contact-bridges     = "getcontacts.get_contact_bridges:main"
+get-contact-ticc        = "getcontacts.get_contact_ticc:main"
+get-contact-trace       = "getcontacts.get_contact_trace:main"
+get-contact-singleframe = "getcontacts.get_contact_singleframe:main"
+get-resilabels          = "getcontacts.get_resilabels:main"
+
+[project.urls]
+Homepage = "https://getcontacts.github.io"
+Source   = "https://github.com/getcontacts/getcontacts"
+
+[tool.setuptools.packages.find]
+# Discovers both 'getcontacts' and 'contact_calc' automatically
+where = ["."]
+include = ["getcontacts*", "contact_calc*"]

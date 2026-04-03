@@ -1,0 +1,544 @@
+Metadata-Version: 2.4
+Name: getcontacts
+Version: 0.1.0
+Summary: Efficient computation of non-covalent contact networks in molecular structures and MD simulations
+Author-email: Anthony Ma <anthonyma27@gmail.com>, Rasmus Fonseca <fonseca.rasmus@gmail.com>
+License:                                  Apache License
+                                   Version 2.0, January 2004
+                                http://www.apache.org/licenses/
+        
+           TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+        
+           1. Definitions.
+        
+              "License" shall mean the terms and conditions for use, reproduction,
+              and distribution as defined by Sections 1 through 9 of this document.
+        
+              "Licensor" shall mean the copyright owner or entity authorized by
+              the copyright owner that is granting the License.
+        
+              "Legal Entity" shall mean the union of the acting entity and all
+              other entities that control, are controlled by, or are under common
+              control with that entity. For the purposes of this definition,
+              "control" means (i) the power, direct or indirect, to cause the
+              direction or management of such entity, whether by contract or
+              otherwise, or (ii) ownership of fifty percent (50%) or more of the
+              outstanding shares, or (iii) beneficial ownership of such entity.
+        
+              "You" (or "Your") shall mean an individual or Legal Entity
+              exercising permissions granted by this License.
+        
+              "Source" form shall mean the preferred form for making modifications,
+              including but not limited to software source code, documentation
+              source, and configuration files.
+        
+              "Object" form shall mean any form resulting from mechanical
+              transformation or translation of a Source form, including but
+              not limited to compiled object code, generated documentation,
+              and conversions to other media types.
+        
+              "Work" shall mean the work of authorship, whether in Source or
+              Object form, made available under the License, as indicated by a
+              copyright notice that is included in or attached to the work
+              (an example is provided in the Appendix below).
+        
+              "Derivative Works" shall mean any work, whether in Source or Object
+              form, that is based on (or derived from) the Work and for which the
+              editorial revisions, annotations, elaborations, or other modifications
+              represent, as a whole, an original work of authorship. For the purposes
+              of this License, Derivative Works shall not include works that remain
+              separable from, or merely link (or bind by name) to the interfaces of,
+              the Work and Derivative Works thereof.
+        
+              "Contribution" shall mean any work of authorship, including
+              the original version of the Work and any modifications or additions
+              to that Work or Derivative Works thereof, that is intentionally
+              submitted to Licensor for inclusion in the Work by the copyright owner
+              or by an individual or Legal Entity authorized to submit on behalf of
+              the copyright owner. For the purposes of this definition, "submitted"
+              means any form of electronic, verbal, or written communication sent
+              to the Licensor or its representatives, including but not limited to
+              communication on electronic mailing lists, source code control systems,
+              and issue tracking systems that are managed by, or on behalf of, the
+              Licensor for the purpose of discussing and improving the Work, but
+              excluding communication that is conspicuously marked or otherwise
+              designated in writing by the copyright owner as "Not a Contribution."
+        
+              "Contributor" shall mean Licensor and any individual or Legal Entity
+              on behalf of whom a Contribution has been received by Licensor and
+              subsequently incorporated within the Work.
+        
+           2. Grant of Copyright License. Subject to the terms and conditions of
+              this License, each Contributor hereby grants to You a perpetual,
+              worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+              copyright license to reproduce, prepare Derivative Works of,
+              publicly display, publicly perform, sublicense, and distribute the
+              Work and such Derivative Works in Source or Object form.
+        
+           3. Grant of Patent License. Subject to the terms and conditions of
+              this License, each Contributor hereby grants to You a perpetual,
+              worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+              (except as stated in this section) patent license to make, have made,
+              use, offer to sell, sell, import, and otherwise transfer the Work,
+              where such license applies only to those patent claims licensable
+              by such Contributor that are necessarily infringed by their
+              Contribution(s) alone or by combination of their Contribution(s)
+              with the Work to which such Contribution(s) was submitted. If You
+              institute patent litigation against any entity (including a
+              cross-claim or counterclaim in a lawsuit) alleging that the Work
+              or a Contribution incorporated within the Work constitutes direct
+              or contributory patent infringement, then any patent licenses
+              granted to You under this License for that Work shall terminate
+              as of the date such litigation is filed.
+        
+           4. Redistribution. You may reproduce and distribute copies of the
+              Work or Derivative Works thereof in any medium, with or without
+              modifications, and in Source or Object form, provided that You
+              meet the following conditions:
+        
+              (a) You must give any other recipients of the Work or
+                  Derivative Works a copy of this License; and
+        
+              (b) You must cause any modified files to carry prominent notices
+                  stating that You changed the files; and
+        
+              (c) You must retain, in the Source form of any Derivative Works
+                  that You distribute, all copyright, patent, trademark, and
+                  attribution notices from the Source form of the Work,
+                  excluding those notices that do not pertain to any part of
+                  the Derivative Works; and
+        
+              (d) If the Work includes a "NOTICE" text file as part of its
+                  distribution, then any Derivative Works that You distribute must
+                  include a readable copy of the attribution notices contained
+                  within such NOTICE file, excluding those notices that do not
+                  pertain to any part of the Derivative Works, in at least one
+                  of the following places: within a NOTICE text file distributed
+                  as part of the Derivative Works; within the Source form or
+                  documentation, if provided along with the Derivative Works; or,
+                  within a display generated by the Derivative Works, if and
+                  wherever such third-party notices normally appear. The contents
+                  of the NOTICE file are for informational purposes only and
+                  do not modify the License. You may add Your own attribution
+                  notices within Derivative Works that You distribute, alongside
+                  or as an addendum to the NOTICE text from the Work, provided
+                  that such additional attribution notices cannot be construed
+                  as modifying the License.
+        
+              You may add Your own copyright statement to Your modifications and
+              may provide additional or different license terms and conditions
+              for use, reproduction, or distribution of Your modifications, or
+              for any such Derivative Works as a whole, provided Your use,
+              reproduction, and distribution of the Work otherwise complies with
+              the conditions stated in this License.
+        
+           5. Submission of Contributions. Unless You explicitly state otherwise,
+              any Contribution intentionally submitted for inclusion in the Work
+              by You to the Licensor shall be under the terms and conditions of
+              this License, without any additional terms or conditions.
+              Notwithstanding the above, nothing herein shall supersede or modify
+              the terms of any separate license agreement you may have executed
+              with Licensor regarding such Contributions.
+        
+           6. Trademarks. This License does not grant permission to use the trade
+              names, trademarks, service marks, or product names of the Licensor,
+              except as required for reasonable and customary use in describing the
+              origin of the Work and reproducing the content of the NOTICE file.
+        
+           7. Disclaimer of Warranty. Unless required by applicable law or
+              agreed to in writing, Licensor provides the Work (and each
+              Contributor provides its Contributions) on an "AS IS" BASIS,
+              WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+              implied, including, without limitation, any warranties or conditions
+              of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+              PARTICULAR PURPOSE. You are solely responsible for determining the
+              appropriateness of using or redistributing the Work and assume any
+              risks associated with Your exercise of permissions under this License.
+        
+           8. Limitation of Liability. In no event and under no legal theory,
+              whether in tort (including negligence), contract, or otherwise,
+              unless required by applicable law (such as deliberate and grossly
+              negligent acts) or agreed to in writing, shall any Contributor be
+              liable to You for damages, including any direct, indirect, special,
+              incidental, or consequential damages of any character arising as a
+              result of this License or out of the use or inability to use the
+              Work (including but not limited to damages for loss of goodwill,
+              work stoppage, computer failure or malfunction, or any and all
+              other commercial damages or losses), even if such Contributor
+              has been advised of the possibility of such damages.
+        
+           9. Accepting Warranty or Additional Liability. While redistributing
+              the Work or Derivative Works thereof, You may choose to offer,
+              and charge a fee for, acceptance of support, warranty, indemnity,
+              or other liability obligations and/or rights consistent with this
+              License. However, in accepting such obligations, You may act only
+              on Your own behalf and on Your sole responsibility, not on behalf
+              of any other Contributor, and only if You agree to indemnify,
+              defend, and hold each Contributor harmless for any liability
+              incurred by, or claims asserted against, such Contributor by reason
+              of your accepting any such warranty or additional liability.
+        
+           END OF TERMS AND CONDITIONS
+        
+           APPENDIX: How to apply the Apache License to your work.
+        
+              To apply the Apache License to your work, attach the following
+              boilerplate notice, with the fields enclosed by brackets "[]"
+              replaced with your own identifying information. (Don't include
+              the brackets!)  The text should be enclosed in the appropriate
+              comment syntax for the file format. We also recommend that a
+              file or class name and description of purpose be included on the
+              same "printed page" as the copyright notice for easier
+              identification within third-party archives.
+        
+           Copyright 2017 Anthony Ma, anthonyma27@gmail.com / Stanford University
+        
+           Licensed under the Apache License, Version 2.0 (the "License");
+           you may not use this file except in compliance with the License.
+           You may obtain a copy of the License at
+        
+               http://www.apache.org/licenses/LICENSE-2.0
+        
+           Unless required by applicable law or agreed to in writing, software
+           distributed under the License is distributed on an "AS IS" BASIS,
+           WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+           See the License for the specific language governing permissions and
+           limitations under the License.
+        
+Project-URL: Homepage, https://getcontacts.github.io
+Project-URL: Source, https://github.com/getcontacts/getcontacts
+Keywords: molecular dynamics,contacts,protein,bioinformatics,VMD
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Operating System :: MacOS
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+Classifier: Topic :: Scientific/Engineering :: Chemistry
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy
+Requires-Dist: scipy
+Requires-Dist: matplotlib
+Requires-Dist: scikit-learn
+Requires-Dist: pandas
+Requires-Dist: seaborn
+Requires-Dist: cython
+Requires-Dist: vmd-python
+Provides-Extra: ticc
+Requires-Dist: ticc==0.1.4; extra == "ticc"
+Dynamic: license-file
+
+# GetContacts
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+Application for efficiently computing non-covalent contact networks in molecular structures and MD simulations. Following example computes all salt bridges, pi-cation, aromatic, and hydrogen bond interactions in a trajectory:
+```bash
+get-dynamic-contacts --topology my_top.psf \
+                     --trajectory my_traj.dcd \
+                     --itypes sb pc ps ts hb \
+                     --output my_contacts.tsv
+```
+The output, `my_contacts.tsv`, is a tab-separated file where each line (except the first two) records frame, type, and atoms involved in an interaction:
+```
+# total_frames:20000 interaction_types:sb,pc,ps,ts,hb
+# Columns: frame, interaction_type, atom_1, atom_2[, atom_3[, atom_4]]
+0   sb     C:GLU:21:OE2    C:ARG:86:NH2
+0   ps     C:TYR:36:CG     C:TRP:108:CG
+0   ts     A:TYR:36:CG     A:TRP:108:CG
+0   hbss   A:GLN:53:NE2    A:GLN:69:OE1
+1   hbss   A:GLU:60:OE2    A:SER:56:OG
+1   hbbb   C:LEU:87:N      C:LEU:83:O
+1   hbbb   C:ARG:88:N      C:LEU:87:N
+2   hbsb   A:LYS:28:N      A:HIS:27:ND1
+2   hbsb   A:ASP:52:OD2    A:PHE:48:O
+2   wb2    C:ASN:110:O     B:ARG:73:NH1    W:TIP3:1524:OH2    W:TIP3:506:OH2
+2   wb2    C:ASN:110:O     C:SER:111:OG    W:TIP3:1524:OH2    W:TIP3:2626:OH2
+3   wb     A:ASP:100:OD1   A:ILE:67:O      W:TIP3:6762:OH2
+3   wb     A:ASP:100:OD1   B:ASN:105:ND2   W:TIP3:9239:OH2
+4   sb     A:GLU:47:OE2    A:LYS:33:NZ
+4   pc     A:LYS:9:NZ      A:TYR:21:CG
+4   hbbb   A:ILE:12:N      A:THR:20:O
+5   vdw    A:LYS:164:CG    A:THR:161:OG1
+5   vdw    A:LYS:164:CD    A:THR:161:OG1
+6   vdw    A:ALA:156:O     A:PHE:159:C
+6   hbls   A:EJ4:1219:OAD  A:TYR:129:OH
+6   hbls   A:ASP:128:OD2   A:EJ4:1219:OAQ
+7   hblb   C:LEU:87:N      A:EJ4:1219:OAQ
+7   lwb    A:EJ4:1219:NAN  A:LYS:214:NZ    A:HOH:1316:O
+7   lwb2   A:EJ4:1219:NAN  A:LYS:214:NZ    A:HOH:1316:O       A:HOH:1315:O
+7   lwb2   A:EJ4:1219:NAN  A:TYR:129:OH    A:HOH:1316:O       A:HOH:1311:O
+...
+```
+Interactions that involve more than two atoms (i.e. water bridges and extended water bridges) have extra columns to denote the identities of the water molecules. For simplicity, all stacking and pi-cation interactions involving an aromatic ring will be denoted by the CG atom. 
+
+Interaction types are denoted by the following abbreviations:
+* **sb** - salt bridges 
+* **pc** - pi-cation 
+* **ps** - pi-stacking
+* **ts** - T-stacking
+* **vdw** - van der Waals
+* **hb** - Hydrogen bond subtypes
+  * **hbbb** - Backbone-backbone hydrogen bonds
+  * **hbsb** - Backbone-sidechain hydrogen bonds
+  * **hbss** - Sidechain-sidechain hydrogen bonds
+  * **wb** - Water-mediated hydrogen bond
+  * **wb2** - Extended water-mediated hydrogen bond
+  * **hblb** - Ligand-backbone hydrogen bonds
+  * **hbls** - Ligand-sidechain hydrogen bonds
+  * **lwb** - Ligand water-mediated hydrogen bond
+  * **lwb2** - Ligand extended water-mediated hydrogen bond
+
+Generated contact-list files are useful as inputs to visualization and analysis tools that operate on interaction-networks:
+ * [Flareplot](https://gpcrviz.github.io/flareplot) - Framework for analyzing interaction networks based on circular diagrams
+ * [MDCompare](MDCompare) - Heatmap fingerprints revealing groups of similar interactions in multiple MD trajectories
+ * [TICC](https://github.com/davidhallac/TICC) - Changepoint detection algorithm to identifying significant events in the dynamic contact network
+ * [NetworkAnalysis](Applications) - Compute residue contact frequencies in a simulation, analyze contact network graphs, visualize in PyMol
+
+## Dependencies
+
+GetContacts requires:
+* [vmd-python](https://github.com/Eigenstate/vmd-python) — **only available via conda-forge**, not PyPI
+* numpy, scipy, matplotlib, scikit-learn, pandas, seaborn, cython
+
+## Installation
+
+### Recommended: conda + pip
+
+`vmd-python` must be installed via conda-forge before the package itself. Create a dedicated environment:
+
+```bash
+conda create -n getcontacts python=3.12
+conda activate getcontacts
+conda install -c conda-forge vmd-python
+```
+
+Then install getcontacts with pip (editable for development, or from git):
+
+```bash
+# From a local clone (editable — source changes take effect immediately)
+git clone https://github.com/getcontacts/getcontacts
+pip install -e ./getcontacts
+
+# Or directly from GitHub (no clone needed)
+pip install git+https://github.com/getcontacts/getcontacts
+```
+
+### As a dependency of another package
+
+Add to your `pyproject.toml` or `setup.cfg`:
+
+```toml
+dependencies = [
+    "getcontacts @ git+https://github.com/getcontacts/getcontacts",
+]
+```
+
+> **Note:** The consuming environment must still have `vmd-python` installed via
+> `conda install -c conda-forge vmd-python` before running `pip install`.
+
+### Conda build (local)
+
+```bash
+conda install conda-build
+conda build conda-recipe/
+conda install --use-local getcontacts
+```
+
+### Verifying the installation
+
+After installation, the following commands should all be available on your `$PATH`:
+
+```bash
+get-dynamic-contacts --help
+get-static-contacts --help
+get-contact-frequencies --help
+```
+
+To run the full test suite:
+
+```bash
+cd getcontacts
+pytest
+```
+
+## Simulation and structure file format
+
+GetContacts is compatible with all topology and reimaged trajectory file formats readable by [VMD](https://www-s.ks.uiuc.edu/Research/vmd/).
+
+## Running the Code
+
+### Command line arguments
+
+Required Arguments:
+
+    --topology STRING 
+        Path to topology
+    --trajectory STRING
+        Path to simulation trajectory fragment
+    --output STRING
+        Path to output file
+    --itypes STRING [STRING ...]
+        Specifies interaction types (see above)
+          all, sb, pc, ps, ts, vdw, hb
+
+Optional Arguments:
+
+    --cores INT 
+        Number of CPU cores for parallelization [default = 6]
+    --ligand STRING [STRING ...]
+        Resname of ligand molecule(s) [default = ""]
+    --sele STRING 
+        VMD selection query to compute contacts in specified region of protein 
+        [default = "protein"]
+    --sele2 STRING
+        Second VMD selection query to compute contacts between two regions of the protein
+        [default = None]
+    --solv STRING 
+        Solvent identifier in simulation [default = "TIP3"]
+
+Arguments for adjusting geometric criteria:
+
+    --sb_cutoff_dist FLOAT
+        Cutoff for distance between anion and cation atoms [default = 4.0 Angstroms]
+    --pc_cutoff_dist FLOAT
+        Cutoff for distance between cation and centroid of aromatic ring [default = 6.0 Angstroms]
+    --pc_cutoff_ang FLOAT
+        Cutoff for angle between normal vector projecting from aromatic plane and vector from 
+        aromatic center to cation atom [default = 60 degrees]
+    --ps_cutoff_dist FLOAT
+        Cutoff for distance between centroids of two aromatic rings [default = 7.0 Angstroms]
+    --ps_cutoff_ang FLOAT
+        Cutoff for angle between the normal vectors projecting from each aromatic plane 
+        [default = 30 degrees]
+    --ps_psi_ang FLOAT
+        Cutoff for angle between normal vector projecting from aromatic plane 1 and vector between 
+        the two aromatic centroids [default = 45 degrees]
+    --ts_cutoff_dist FLOAT
+        Cutoff for distance between centroids of two aromatic rings [default = 5.0 Angstroms]
+    --ts_cutoff_ang FLOAT
+        Cutoff for angle between the normal vectors projecting from each aromatic plane minus 90 
+        degrees [default = 30 degrees]
+    --ts_psi_ang FLOAT
+        Cutoff for angle between normal vector projecting from aromatic plane 1 and vector between 
+        the two aromatic centroids [default = 45 degrees]
+    --hbond_cutoff_dist FLOAT
+        Cutoff for distance between donor and acceptor atoms [default = 3.5 Angstroms]
+    --hbond_cutoff_ang FLOAT
+        Cutoff for angle between donor hydrogen acceptor [default = 70 degrees in simulation, 180 in structures]
+    --hbond_res_diff INT
+        Minimum residue distance for which to consider computing hbond interactions 
+        [default = 0 in simulations 1 in structures]
+    --vdw_epsilon FLOAT
+        Amount of padding for calculating vanderwaals contacts [default = 0.5 Angstroms]
+    --vdw_res_diff INT
+        Minimum residue distance for which to consider computing vdw interactions [default = 2]
+
+   
+### Examples
+
+Compute all pi-cation, pi-stacking, and van der Waals contacts throughout an entire simulation:
+
+    get-dynamic-contacts --topology TOP.psf \
+                         --trajectory TRAJ.dcd \
+                         --output output_pc_ps_vdw.tsv \
+                         --itypes pc ps vdw
+
+Compute salt bridges and hydrogen bonds for residues 100 to 160, including those that involves a ligand:
+
+    get-dynamic-contacts --topology TOP.pdb \
+                         --trajectory TRAJ.nc \
+                         --output loop-ligand_sb_hb.tsv \
+                         --cores 12 \
+                         --solv IP3 \
+                         --sele "chain A and resid 100 to 160" \
+                         --ligand EJ4 \
+                         --itypes sb hb 
+
+Compute all interactions formed at a protein-protein interface throughout simulation:
+
+    get-dynamic-contacts --topology TOP.pdb \
+                         --trajectory TRAJ.nc \
+                         --output protein_interface_all.tsv \
+                         --cores 12 \
+                         --sele "chain A" \
+                         --sele2 "chain B" \
+                         --itypes all
+
+Locate salt bridges and hydrogen bonds using modified distance cutoffs:
+
+    get-dynamic-contacts --topology TOP.mae \
+                         --trajectory TRAJ.dcd \
+                         --output output_sb_hb.tsv \
+                         --sb_cutoff_dist 5.0 \
+                         --hbond_cutoff_dist 4.5 \
+                         --itypes sb hb
+
+For further examples, see the [GetContacts main page](https://getcontacts.github.io).
+
+### Programmatic usage
+
+After `pip install`, the tools are importable as a Python package:
+
+```python
+from getcontacts.get_dynamic_contacts import main as get_dynamic_contacts
+from getcontacts.get_contact_frequencies import main as get_contact_frequencies
+
+get_dynamic_contacts([
+    "--topology",  "my_top.pdb",
+    "--trajectory", "my_traj.dcd",
+    "--output",    "contacts.tsv",
+    "--itypes",    "hb", "sb",
+    "--cores",     "8",
+])
+
+get_contact_frequencies([
+    "--input_files",  "contacts.tsv",
+    "--output_file",  "frequencies.tsv",
+])
+```
+
+Or via subprocess (recommended when calling from within another package's
+multiprocessing workers, to keep VMD state fully isolated):
+
+```python
+import subprocess
+
+subprocess.run([
+    "get-dynamic-contacts",
+    "--topology",  "my_top.pdb",
+    "--trajectory", "my_traj.dcd",
+    "--output",    "contacts.tsv",
+    "--itypes",    "all",
+    "--cores",     "8",
+], check=True)
+```
+
+## Python version compatibility
+
+GetContacts requires **Python ≥ 3.7**. Internal parallelization uses the
+`forkserver` multiprocessing context (falling back to `spawn`) so that VMD's
+C library is never duplicated into worker processes via `fork`. This resolves
+memory allocation errors that occurred on Python 3.12+ with the previous
+`fork`-based approach.
+
+## For developers
+
+Unit tests are located in `unittests` subfolders and use the python `unittest` module. To run just the unit-tests, type
+
+    python -m unittest
+
+Integration tests verifying the functionality of executables are in the `tests`-folder. To run all tests make sure pytest is installed (e.g. `pip install pytest`) and run the following from the root:
+
+    pytest
+    
+Pull-requests won't be accepted before all tests pass, but if there are any problems we are happy to help work them out.
+
+The code aims to be [PEP 8](http://pep8.org/) compliant, but pull-requests wont be rejected if they're not. 
+
+## Citation
+
+When using GetContacts for publication, please cite: 
+
+``https://getcontacts.github.io/``

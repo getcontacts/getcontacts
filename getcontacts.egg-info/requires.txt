@@ -1,0 +1,11 @@
+numpy
+scipy
+matplotlib
+scikit-learn
+pandas
+seaborn
+cython
+vmd-python
+
+[ticc]
+ticc==0.1.4

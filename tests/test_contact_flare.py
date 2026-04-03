@@ -1,7 +1,7 @@
 
 import unittest
-import get_dynamic_contacts
-import get_contact_flare
+from getcontacts import get_dynamic_contacts
+from getcontacts import get_contact_flare
 import os
 
 

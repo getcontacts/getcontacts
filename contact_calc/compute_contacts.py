@@ -19,7 +19,7 @@
 ##############################################################################
 
 import datetime
-from multiprocessing import Process, Queue
+import multiprocessing
 try:
     from vmd import *  # Loads the static `molecule` object
 except ModuleNotFoundError:
@@ -104,7 +104,8 @@ def compute_frame_contacts(molid, frame, itypes, geom_criteria, sele1, sele2,
 
 
 def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values, stride, distout,
-                              sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom, ligand_anions, ligand_cations, disulfide_cys):
+                              sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom, ligand_anions, ligand_cations, disulfide_cys,
+                              vmd_macros=None):
     """ 
     Reads in a single trajectory fragment and calls compute_frame_contacts on each frame
 
@@ -148,6 +149,14 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes,
     fragment_contacts: list of tuples, [(frame_index, atom1_label, atom2_label, itype), ...]
     """
     tic = datetime.datetime.now()
+
+    # Re-apply VMD selection macros (solv/lipid/ligand) that were defined in the
+    # parent process. With forkserver/spawn, each worker starts a fresh VMD
+    # instance and does not inherit the parent's Tcl state.
+    if vmd_macros:
+        for macro_name, macro_defn in vmd_macros.items():
+            evaltcl('atomselect macro %s "%s"' % (macro_name, macro_defn))
+
     molid = load_traj(top, traj, beg_frame, end_frame, stride)
     fragment_contacts = []
 
@@ -185,7 +194,8 @@ def compute_fragment_contacts(frag_idx, beg_frame, end_frame, top, traj, itypes,
 #
 
 def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
-                     beg, end, stride, distout, ligand_sele, solv_sele, lipid_sele, sele1, sele2):
+                     beg, end, stride, distout, ligand_sele, solv_sele, lipid_sele, sele1, sele2,
+                     mp_context=None):
     """
     Computes non-covalent contacts across the entire trajectory and writes them to `output`.
 
@@ -229,6 +239,15 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
     configure_lipid(top, traj, lipid_sele)
     configure_ligand(top, traj, ligand_sele, sele1, sele2)
 
+    # Capture the VMD atomselect macro definitions that were just configured so
+    # that forkserver/spawn workers (which start fresh VMD instances) can
+    # re-apply them before computing contacts.
+    vmd_macros = {
+        "solv":   evaltcl("atomselect macro solv"),
+        "lipid":  evaltcl("atomselect macro lipid"),
+        "ligand": evaltcl("atomselect macro ligand"),
+    }
+
     disulfide_cys = find_disulfide(top, traj)
     ligand_anions, ligand_cations = extract_ligand_features(top, traj, index_to_atom)
 
@@ -249,48 +268,81 @@ def compute_contacts(top, traj, output, itypes, geom_criterion_values, cores,
     stride = max(1, stride)
     num_fragments = math.ceil((end - beg + 1) / (TRAJ_FRAG_SIZE * stride))
 
-    # Generate input arguments for each trajectory piece
-    inputqueue = Queue()
     print("Processing %s (frame %d to %d with stride of %d) as %d fragments\n" %
           (traj, beg, end, stride, num_fragments))
 
+    # Build the list of fragment argument tuples to dispatch
+    frag_args = []
     for frag_idx, beg_frame in enumerate(range(beg, end + 1, TRAJ_FRAG_SIZE * stride)):
         end_frame = beg_frame + (TRAJ_FRAG_SIZE * stride) - 1
-        # print(frag_idx, beg_frame, end_frame, stride)
-        inputqueue.put((frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values,
-                        stride, distout, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom, ligand_anions, ligand_cations, disulfide_cys))
+        frag_args.append((frag_idx, beg_frame, end_frame, top, traj, itypes, geom_criterion_values,
+                          stride, distout, sele1, sele2, sele1_atoms, sele2_atoms, index_to_atom,
+                          ligand_anions, ligand_cations, disulfide_cys, vmd_macros))
 
-    # Set up result queue for workers to transfer results to the consumer
-    resultsqueue = Queue()
-
-    # Set up and start worker processes
     num_workers = max(1, cores)
-    for _ in range(num_workers):
-        inputqueue.put("DONE")  # Stops each worker process
 
-    if num_workers == 1:  # Run everything in series (in addition to being slow it will consume memory)
+    # Choose a safe multiprocessing context.
+    # 'forkserver' starts workers from a clean server process that predates VMD
+    # initialization, avoiding fork+VMD memory corruption on Python 3.12+.
+    # Falls back to 'spawn' (slower but equally safe) on systems where
+    # forkserver isn't available (some HPC schedulers, macOS CI, etc.).
+    ctx = None
+    if num_workers > 1:
+        if multiprocessing.current_process().daemon:
+            # Daemon processes cannot spawn children; fall back to serial.
+            print("Warning: running in a daemon process — falling back to serial contact computation.")
+            num_workers = 1
+        else:
+            if mp_context is None:
+                try:
+                    ctx = multiprocessing.get_context("forkserver")
+                except ValueError:
+                    ctx = multiprocessing.get_context("spawn")
+            else:
+                ctx = multiprocessing.get_context(mp_context)
+
+    if num_workers == 1:
+        # Serial path: run entirely in-process, no multiprocessing overhead
+        import queue as _queue
+        inputqueue = _queue.SimpleQueue()
+        resultsqueue = _queue.SimpleQueue()
+
+        for args in frag_args:
+            inputqueue.put(args)
+        inputqueue.put("DONE")
+
         contact_worker(inputqueue, resultsqueue)
         resultsqueue.put("DONE")
-        output_fd = open(output, "w")
-        contact_consumer(resultsqueue, output_fd, itypes, beg, end, stride, distout)
-        output_fd.close()
+        contact_consumer(resultsqueue, output, itypes, beg, end, stride, distout)
 
     else:
-        workers = [Process(target=contact_worker, args=(inputqueue, resultsqueue)) for _ in range(num_workers)]
+        # Parallel path: use forkserver/spawn context so VMD C-state is not
+        # duplicated by fork() into worker processes.
+        inputqueue = ctx.Queue()
+        resultsqueue = ctx.Queue()
+
+        for args in frag_args:
+            inputqueue.put(args)
+        for _ in range(num_workers):
+            inputqueue.put("DONE")  # sentinel per worker
+
+        workers = [ctx.Process(target=contact_worker, args=(inputqueue, resultsqueue))
+                   for _ in range(num_workers)]
         for w in workers:
             w.start()
 
-        # Set up and start consumer process which takes contact results and saves them to output
-        output_fd = open(output, "w")
-        consumer = Process(target=contact_consumer, args=(resultsqueue, output_fd, itypes, beg, end, stride, distout))
+        # Pass the output *path* (a plain string), not an open file handle.
+        # forkserver/spawn pickle the Process args before sending them to the
+        # child, and open file objects cannot be pickled.
+        consumer = ctx.Process(target=contact_consumer,
+                               args=(resultsqueue, output, itypes, beg, end, stride, distout))
         consumer.start()
 
-        # Wait for everyone to finish
         for w in workers:
             w.join()
         resultsqueue.put("DONE")
         consumer.join()
-        output_fd.close()
+
 
 
 def contact_worker(inputqueue, resultsqueue):
@@ -303,8 +355,12 @@ def contact_worker(inputqueue, resultsqueue):
         resultsqueue.put((frag_idx, contacts))
 
 
-def contact_consumer(resultsqueue, output_fd, itypes, beg, end, stride, distout):
+def contact_consumer(resultsqueue, output, itypes, beg, end, stride, distout):
     import heapq
+
+    # Open the output file here inside the child process — avoids passing an
+    # unpicklable file handle when using forkserver/spawn contexts.
+    output_fd = open(output, "w")
 
     total_frames = math.ceil((end - beg + 1) / stride)
     output_fd.write("# total_frames:%d beg:%d end:%d stride:%d interaction_types:%s\n" %

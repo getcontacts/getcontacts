@@ -2,7 +2,7 @@ __author__ = 'Rasmus Fonseca <fonseca.rasmus@gmail.com>'
 __license__ = "Apache License 2.0"
 
 import unittest
-import get_dynamic_contacts
+from getcontacts import get_dynamic_contacts
 import os
 
 

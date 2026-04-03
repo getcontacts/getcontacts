@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
+"""
+Converts a list of atomic contacts across multiple frames into a single-frame contact
+file where atomic interactions are filtered out if their corresponding residues do not
+frequently form interactions of that particular kind.
+"""
 
 from contact_calc.transformations import parse_contacts, multi_to_single_contact
 import argparse as ap
 
-"""
-Converts a list of atomic contacts across multiple frames into a single-frame contact
-file where atomic interactions are filtered out if their corresponding residues do not
-frequently form a interactions of that particular kind.
-"""
 
-if __name__ == "__main__":
+def main(argv=None):
     # Parse command line arguments
     parser = ap.ArgumentParser(description=__doc__, formatter_class=ap.RawTextHelpFormatter)
     optional = parser._action_groups.pop()
     required = parser.add_argument_group('required arguments')
-    parser._action_groups.append(optional)  # added this line
+    parser._action_groups.append(optional)
 
     required.add_argument('--input',
                           required=True,
@@ -33,7 +33,7 @@ if __name__ == "__main__":
                           type=float,
                           help='Minimum residue frequency')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     contacts, num_frames = parse_contacts(args.input)
     contacts = multi_to_single_contact(contacts, args.min_frequency * num_frames)
@@ -46,6 +46,10 @@ if __name__ == "__main__":
         print("Wrote residue contact file to " + args.output.name)
     else:
         print("\n".join(contacts))
+
+
+if __name__ == "__main__":
+    main()
 
 
 __license__ = "Apache License 2.0"
